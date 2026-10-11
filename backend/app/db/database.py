@@ -7,6 +7,8 @@ from backend.app.config import BASE_DIR, DEFAULT_USERS
 from backend.app.db.models import (
     Base,
     UserModel,
+    CattleModel,
+    CattleMedicalModel,
     CensusSettingModel,
     FeedingScheduleModel
 )
@@ -82,6 +84,31 @@ def init_db():
                 is_active=True
             ))
             db.commit()
+
+        # 4. Migrate missing columns on existing cattle_registry table if needed
+        try:
+            from sqlalchemy import inspect, text
+            inspector = inspect(engine)
+            if "cattle_registry" in inspector.get_table_names():
+                cols = [c["name"] for c in inspector.get_columns("cattle_registry")]
+                with engine.connect() as conn:
+                    if "category" not in cols:
+                        conn.execute(text("ALTER TABLE cattle_registry ADD COLUMN category VARCHAR(32) DEFAULT 'cow'"))
+                    if "gender" not in cols:
+                        conn.execute(text("ALTER TABLE cattle_registry ADD COLUMN gender VARCHAR(16) DEFAULT 'female'"))
+                    if "lactation_stage" not in cols:
+                        conn.execute(text("ALTER TABLE cattle_registry ADD COLUMN lactation_stage VARCHAR(32) DEFAULT 'dry'"))
+                    if "health_status" not in cols:
+                        conn.execute(text("ALTER TABLE cattle_registry ADD COLUMN health_status VARCHAR(32) DEFAULT 'healthy'"))
+                    if "inaph_tag" not in cols:
+                        conn.execute(text("ALTER TABLE cattle_registry ADD COLUMN inaph_tag VARCHAR(32)"))
+                    if "intake_source" not in cols:
+                        conn.execute(text("ALTER TABLE cattle_registry ADD COLUMN intake_source VARCHAR(64) DEFAULT 'rescue'"))
+                    if "age_years" not in cols:
+                        conn.execute(text("ALTER TABLE cattle_registry ADD COLUMN age_years FLOAT DEFAULT 3.0"))
+                    conn.commit()
+        except Exception as mig_err:
+            logger.debug(f"SQLite column migration check: {mig_err}")
 
         logger.info("Database schema initialized and verified successfully.")
     except Exception as e:

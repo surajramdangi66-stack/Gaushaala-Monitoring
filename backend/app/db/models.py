@@ -35,6 +35,13 @@ class CattleModel(Base):
     name = Column(String(128), nullable=True)
     enclosure_id = Column(String(64), nullable=False, default="cam-01", index=True)
     breed = Column(String(64), nullable=True, default="Gir / Indigenous")
+    category = Column(String(32), nullable=False, default="cow")  # "cow", "bull", "calf"
+    gender = Column(String(16), nullable=False, default="female")  # "female", "male"
+    lactation_stage = Column(String(32), nullable=False, default="dry")  # "milking", "dry", "pregnant", "na"
+    health_status = Column(String(32), nullable=False, default="healthy")  # "healthy", "under_treatment", "quarantine"
+    inaph_tag = Column(String(32), nullable=True, index=True)  # 12-digit Bharat Pashudhan (INAPH) tag
+    intake_source = Column(String(64), nullable=False, default="rescue")  # "rescue", "donated", "born"
+    age_years = Column(Float, nullable=True, default=3.0)
     status = Column(String(32), nullable=False, default="active", index=True)  # "active" | "inactive"
     notes = Column(Text, nullable=True)
     created_at = Column(String(64), default=utc_now_iso, nullable=False)
@@ -47,10 +54,47 @@ class CattleModel(Base):
             "name": self.name,
             "enclosure_id": self.enclosure_id,
             "breed": self.breed,
+            "category": self.category,
+            "gender": self.gender,
+            "lactation_stage": self.lactation_stage,
+            "health_status": self.health_status,
+            "inaph_tag": self.inaph_tag,
+            "intake_source": self.intake_source,
+            "age_years": self.age_years,
             "status": self.status,
             "notes": self.notes,
             "created_at": self.created_at,
             "updated_at": self.updated_at
+        }
+
+class CattleMedicalModel(Base):
+    __tablename__ = "cattle_medical_records"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    cattle_id = Column(Integer, nullable=False, index=True)
+    tag_id = Column(String(64), nullable=False, index=True)
+    record_type = Column(String(32), nullable=False)  # "vaccination", "deworming", "checkup", "treatment"
+    title = Column(String(128), nullable=False)
+    administered_date = Column(String(32), nullable=False)
+    next_due_date = Column(String(32), nullable=True)
+    doctor_name = Column(String(128), nullable=True)
+    status = Column(String(32), default="completed", nullable=False)  # "completed", "due", "overdue"
+    notes = Column(Text, nullable=True)
+    created_at = Column(String(64), default=utc_now_iso, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "cattle_id": self.cattle_id,
+            "tag_id": self.tag_id,
+            "record_type": self.record_type,
+            "title": self.title,
+            "administered_date": self.administered_date,
+            "next_due_date": self.next_due_date,
+            "doctor_name": self.doctor_name,
+            "status": self.status,
+            "notes": self.notes,
+            "created_at": self.created_at
         }
 
 class CensusRecordModel(Base):

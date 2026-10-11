@@ -716,6 +716,8 @@
             </div>
 
           </div>
+        </section>
+
         <!-- =====================================================================
              TAB 5: HERD CENSUS, REGISTRY & FEEDING COMPLIANCE
              ===================================================================== -->
@@ -726,15 +728,19 @@
             <div class="census-subtabs-bar">
               <button class="census-subtab-btn active" data-subtab="registry" id="subtab-btn-registry">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                <span data-i18n="subtab_registry">Cattle Registry</span>
+                <span data-i18n="subtab_registry">Cattle Registry (गोवंश रजिस्टर)</span>
               </button>
               <button class="census-subtab-btn" data-subtab="audit" id="subtab-btn-audit">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
-                <span data-i18n="subtab_census_audit">05:00 & 17:00 IST Census Audit</span>
+                <span data-i18n="subtab_census_audit">05:00 & 17:00 IST Census Audit (जनगणना)</span>
+              </button>
+              <button class="census-subtab-btn" data-subtab="medical" id="subtab-btn-medical">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/><circle cx="12" cy="12" r="2"/></svg>
+                <span>टीकाकरण एवं स्वास्थ्य (Medical & Vaccine)</span>
               </button>
               <button class="census-subtab-btn" data-subtab="feeding" id="subtab-btn-feeding">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
-                <span data-i18n="subtab_feeding">Feeding Compliance & Troughs</span>
+                <span data-i18n="subtab_feeding">Feeding Compliance (चारागाह)</span>
               </button>
             </div>
 
@@ -743,7 +749,7 @@
               <div class="census-panel-header">
                 <div>
                   <h3 class="panel-headline" data-i18n="reg_headline">Official Cattle Herd Registry</h3>
-                  <p class="panel-subtext" data-i18n="reg_subtext">Persistent database register of active cattle heads, identification tags, and assigned enclosures</p>
+                  <p class="panel-subtext" data-i18n="reg_subtext">Persistent database register with INAPH ear tags, breed classification, lactation, and health status</p>
                 </div>
                 <div class="header-actions-row">
                   <div class="summary-chips-group">
@@ -755,15 +761,26 @@
                       <span class="chip-label" data-i18n="lbl_active_herd">Active Herd</span>
                       <strong class="chip-val text-emerald" id="reg-active-cows">0</strong>
                     </div>
-                    <div class="summary-chip chip-muted">
-                      <span class="chip-label" data-i18n="lbl_inactive_herd">Inactive</span>
-                      <strong class="chip-val" id="reg-inactive-cows">0</strong>
+                    <div class="summary-chip" style="border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.06);">
+                      <span class="chip-label" style="color:#f59e0b;">अनुदान (₹40/गाय/दिन)</span>
+                      <strong class="chip-val" id="reg-subsidy-daily" style="color:#f59e0b;">₹0</strong>
                     </div>
                   </div>
-                  <button class="btn-primary" id="btn-open-add-cattle">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    <span data-i18n="btn_register_cow">+ Register Cattle</span>
-                  </button>
+                  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="btn-tool" id="btn-reconcile-census" title="Run instant AI Headcount Reconciliation">
+                      <span>⚖️ AI Reconcile</span>
+                    </button>
+                    <button class="btn-tool" id="btn-open-bulk-import" title="Upload multiple cattle from CSV">
+                      <span>📥 Import CSV</span>
+                    </button>
+                    <button class="btn-tool" id="btn-export-cattle-csv" title="Download official registry muster roll">
+                      <span>📊 Export CSV</span>
+                    </button>
+                    <button class="btn-primary" id="btn-open-add-cattle">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      <span data-i18n="btn_register_cow">+ Register Cattle</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -771,9 +788,21 @@
               <div class="registry-filter-bar">
                 <div class="search-input-wrap">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                  <input type="text" class="table-search-input" id="cattle-search-input" placeholder="Search by Tag ID, Name, or Breed..." data-i18n-ph="ph_search_cattle" />
+                  <input type="text" class="table-search-input" id="cattle-search-input" placeholder="Search by Tag ID, INAPH, Name, or Breed..." data-i18n-ph="ph_search_cattle" />
                 </div>
-                <div class="filter-controls-right">
+                <div class="filter-controls-right" style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <select class="form-select filter-select" id="cattle-category-filter" title="Filter by Category">
+                    <option value="">All Categories (सभी)</option>
+                    <option value="cow">गाय (Cow)</option>
+                    <option value="bull">नंदी / बैल (Bull)</option>
+                    <option value="calf">बछड़ा / बछिया (Calf)</option>
+                  </select>
+                  <select class="form-select filter-select" id="cattle-lactation-filter" title="Filter by Lactation">
+                    <option value="">All Lactation Stages</option>
+                    <option value="milking">दुधारू (Milking)</option>
+                    <option value="dry">सूखी (Dry)</option>
+                    <option value="pregnant">गर्भवती (Pregnant)</option>
+                  </select>
                   <select class="form-select filter-select" id="cattle-status-filter" title="Filter by status">
                     <option value="">All Statuses</option>
                     <option value="active">Active Only</option>
@@ -787,12 +816,13 @@
                 <table class="modern-table">
                   <thead>
                     <tr>
-                      <th data-i18n="th_tag_id">Tag / RFID ID</th>
+                      <th>टैग एवं INAPH UID</th>
                       <th data-i18n="th_cow_name">Name / Identifier</th>
                       <th data-i18n="th_cow_enclosure">Enclosure</th>
-                      <th data-i18n="th_cow_breed">Breed</th>
+                      <th>श्रेणी एवं नस्ल (Category)</th>
+                      <th>दुग्ध अवस्था (Lactation)</th>
+                      <th>स्वास्थ्य (Health)</th>
                       <th data-i18n="th_cow_status">Status</th>
-                      <th data-i18n="th_cow_registered_at">Registered Date</th>
                       <th data-i18n="th_cow_actions">Actions</th>
                     </tr>
                   </thead>
@@ -818,6 +848,9 @@
                   <div class="banner-action-col">
                     <button class="btn-primary" id="btn-run-census-diagnostic">
                       <span data-i18n="btn_run_diag_census">⚡ Run Diagnostic Census</span>
+                    </button>
+                    <button class="btn-tool" id="btn-export-audit-report" style="margin-top:6px;" title="Download Official Government Muster Roll">
+                      <span>📜 Export Audit Report (CSV)</span>
                     </button>
                     <span class="next-run-text"><span data-i18n="lbl_next_run">Next Scheduled:</span> <strong id="census-next-scheduled-time">05:00 / 17:00 IST</strong></span>
                   </div>
@@ -961,6 +994,71 @@
                     </table>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <!-- SUBPANEL 4: MEDICAL & VACCINATION REGISTER -->
+            <div class="census-subtab-panel" id="subtab-medical">
+              <div class="census-panel-header">
+                <div>
+                  <h3 class="panel-headline">गोवंश टीकाकरण एवं चिकित्सा रजिस्टर (Medical & Vaccination)</h3>
+                  <p class="panel-subtext">Comprehensive livestock health records: FMD, Lumpy Skin, Anthrax vaccinations, Deworming, and Veterinarian clinical visits</p>
+                </div>
+                <div class="header-actions-row">
+                  <div class="summary-chips-group">
+                    <div class="summary-chip" style="border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.06);">
+                      <span class="chip-label" style="color:#ef4444;">Overdue / Due Soon</span>
+                      <strong class="chip-val text-rose" id="med-due-count">0</strong>
+                    </div>
+                    <div class="summary-chip chip-emerald">
+                      <span class="chip-label">Completed Vaccines</span>
+                      <strong class="chip-val text-emerald" id="med-completed-count">0</strong>
+                    </div>
+                  </div>
+                  <button class="btn-primary" id="btn-open-add-medical">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>+ Log Medical / Vaccine</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Medical Filter Controls -->
+              <div class="registry-filter-bar">
+                <div class="search-input-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="text" class="table-search-input" id="medical-search-input" placeholder="Search by Tag ID, Vaccine Name, or Doctor..." />
+                </div>
+                <div class="filter-controls-right">
+                  <select class="form-select filter-select" id="medical-type-filter">
+                    <option value="">All Record Types (सभी)</option>
+                    <option value="vaccination">Vaccination (टीकाकरण)</option>
+                    <option value="deworming">Deworming (कृमिनाशक)</option>
+                    <option value="checkup">Vet Checkup (चिकित्सक जांच)</option>
+                    <option value="treatment">Treatment (उपचार)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Medical Records Table -->
+              <div class="modern-table-wrap">
+                <table class="modern-table">
+                  <thead>
+                    <tr>
+                      <th>Cattle Tag / ID</th>
+                      <th>Record Type</th>
+                      <th>Title / Treatment</th>
+                      <th>Administered Date</th>
+                      <th>Next Due Date</th>
+                      <th>Doctor / Paravet</th>
+                      <th>Status</th>
+                      <th>Notes</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cattle-medical-tbody">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
               </div>
             </div>
 
@@ -1266,41 +1364,284 @@
 
       <form id="cattle-registration-form">
         <div class="modal-body">
-          <div class="form-group">
-            <label for="cow-tag-id" class="form-label" data-i18n="lbl_tag_id">Ear Tag / Collar RFID *</label>
-            <input type="text" class="form-input font-mono" id="cow-tag-id" placeholder="e.g. IN-DL-001 or RFID-9021" required />
-          </div>
-
-          <div class="form-group">
-            <label for="cow-name" class="form-label" data-i18n="lbl_cow_name">Name / Cow Identifier (Optional)</label>
-            <input type="text" class="form-input" id="cow-name" placeholder="e.g. Nandini, Gauri, Krishna" />
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="cow-tag-id" class="form-label" data-i18n="lbl_tag_id">Ear Tag / Collar RFID *</label>
+              <input type="text" class="form-input font-mono" id="cow-tag-id" placeholder="e.g. DL-GAU-0101" required />
+            </div>
+            <div class="form-group">
+              <label for="cow-inaph-tag" class="form-label">Bharat Pashudhan (INAPH) Tag</label>
+              <input type="text" class="form-input font-mono" id="cow-inaph-tag" placeholder="12-digit Gov UID (e.g. 100012345678)" maxlength="24" />
+            </div>
           </div>
 
           <div class="form-row-2">
             <div class="form-group">
+              <label for="cow-name" class="form-label" data-i18n="lbl_cow_name">Name / Cow Identifier</label>
+              <input type="text" class="form-input" id="cow-name" placeholder="e.g. Nandini, Gauri, Kamdhenu" />
+            </div>
+            <div class="form-group">
               <label for="cow-enclosure" class="form-label" data-i18n="lbl_cow_enclosure">Assigned Pen / Camera *</label>
               <select class="form-select" id="cow-enclosure">
-                <option value="cam-01">Shed A - North Paddock (cam-01)</option>
-                <option value="cam-02">Shed B - Milking Barn (cam-02)</option>
-                <option value="cam-03">Shed C - Feed Lot (cam-03)</option>
-                <option value="cam-04">Shed D - Maternity Pen (cam-04)</option>
+                <option value="cam-01">Main Enclosure - North Pen (cam-01)</option>
+                <option value="cam-02">Shed B - Feeder Bay (cam-02)</option>
+                <option value="cam-03">Open Paddock / Yard (cam-03)</option>
+                <option value="cam-04">Calving & Medical Bay (cam-04)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row-3" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+            <div class="form-group">
+              <label for="cow-category" class="form-label">Category (श्रेणी) *</label>
+              <select class="form-select" id="cow-category">
+                <option value="cow" selected>गाय (Cow)</option>
+                <option value="bull">नंदी / बैल (Bull)</option>
+                <option value="calf">बछड़ा / बछिया (Calf)</option>
               </select>
             </div>
             <div class="form-group">
-              <label for="cow-breed" class="form-label" data-i18n="lbl_cow_breed">Breed</label>
-              <input type="text" class="form-input" id="cow-breed" value="Gir / Indigenous" placeholder="e.g. Gir, Sahiwal, Tharparkar" />
+              <label for="cow-lactation" class="form-label">Lactation Stage</label>
+              <select class="form-select" id="cow-lactation">
+                <option value="dry" selected>सूखी (Dry / Non-Milking)</option>
+                <option value="milking">दुधारू (Lactating / Milking)</option>
+                <option value="pregnant">गर्भवती (Pregnant)</option>
+                <option value="na">लागू नहीं (N/A)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="cow-health" class="form-label">Health Status *</label>
+              <select class="form-select" id="cow-health">
+                <option value="healthy" selected>स्वस्थ (Healthy)</option>
+                <option value="under_treatment">उपचाराधीन (Under Treatment)</option>
+                <option value="quarantine">क्वारंटाइन (Quarantine)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row-3" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+            <div class="form-group">
+              <label for="cow-breed" class="form-label" data-i18n="lbl_cow_breed">Desi Breed</label>
+              <input type="text" class="form-input" id="cow-breed" value="Gir Cow" placeholder="e.g. Gir, Sahiwal, Rathi, Kankrej" />
+            </div>
+            <div class="form-group">
+              <label for="cow-intake" class="form-label">Intake Source</label>
+              <select class="form-select" id="cow-intake">
+                <option value="rescue" selected>सड़क से रेस्क्यू (Street Rescue)</option>
+                <option value="donated">दान / समर्पण (Donated)</option>
+                <option value="born">गौशाला जन्म (Born in Gaushala)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="cow-age" class="form-label">Age (Years)</label>
+              <input type="number" class="form-input" id="cow-age" value="3.5" step="0.5" min="0" max="25" />
             </div>
           </div>
 
           <div class="form-group">
-            <label for="cow-notes" class="form-label" data-i18n="lbl_cow_notes">Health / Identification Notes</label>
-            <textarea class="form-textarea" id="cow-notes" rows="2" placeholder="Distinctive markings, age, health status..."></textarea>
+            <label for="cow-notes" class="form-label" data-i18n="lbl_cow_notes">Distinctive Markings & Medical Notes</label>
+            <textarea class="form-textarea" id="cow-notes" rows="2" placeholder="Distinctive coat color, horn shape, ear cuts, previous treatments..."></textarea>
           </div>
 
           <div class="modal-footer-actions">
             <button type="button" class="btn-tool" id="cancel-cattle-modal-btn" data-i18n="btn_cancel">Cancel</button>
             <button type="submit" class="btn-primary" id="submit-cattle-reg-btn">
               <span data-i18n="btn_save_cattle">Save to Official Registry</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Bulk CSV Import Modal -->
+  <div class="modal-overlay" id="bulk-import-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge icon-indigo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <div>
+            <h2 class="modal-title">Bulk Cattle CSV Import (एक साथ कई गोवंश जोड़ें)</h2>
+            <p class="modal-subtitle">Upload CSV muster roll with 50-200 cattle in a single click</p>
+          </div>
+        </div>
+        <button class="btn-icon" id="close-bulk-import-modal-btn" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div style="background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.25); border-radius:10px; padding:12px 16px; margin-bottom:1.25rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong style="color:var(--text-primary); font-size:0.9rem;">CSV Column Standard:</strong>
+              <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
+                <code>Tag ID, INAPH UID, Name, Enclosure, Breed, Category, Lactation Stage, Health Status, Notes</code>
+              </div>
+            </div>
+            <button type="button" class="btn-tool" id="btn-download-sample-csv" style="white-space:nowrap;">
+              📥 Sample CSV
+            </button>
+          </div>
+        </div>
+
+        <form id="bulk-import-form">
+          <div class="form-group">
+            <label for="bulk-csv-file" class="form-label">Select CSV File (*.csv):</label>
+            <input type="file" class="form-input" id="bulk-csv-file" accept=".csv" required style="padding:8px;" />
+          </div>
+
+          <div id="bulk-import-feedback" style="display:none; padding:10px 14px; border-radius:8px; font-size:0.85rem; margin-top:10px;"></div>
+
+          <div class="modal-footer-actions" style="margin-top:1.25rem;">
+            <button type="button" class="btn-tool" id="cancel-bulk-import-btn">Cancel</button>
+            <button type="submit" class="btn-primary" id="btn-submit-bulk-upload">
+              <span>Upload & Import Records</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Reconcile Discrepancy & Subsidy Modal -->
+  <div class="modal-overlay" id="reconcile-modal">
+    <div class="modal-card" style="max-width:750px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge icon-spark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div>
+            <h2 class="modal-title">AI Headcount Reconcile & Subsidy Audit</h2>
+            <p class="modal-subtitle">Real-time CCTV optical detection vs Database Registered muster roll</p>
+          </div>
+        </div>
+        <button class="btn-icon" id="close-reconcile-modal-btn" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body" id="reconcile-modal-body">
+        <div style="text-align:center; padding:2rem;"><div class="spinner"></div> Reconciling camera feeds with herd database...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Printable Cattle QR / ID Badge Modal -->
+  <div class="modal-overlay" id="qr-id-modal">
+    <div class="modal-card" style="max-width:540px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge icon-emerald">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </div>
+          <div>
+            <h2 class="modal-title">Official Cattle ID Badge & QR Code</h2>
+            <p class="modal-subtitle">Printable identity credential for caretaker & veterinary mobile scan</p>
+          </div>
+        </div>
+        <button class="btn-icon" id="close-qr-modal-btn" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div id="cattle-id-card-print-area" style="background:#0f172a; border:2px solid #334155; border-radius:14px; padding:20px; color:#f8fafc; font-family:sans-serif;">
+          <!-- Dynamically populated ID card -->
+        </div>
+
+        <div class="modal-footer-actions" style="margin-top:1.25rem;">
+          <button type="button" class="btn-tool" id="btn-print-id-card" onclick="window.print()">
+            🖨️ Print Badge
+          </button>
+          <button type="button" class="btn-primary" id="close-qr-card-btn">
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Medical Record Entry Modal -->
+  <div class="modal-overlay" id="medical-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge icon-rose">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <div>
+            <h2 class="modal-title">Log Vaccine / Medical Event</h2>
+            <p class="modal-subtitle">Record clinical vaccination, deworming, or veterinary doctor visit</p>
+          </div>
+        </div>
+        <button class="btn-icon" id="close-medical-modal-btn" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form id="medical-record-form">
+        <div class="modal-body">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="med-cattle-select" class="form-label">Select Cattle (टैग) *</label>
+              <select class="form-select" id="med-cattle-select" required>
+                <!-- Populated dynamically with registered cattle -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="med-record-type" class="form-label">Record Type (प्रकार) *</label>
+              <select class="form-select" id="med-record-type">
+                <option value="vaccination" selected>Vaccination (टीकाकरण - FMD / Lumpy)</option>
+                <option value="deworming">Deworming (कृमिनाशक दवा)</option>
+                <option value="checkup">Veterinary Checkup (चिकित्सक परीक्षण)</option>
+                <option value="treatment">Treatment / Surgery (उपचार)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="med-title" class="form-label">Title / Vaccine Name *</label>
+            <input type="text" class="form-input" id="med-title" placeholder="e.g. FMD Bi-annual Booster, Lumpy Skin Prophylactic, Albendazole 100ml" required />
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="med-admin-date" class="form-label">Administered Date *</label>
+              <input type="date" class="form-input" id="med-admin-date" required />
+            </div>
+            <div class="form-group">
+              <label for="med-due-date" class="form-label">Next Due Date (अगली तारीख)</label>
+              <input type="date" class="form-input" id="med-due-date" />
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="med-doctor" class="form-label">Veterinarian / Paravet Name</label>
+              <input type="text" class="form-input" id="med-doctor" placeholder="e.g. Dr. Rajesh Sharma, MVSc" />
+            </div>
+            <div class="form-group">
+              <label for="med-status" class="form-label">Status</label>
+              <select class="form-select" id="med-status">
+                <option value="completed" selected>Completed (सम्पन्न)</option>
+                <option value="due">Scheduled / Due (नियत)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="med-notes" class="form-label">Clinical Notes & Dosage</label>
+            <textarea class="form-textarea" id="med-notes" rows="2" placeholder="Dosage, batch number, manufacturer, animal reaction..."></textarea>
+          </div>
+
+          <div class="modal-footer-actions">
+            <button type="button" class="btn-tool" id="cancel-medical-modal-btn">Cancel</button>
+            <button type="submit" class="btn-primary" id="submit-medical-record-btn">
+              <span>Save Medical Record</span>
             </button>
           </div>
         </div>
