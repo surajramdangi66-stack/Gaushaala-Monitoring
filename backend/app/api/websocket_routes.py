@@ -73,6 +73,7 @@ async def websocket_camera_stream(
                     "overlay": overlay_enabled,
                     "fps": summary["fps"],
                     "total": summary["total_cattle"],
+                    "workers": summary["total_workers"],
                     "active": summary["active_cattle"],
                     "resting": summary["resting_cattle"],
                     "tracks": summary["tracks"],

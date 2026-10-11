@@ -1,0 +1,23 @@
+{
+  "name": "gaushaala-monitoring",
+  "version": "2.0.0",
+  "description": "Smart Gaushala CCTV AI Vision & Livestock Surveillance Platform",
+  "main": "run.py",
+  "scripts": {
+    "dev": "node dev.js",
+    "web": "node dev.js",
+    "start": "node dev.js",
+    "serve": "node dev.js",
+    "test": "node dev.js --test"
+  },
+  "keywords": [
+    "gaushala",
+    "livestock",
+    "cctv",
+    "yolov8",
+    "ai",
+    "monitoring"
+  ],
+  "author": "Gaushala AI Team",
+  "license": "ISC"
+}

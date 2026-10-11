@@ -123,14 +123,16 @@ const MonitorModule = {
           
           <div class="video-hud-overlay">
             <span class="hud-pill" style="display:inline-flex; align-items:center; gap:5px;"><span class="pulse-dot-green" style="width:6px; height:6px;"></span> 24x7 REC // DL-GAU-${(cam.id || 'CAM').toUpperCase()}</span>
-            <span class="hud-pill" id="hud-cattle-${cam.id}">गोवंश संख्या: --</span>
+            <span class="hud-pill" id="hud-cattle-${cam.id}" style="color:#10b981;">गोवंश: --</span>
+            <span class="hud-pill" id="hud-worker-${cam.id}" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);">स्टाफ: --</span>
             <span class="hud-pill" id="hud-fps-${cam.id}">FPS: --</span>
           </div>
         </div>
 
         <div class="camera-card-footer">
           <div class="cam-counts-preview">
-            <span>कुल: <strong id="footer-total-${cam.id}">--</strong></span>
+            <span>गोवंश: <strong id="footer-total-${cam.id}">--</strong></span>
+            <span>स्टाफ: <strong id="footer-worker-${cam.id}" style="color:#f59e0b;">--</strong></span>
             <span>सक्रिय: <strong id="footer-active-${cam.id}" style="color:#ffffff;">--</strong></span>
             <span>विश्रामरत: <strong id="footer-resting-${cam.id}" style="color:var(--text-secondary);">--</strong></span>
           </div>
@@ -168,7 +170,9 @@ const MonitorModule = {
     const placeholder = document.getElementById(`placeholder-${camId}`);
     const hudFps = document.getElementById(`hud-fps-${camId}`);
     const hudCattle = document.getElementById(`hud-cattle-${camId}`);
+    const hudWorker = document.getElementById(`hud-worker-${camId}`);
     const footerTotal = document.getElementById(`footer-total-${camId}`);
+    const footerWorker = document.getElementById(`footer-worker-${camId}`);
     const footerActive = document.getElementById(`footer-active-${camId}`);
     const footerResting = document.getElementById(`footer-resting-${camId}`);
 
@@ -190,9 +194,12 @@ const MonitorModule = {
           statusElem.textContent = (data.status === 'online') ? 'सक्रिय (ONLINE)' : 'स्टैंडबाय (STANDBY / PAUSED)';
         }
 
+        const isOnline = (data.status === 'online');
         if (hudFps) hudFps.textContent = `FPS: ${data.fps || 0}`;
-        if (hudCattle) hudCattle.textContent = (data.status === 'online') ? `CATTLE: ${data.total}` : 'NODE STANDBY';
+        if (hudCattle) hudCattle.textContent = isOnline ? `गोवंश (CATTLE): ${data.total}` : 'NODE STANDBY';
+        if (hudWorker) hudWorker.textContent = isOnline ? `स्टाफ (WORKER): ${data.workers ?? 0}` : 'स्टाफ: 0';
         if (footerTotal) footerTotal.textContent = data.total;
+        if (footerWorker) footerWorker.textContent = data.workers ?? 0;
         if (footerActive) footerActive.textContent = data.active;
         if (footerResting) footerResting.textContent = data.resting;
       },

@@ -106,7 +106,7 @@ const DashboardModule = {
         tr.innerHTML = `
           <td><strong>${localizedName}</strong></td>
           <td><code class="code-badge">DL-${String(zone.camera_id || '01').toUpperCase()}</code></td>
-          <td><strong>${total}</strong> <span class="text-muted" style="font-size:0.75rem;">${isHi ? 'गोवंश' : 'Heads'}</span></td>
+          <td><strong>${total}</strong> <span class="text-muted" style="font-size:0.75rem;">${isHi ? 'गोवंश' : 'Cattle'}</span> <span style="margin:0 4px; color:var(--text-muted); opacity:0.6;">|</span> <strong style="color:#f59e0b;">${zone.workers ?? 0}</strong> <span class="text-muted" style="font-size:0.75rem;">${isHi ? 'स्टाफ' : 'Staff'}</span></td>
           <td>
             <div class="tbl-ratio-bar-wrap">
               <div class="tbl-ratio-bar">

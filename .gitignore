@@ -31,8 +31,10 @@ ENV/
 Thumbs.db
 Desktop.ini
 
-# Logs
+# Logs & Node
 *.log
+npm-debug.log*
+node_modules/
 
 # Local databases and datasets
 data/*.db

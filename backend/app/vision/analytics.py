@@ -25,8 +25,10 @@ class CameraAnalyticsEngine:
         self.camera_id = camera_id
         self.camera_name = camera_name
         self.spatial = SpatialAnalytics(zones_config)
-        self.tracker = CattleTracker(iou_threshold=0.25, max_age=15)
+        self.tracker = CattleTracker(iou_threshold=0.20, max_age=75)
         self.detector = get_detector()
+        self._frame_count = 0
+        self._cached_detections = []
 
     def process_frame(
         self,
@@ -37,8 +39,14 @@ class CameraAnalyticsEngine:
         if frame is None or frame.size == 0:
             return result
 
-        # Run real YOLOv8 detection for both workers and desi cattle (no static trough clutter)
-        detections = self.detector.detect(frame, include_workers=True)
+        self._frame_count += 1
+
+        # High-FPS frame cadence: Run YOLOv8 on every 2nd frame, re-use cached detections on intermediate frames
+        if self._frame_count % 2 == 1 and self._cached_detections:
+            detections = self._cached_detections
+        else:
+            detections = self.detector.detect(frame, include_workers=True)
+            self._cached_detections = detections
 
         # Update multi-object tracker
         tracks = self.tracker.update(detections)

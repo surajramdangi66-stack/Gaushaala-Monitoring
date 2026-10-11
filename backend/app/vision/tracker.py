@@ -124,7 +124,7 @@ class TrackedCattle:
 
 
 class CattleTracker:
-    def __init__(self, iou_threshold: float = 0.3, max_age: int = 15):
+    def __init__(self, iou_threshold: float = 0.20, max_age: int = 75):
         self.iou_threshold = iou_threshold
         self.max_age = max_age
         self.tracks: Dict[int, TrackedCattle] = {}
@@ -138,7 +138,7 @@ class CattleTracker:
         existing_track_ids = list(self.tracks.keys())
 
         if existing_track_ids and detections:
-            # Calculate IoU cost matrix, enforcing entity_type consistency
+            # Stage 1: Primary IoU Matching
             cost_matrix = []
             for tid in existing_track_ids:
                 row = []
@@ -152,7 +152,6 @@ class CattleTracker:
                         row.append(iou)
                 cost_matrix.append(row)
 
-            # Greedy matching for highest IoU
             while True:
                 max_iou = 0.0
                 best_t_idx = -1
@@ -186,20 +185,76 @@ class CattleTracker:
                 else:
                     break
 
+            # Stage 2: Secondary Centroid-Distance Association for Unmatched Tracks
+            # (Maintains track identity even during posture shifts, turning, or scale changes)
+            for t_idx, tid in enumerate(existing_track_ids):
+                if tid in matched_track_ids:
+                    continue
+                track = self.tracks[tid]
+                best_dist = 9999.0
+                best_d_idx = -1
+
+                for d_idx, det in enumerate(detections):
+                    if d_idx in matched_det_indices:
+                        continue
+                    if det.get("entity_type", "animal") != track.entity_type:
+                        continue
+
+                    d_cx = (det["bbox"][0] + det["bbox"][2]) / 2.0
+                    d_cy = (det["bbox"][1] + det["bbox"][3]) / 2.0
+                    dist = math.hypot(d_cx - track.cx, d_cy - track.cy)
+                    max_allowed_dist = max(110.0, (track.bbox[2] - track.bbox[0]) * 0.8, (track.bbox[3] - track.bbox[1]) * 0.8)
+
+                    if dist < max_allowed_dist and dist < best_dist:
+                        best_dist = dist
+                        best_d_idx = d_idx
+
+                if best_d_idx != -1:
+                    det = detections[best_d_idx]
+                    self.tracks[tid].update(
+                        det["bbox"],
+                        det.get("conf", 1.0),
+                        is_lying=det.get("is_lying", False),
+                        is_calf=det.get("is_calf", False),
+                        label=det.get("label"),
+                        breed=det.get("breed")
+                    )
+                    matched_track_ids.add(tid)
+                    matched_det_indices.add(best_d_idx)
+
         # Handle unmatched existing tracks
         for tid in existing_track_ids:
             if tid not in matched_track_ids:
                 self.tracks[tid].mark_missed()
 
-        # Remove dead tracks
+        # Remove dead tracks after max_age frames of complete absence
         dead_tracks = [tid for tid, track in self.tracks.items() if track.time_since_update > self.max_age]
         for tid in dead_tracks:
             del self.tracks[tid]
 
-        # Initialize new tracks for unmatched detections
+        # Initialize new tracks ONLY for genuinely new, non-overlapping detections
         for d_idx, det in enumerate(detections):
             if d_idx not in matched_det_indices:
                 det_type = det.get("entity_type", "animal")
+
+                # Double check that this detection doesn't heavily overlap an existing active track
+                d_box = det["bbox"]
+                too_close_to_existing = False
+                for existing_track in self.tracks.values():
+                    if existing_track.entity_type == det_type:
+                        iou = calculate_iou(existing_track.bbox, d_box)
+                        if iou > 0.40:
+                            too_close_to_existing = True
+                            break
+                        d_cx = (d_box[0] + d_box[2]) / 2.0
+                        d_cy = (d_box[1] + d_box[3]) / 2.0
+                        if math.hypot(d_cx - existing_track.cx, d_cy - existing_track.cy) < 25.0:
+                            too_close_to_existing = True
+                            break
+
+                if too_close_to_existing:
+                    continue
+
                 if det_type == "worker":
                     tid = self.next_worker_id
                     self.next_worker_id += 1
@@ -220,4 +275,6 @@ class CattleTracker:
                     new_track.activity_state = "resting"
                 self.tracks[tid] = new_track
 
-        return list(self.tracks.values())
+        # Return only active tracks (updated recently) to prevent ghost visual flicker
+        active_visible_tracks = [t for t in self.tracks.values() if t.time_since_update < 10]
+        return active_visible_tracks

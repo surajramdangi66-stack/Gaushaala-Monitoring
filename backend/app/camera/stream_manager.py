@@ -37,6 +37,7 @@ class CameraPipeline:
         self.latest_result: Optional[FrameAnalysisResult] = None
         self.latest_processed_frame: Optional[np.ndarray] = None
         self.latest_raw_frame: Optional[np.ndarray] = None
+        self.latest_jpeg_bytes: Optional[bytes] = None
         self.lock = threading.Lock()
         self.is_running = False
         self.worker_thread: Optional[threading.Thread] = None
@@ -69,93 +70,111 @@ class CameraPipeline:
 
     def _processing_loop(self):
         while self.is_running:
-            # 1. Check if hardware is connected to this camera
-            # If camera is paused or disconnected from hardware:
-            # DO NOT run analytics, DO NOT trigger any alerts, and DO NOT register phantom presence!
-            if not self.source.is_connected or not self.source.is_online:
+            try:
+                # 1. Check if hardware is connected to this camera
+                # If camera is paused or disconnected from hardware:
+                # DO NOT run analytics, DO NOT trigger any alerts, and DO NOT register phantom presence!
+                if not self.source.is_connected or not self.source.is_online:
+                    raw_frame = self.source.get_latest_frame()
+                    with self.lock:
+                        self.latest_raw_frame = raw_frame
+                        self.latest_processed_frame = raw_frame
+                        self.latest_jpeg_bytes = None
+                        self.latest_result = None
+                    time.sleep(0.5)
+                    continue
+
                 raw_frame = self.source.get_latest_frame()
+                if raw_frame is None:
+                    time.sleep(0.03)
+                    continue
+
+                self._loop_counter += 1
+
+                # Process real incoming video frame with YOLOv8 (detecting animals & workers)
+                result = self.analytics.process_frame(raw_frame)
+
+                # Sync detections with Cross-Camera Entity Presence Manager
+                for track in result.tracks:
+                    self.presence_mgr.register_or_update(
+                        camera_id=self.camera_id,
+                        camera_name=self.name,
+                        entity_type=track.entity_type,
+                        track_id=track.track_id,
+                        label=track.label,
+                        breed=track.breed,
+                        posture=track.activity_state if not track.is_worker else "standing",
+                        bbox=track.bbox
+                    )
+
+                # Periodic exit check across cameras (every ~15 frames)
+                if self._loop_counter % 15 == 0:
+                    self.presence_mgr.reap_exited_sessions()
+
+                # Alerts evaluation (Only triggered when camera has active hardware stream!)
+                for breached_cow in result.breaches_detected:
+                    self.alert_engine.trigger_alert(
+                        camera_id=self.camera_id,
+                        zone_name=self.name,
+                        alert_type="GEOFENCE_BREACH",
+                        severity="CRITICAL",
+                        message=f"Cattle #{breached_cow.track_id} ({breached_cow.label}) breached perimeter!",
+                        frame=raw_frame,
+                        highlight_box=breached_cow.bbox,
+                        entity_id=str(breached_cow.track_id),
+                        details={"track_id": breached_cow.track_id, "zone": breached_cow.current_zone}
+                    )
+
+                for prostrated_cow in result.prostrations_detected:
+                    self.alert_engine.trigger_alert(
+                        camera_id=self.camera_id,
+                        zone_name=self.name,
+                        alert_type="PROSTRATION_DISTRESS",
+                        severity="CRITICAL",
+                        message=f"Cattle #{prostrated_cow.track_id} ({prostrated_cow.label}) motionless for {int(prostrated_cow.inactivity_duration)}s!",
+                        frame=raw_frame,
+                        highlight_box=prostrated_cow.bbox,
+                        entity_id=str(prostrated_cow.track_id),
+                        details={"track_id": prostrated_cow.track_id, "duration": prostrated_cow.inactivity_duration}
+                    )
+
+                if result.overcrowding_detected:
+                    feeder_zone = self.analytics.spatial.feeder_zone
+                    max_cap = feeder_zone.max_capacity if feeder_zone else 4
+                    self.alert_engine.trigger_alert(
+                        camera_id=self.camera_id,
+                        zone_name=self.name,
+                        alert_type="FEEDER_OVERCROWDING",
+                        severity="WARNING",
+                        message=f"Feed trough density alert: {result.feeder_count} cattle crowding (limit: {max_cap})",
+                        frame=raw_frame,
+                        entity_id="feeder",
+                        details={"count": result.feeder_count, "capacity": max_cap}
+                    )
+
+                # Render frame with clean, professional, uncluttered overlays
+                processed = self._render_overlay_frame(raw_frame, result)
+
+                # Pre-encode JPEG once for all WebSocket clients, avoiding repetitive encoding & lock contention
+                h, w = processed.shape[:2]
+                if w > 960:
+                    scale = 960.0 / w
+                    stream_frame = cv2.resize(processed, (960, int(h * scale)), interpolation=cv2.INTER_LINEAR)
+                else:
+                    stream_frame = processed
+
+                encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 65]
+                ret, buf = cv2.imencode('.jpg', stream_frame, encode_param)
+                encoded_bytes = buf.tobytes() if ret else None
+
                 with self.lock:
                     self.latest_raw_frame = raw_frame
-                    self.latest_processed_frame = raw_frame
-                    self.latest_result = None
-                time.sleep(0.5)
-                continue
+                    self.latest_processed_frame = processed
+                    self.latest_jpeg_bytes = encoded_bytes
+                    self.latest_result = result
 
-            raw_frame = self.source.get_latest_frame()
-            if raw_frame is None:
-                time.sleep(0.04)
-                continue
-
-            self._loop_counter += 1
-
-            # Process real incoming video frame with YOLOv8 (detecting animals & workers)
-            result = self.analytics.process_frame(raw_frame)
-
-            # Sync detections with Cross-Camera Entity Presence Manager
-            for track in result.tracks:
-                self.presence_mgr.register_or_update(
-                    camera_id=self.camera_id,
-                    camera_name=self.name,
-                    entity_type=track.entity_type,
-                    track_id=track.track_id,
-                    label=track.label,
-                    breed=track.breed,
-                    posture=track.activity_state if not track.is_worker else "standing",
-                    bbox=track.bbox
-                )
-
-            # Periodic exit check across cameras (every ~15 frames)
-            if self._loop_counter % 15 == 0:
-                self.presence_mgr.reap_exited_sessions()
-
-            # Alerts evaluation (Only triggered when camera has active hardware stream!)
-            for breached_cow in result.breaches_detected:
-                self.alert_engine.trigger_alert(
-                    camera_id=self.camera_id,
-                    zone_name=self.name,
-                    alert_type="GEOFENCE_BREACH",
-                    severity="CRITICAL",
-                    message=f"Cattle #{breached_cow.track_id} ({breached_cow.label}) breached perimeter!",
-                    frame=raw_frame,
-                    highlight_box=breached_cow.bbox,
-                    entity_id=str(breached_cow.track_id),
-                    details={"track_id": breached_cow.track_id, "zone": breached_cow.current_zone}
-                )
-
-            for prostrated_cow in result.prostrations_detected:
-                self.alert_engine.trigger_alert(
-                    camera_id=self.camera_id,
-                    zone_name=self.name,
-                    alert_type="PROSTRATION_DISTRESS",
-                    severity="CRITICAL",
-                    message=f"Cattle #{prostrated_cow.track_id} ({prostrated_cow.label}) motionless for {int(prostrated_cow.inactivity_duration)}s!",
-                    frame=raw_frame,
-                    highlight_box=prostrated_cow.bbox,
-                    entity_id=str(prostrated_cow.track_id),
-                    details={"track_id": prostrated_cow.track_id, "duration": prostrated_cow.inactivity_duration}
-                )
-
-            if result.overcrowding_detected:
-                feeder_zone = self.analytics.spatial.feeder_zone
-                max_cap = feeder_zone.max_capacity if feeder_zone else 4
-                self.alert_engine.trigger_alert(
-                    camera_id=self.camera_id,
-                    zone_name=self.name,
-                    alert_type="FEEDER_OVERCROWDING",
-                    severity="WARNING",
-                    message=f"Feed trough density alert: {result.feeder_count} cattle crowding (limit: {max_cap})",
-                    frame=raw_frame,
-                    entity_id="feeder",
-                    details={"count": result.feeder_count, "capacity": max_cap}
-                )
-
-            # Render frame with clean, professional, uncluttered overlays
-            processed = self._render_overlay_frame(raw_frame, result)
-
-            with self.lock:
-                self.latest_raw_frame = raw_frame
-                self.latest_processed_frame = processed
-                self.latest_result = result
+            except Exception as e:
+                logger.error(f"Error in {self.camera_id} processing loop: {e}", exc_info=True)
 
             time.sleep(0.035)
 
@@ -235,23 +254,44 @@ class CameraPipeline:
                 cv2.LINE_AA
             )
 
-        # 4. Minimal discreet top-right watermark
+        # 4. Top-left Live Entity Count HUD Banner (Cow & Worker counts)
+        hud_cow = f"CATTLE: {result.cattle_count}"
+        hud_worker = f"WORKERS: {result.worker_count}"
+        (cw, ch), _ = cv2.getTextSize(hud_cow, cv2.FONT_HERSHEY_SIMPLEX, 0.48, 1)
+        (ww, wh), _ = cv2.getTextSize(hud_worker, cv2.FONT_HERSHEY_SIMPLEX, 0.48, 1)
+        badge_w = cw + ww + 40
+        badge_h = max(ch, wh) + 14
+
+        cv2.rectangle(overlay_frame, (12, 10), (12 + badge_w, 10 + badge_h), (18, 26, 36), -1)
+        cv2.rectangle(overlay_frame, (12, 10), (12 + badge_w, 10 + badge_h), (60, 90, 115), 1, cv2.LINE_AA)
+
+        cv2.putText(overlay_frame, hud_cow, (20, 10 + badge_h - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (80, 230, 140), 1, cv2.LINE_AA)
+        cv2.putText(overlay_frame, "|", (20 + cw + 8, 10 + badge_h - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (140, 160, 180), 1, cv2.LINE_AA)
+        cv2.putText(overlay_frame, hud_worker, (20 + cw + 20, 10 + badge_h - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (40, 195, 250), 1, cv2.LINE_AA)
+
+        # 5. Minimal discreet top-right watermark
         time_str = time.strftime("%H:%M:%S")
         watermark_txt = f"{self.name} // {time_str}"
         cv2.putText(overlay_frame, watermark_txt, (w - 240, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (170, 185, 200), 1, cv2.LINE_AA)
 
         return overlay_frame
 
-    def get_jpeg_frame(self, overlay: bool = True, quality: int = 70) -> Optional[bytes]:
+    def get_jpeg_frame(self, overlay: bool = True, quality: int = 65) -> Optional[bytes]:
         with self.lock:
+            if overlay and self.latest_jpeg_bytes is not None:
+                return self.latest_jpeg_bytes
             frame = self.latest_processed_frame if overlay else self.latest_raw_frame
             if frame is None:
                 return None
-            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
-            ret, buf = cv2.imencode('.jpg', frame, encode_param)
-            if not ret:
-                return None
-            return buf.tobytes()
+            frame_copy = frame.copy()
+
+        h, w = frame_copy.shape[:2]
+        if w > 960:
+            scale = 960.0 / w
+            frame_copy = cv2.resize(frame_copy, (960, int(h * scale)), interpolation=cv2.INTER_LINEAR)
+        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
+        ret, buf = cv2.imencode('.jpg', frame_copy, encode_param)
+        return buf.tobytes() if ret else None
 
     def get_summary(self) -> Dict[str, Any]:
         with self.lock:
