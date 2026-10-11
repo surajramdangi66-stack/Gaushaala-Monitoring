@@ -29,8 +29,61 @@ const TRANSLATIONS = {
     nav_dashboard: "Dashboard",
     nav_cctv: "Live CCTV Feeds",
     nav_alerts: "AI Alerts",
+    nav_census: "Herd Census & Registry",
     nav_groq: "Groq AI Automation",
     role_supervisor: "Supervisor",
+    
+    // Census & Feeding
+    subtab_registry: "Cattle Registry",
+    subtab_census_audit: "05:00 & 17:00 IST Census Audit",
+    subtab_feeding: "Feeding Compliance & Troughs",
+    reg_headline: "Official Cattle Herd Registry",
+    reg_subtext: "Persistent database register of active cattle heads, identification tags, and assigned enclosures",
+    lbl_total_reg: "Total Registered",
+    lbl_active_herd: "Active Herd",
+    lbl_inactive_herd: "Inactive",
+    btn_register_cow: "+ Register Cattle",
+    th_tag_id: "Tag / RFID ID",
+    th_cow_name: "Name / Identifier",
+    th_cow_enclosure: "Enclosure",
+    th_cow_breed: "Breed",
+    th_cow_status: "Status",
+    th_cow_registered_at: "Registered Date",
+    th_cow_actions: "Actions",
+    census_audit_title: "Automated Herd Census Verification",
+    census_audit_desc: "Daily verified optical counts at 05:00 AM & 05:00 PM (Asia/Kolkata) comparing live YOLOv8 tracks against registered herd",
+    btn_run_diag_census: "⚡ Run Diagnostic Census",
+    lbl_next_run: "Next Scheduled:",
+    lbl_expected_herd: "Registered Active Herd",
+    lbl_expected_hint: "Database baseline",
+    lbl_detected_count: "Verified Detected Count",
+    lbl_detected_hint: "Aggregated stable tracks",
+    lbl_difference: "Variance / Difference",
+    lbl_diff_hint: "Detected vs Expected",
+    lbl_last_executed: "Last Census Execution",
+    lbl_auto_scheduler: "Automated background job",
+    th_census_history: "Census Audit History Log",
+    th_census_history_sub: "Tamper-evident record of all automated scheduled and diagnostic headcounts",
+    th_session_id: "Session ID",
+    th_scheduled: "Target Time",
+    th_executed_at: "Executed (UTC/IST)",
+    th_expected: "Expected",
+    th_detected: "Detected",
+    th_status: "Result Status",
+    feeding_headline: "Feeding Compliance & Trough Surveillance",
+    feeding_subtext: "Daily 10:00 AM feeding deadline compliance, feeder ROI inspection, and missed-ration alerts",
+    btn_inspect_feeding: "🔍 Check Feeding Compliance Now",
+    th_feed_schedules: "Configured Feeding Schedules",
+    th_feed_observations: "Recent Feeding Observations",
+    modal_reg_cattle_title: "Register Cattle Head",
+    modal_reg_cattle_sub: "Add a verified cow or calf to the official Gaushala registry",
+    lbl_tag_id: "Ear Tag / Collar RFID *",
+    lbl_cow_name: "Name / Cow Identifier (Optional)",
+    lbl_cow_enclosure: "Assigned Pen / Camera *",
+    lbl_cow_breed: "Breed",
+    lbl_cow_notes: "Health / Identification Notes",
+    btn_save_cattle: "Save to Official Registry",
+    btn_cancel: "Cancel",
     
     // Dashboard KPIs
     metric_total_title: "Total Live Cattle Census",
@@ -139,8 +192,61 @@ const TRANSLATIONS = {
     nav_dashboard: "डैशबोर्ड",
     nav_cctv: "लाइव सीसीटीवी",
     nav_alerts: "ए.आई. अलर्ट",
+    nav_census: "गोवंश जनगणना एवं रजिस्टर",
     nav_groq: "ग्रोक ए.आई. स्वचालन",
     role_supervisor: "पर्यवेक्षक",
+    
+    // Census & Feeding
+    subtab_registry: "गोवंश रजिस्टर",
+    subtab_census_audit: "05:00 एवं 17:00 जनगणना ऑडिट",
+    subtab_feeding: "चारा अनुपालन एवं हौदी",
+    reg_headline: "आधिकारिक गोवंश रजिस्टर",
+    reg_subtext: "सक्रिय गोवंश, पहचान टैग एवं बाड़े का स्थायी डेटाबेस रजिस्टर",
+    lbl_total_reg: "कुल पंजीकृत",
+    lbl_active_herd: "सक्रिय गोवंश",
+    lbl_inactive_herd: "निष्क्रिय",
+    btn_register_cow: "+ नया गोवंश पंजीकृत करें",
+    th_tag_id: "टैग / आरएफआईडी",
+    th_cow_name: "नाम / पहचान",
+    th_cow_enclosure: "बाड़ा / शेड",
+    th_cow_breed: "नस्ल",
+    th_cow_status: "स्थिति",
+    th_cow_registered_at: "पंजीकरण तिथि",
+    th_cow_actions: "कार्रवाई",
+    census_audit_title: "स्वचालित गोवंश जनगणना सत्यापन",
+    census_audit_desc: "प्रतिदिन सुबह 05:00 और शाम 05:00 बजे लाइव YOLOv8 ट्रैकिंग द्वारा पंजीकृत गोवंश का सत्यापन",
+    btn_run_diag_census: "⚡ त्वरित नैदानिक जनगणना चलाएं",
+    lbl_next_run: "अगली अनुसूचित गणना:",
+    lbl_expected_herd: "पंजीकृत सक्रिय गोवंश",
+    lbl_expected_hint: "डेटाबेस आधार",
+    lbl_detected_count: "सत्यापित गोवंश संख्या",
+    lbl_detected_hint: "स्थिर कैमरा ट्रैक्स",
+    lbl_difference: "अंतर / विचलन",
+    lbl_diff_hint: "सत्यापित बनाम अपेक्षित",
+    lbl_last_executed: "पिछली जनगणना समय",
+    lbl_auto_scheduler: "स्वचालित पृष्ठभूमि कार्य",
+    th_census_history: "जनगणना ऑडिट इतिहास",
+    th_census_history_sub: "सभी स्वचालित और नैदानिक जनगणना का स्थायी ऑडिट रिकॉर्ड",
+    th_session_id: "सत्र आईडी",
+    th_scheduled: "निर्धारित समय",
+    th_executed_at: "निष्पादन समय",
+    th_expected: "अपेक्षित",
+    th_detected: "सत्यापित",
+    th_status: "परिणाम स्थिति",
+    feeding_headline: "चारा अनुपालन एवं नांद निगरानी",
+    feeding_subtext: "प्रतिदिन 10:00 बजे तक चारा वितरण अनुपालन एवं अलर्ट प्रणाली",
+    btn_inspect_feeding: "🔍 चारा अनुपालन जांचें",
+    th_feed_schedules: "निर्धारित चारा समय सारिणी",
+    th_feed_observations: "हालिया चारा निरीक्षण",
+    modal_reg_cattle_title: "गोवंश पंजीकरण",
+    modal_reg_cattle_sub: "आधिकारिक गौशाला रजिस्टर में गोवंश जोड़ें",
+    lbl_tag_id: "कान का टैग / आरएफआईडी *",
+    lbl_cow_name: "नाम / पहचान (वैकल्पिक)",
+    lbl_cow_enclosure: "निर्धारित बाड़ा / कैमरा *",
+    lbl_cow_breed: "नस्ल",
+    lbl_cow_notes: "स्वास्थ्य / पहचान विवरण",
+    btn_save_cattle: "आधिकारिक रजिस्टर में सहेजें",
+    btn_cancel: "रद्द करें",
     
     // Dashboard KPIs
     metric_total_title: "कुल जीवित गोवंश संख्या",
@@ -415,6 +521,10 @@ function switchTab(tabId) {
     MonitorModule.startVisibleStreams();
   } else if (tabId === 'dashboard') {
     DashboardModule.refreshDashboard();
+  } else if (tabId === 'census') {
+    if (typeof CensusModule !== 'undefined') {
+      CensusModule.init();
+    }
   } else if (tabId === 'ai') {
     AiModule.checkStatus();
   }
@@ -429,6 +539,10 @@ function updateTopBarTitle(tabId) {
     dashboard: {
       en: { title: "Dashboard Overview", desc: "Real-time cattle census and facility monitoring" },
       hi: { title: "गौशाला डैशबोर्ड सारांश", desc: "वास्तविक समय गोवंश जनगणना एवं बाड़ा टेलीमेट्री" }
+    },
+    census: {
+      en: { title: "Herd Census & Registry", desc: "Official database cattle register, 05:00/17:00 IST automated audit & feeding compliance" },
+      hi: { title: "गोवंश जनगणना एवं रजिस्टर", desc: "आधिकारिक गोवंश रजिस्टर, 05:00/17:00 बजे स्वचालित गणना एवं चारा अनुपालन" }
     },
     monitor: {
       en: { title: "Live CCTV Surveillance", desc: "Optical multi-camera AI ingestion and activity grid" },
@@ -531,6 +645,9 @@ function initAppSession() {
   MonitorModule.init();
   AlertsModule.init();
   AiModule.init();
+  if (typeof CensusModule !== 'undefined') {
+    CensusModule.init();
+  }
 }
 
 // App DOM Bootstrap

@@ -29,20 +29,20 @@ class CattleDetector:
             logger.error(f"Failed to initialize YOLO model: {e}")
             self.model = None
 
-    def detect(self, frame: np.ndarray, conf_threshold: float = DETECTION_CONF_THRESHOLD) -> List[Dict[str, Any]]:
+    def detect(self, frame: np.ndarray, conf_threshold: float = DETECTION_CONF_THRESHOLD, cow_only: bool = True) -> List[Dict[str, Any]]:
         """
         Runs YOLOv8 detection on an image frame (BGR format from cv2).
-        Returns bounding boxes filtered for livestock / cattle.
+        Returns bounding boxes filtered for cow class (COCO 19) strictly when cow_only=True.
+        Rejects sheep (18) and horse (17) from cow census calculations.
         """
         if self.model is None or frame is None or frame.size == 0:
             return []
 
         try:
-            # We filter classes for cow (19), sheep (18), horse (17), dog (16)
-            # COCO: 19 = cow, 18 = sheep, 17 = horse
+            target_classes = [COCO_COW_CLASS_ID] if cow_only else [19, 18, 17]
             results = self.model.predict(
                 source=frame,
-                classes=[19, 18, 17],
+                classes=target_classes,
                 conf=conf_threshold,
                 verbose=False,
                 imgsz=640
@@ -53,14 +53,22 @@ class CattleDetector:
                 boxes = results[0].boxes
                 for box in boxes:
                     cls_id = int(box.cls[0].item())
+                    # Strict validation: reject non-cow if cow_only requested
+                    if cow_only and cls_id != COCO_COW_CLASS_ID:
+                        continue
+
                     conf = float(box.conf[0].item())
                     xyxy = box.xyxy[0].tolist()
+                    w = xyxy[2] - xyxy[0]
+                    h = xyxy[3] - xyxy[1]
+                    if w <= 1.0 or h <= 1.0:
+                        continue
 
                     detections.append({
                         "bbox": [round(float(c), 1) for c in xyxy],
                         "conf": round(conf, 2),
                         "class_id": cls_id,
-                        "class_name": "cattle" if cls_id == 19 else "livestock"
+                        "class_name": "cattle" if cls_id == COCO_COW_CLASS_ID else "livestock"
                     })
             return detections
         except Exception as e:

@@ -114,10 +114,34 @@ async def websocket_telemetry(websocket: WebSocket, token: str = Query(None)):
                     new_alert = latest_alerts[0]
                     last_alert_id = current_top_id
 
+            # Fetch latest census record & active herd count
+            census_summary = None
+            try:
+                from backend.app.db.database import SessionLocal
+                from backend.app.db.models import CensusRecordModel, CattleModel
+                db = SessionLocal()
+                try:
+                    latest_rec = db.query(CensusRecordModel).order_by(CensusRecordModel.executed_at.desc()).first()
+                    active_cattle_count = db.query(CattleModel).filter(CattleModel.status == "active").count()
+                    census_summary = {
+                        "registered_herd": active_cattle_count,
+                        "latest_status": latest_rec.status if latest_rec else "PENDING",
+                        "expected_count": latest_rec.expected_count if latest_rec else active_cattle_count,
+                        "detected_count": latest_rec.detected_count if latest_rec else None,
+                        "difference": latest_rec.difference if latest_rec else 0,
+                        "last_executed_at": latest_rec.executed_at if latest_rec else None,
+                        "scheduled_time": latest_rec.scheduled_time if latest_rec else None
+                    }
+                finally:
+                    db.close()
+            except Exception:
+                pass
+
             payload = {
                 "type": "telemetry",
                 "metrics": metrics,
-                "latest_alert": new_alert
+                "latest_alert": new_alert,
+                "census": census_summary
             }
             await websocket.send_json(payload)
             await asyncio.sleep(1.0)  # Telemetry pulse every 1 second

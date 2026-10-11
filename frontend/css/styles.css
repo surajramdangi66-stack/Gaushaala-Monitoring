@@ -2807,3 +2807,410 @@ body {
 .toast-critical svg { stroke: var(--rose); }
 .toast-warning { border-left: 4px solid var(--amber); }
 .toast-warning svg { stroke: var(--amber); }
+
+/* =========================================================================
+   6. HERD CENSUS, REGISTRY & FEEDING COMPLIANCE STYLES
+   ========================================================================= */
+.census-view-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.census-subtabs-bar {
+  display: flex;
+  gap: 0.5rem;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 0.4rem;
+  box-shadow: var(--shadow-sm);
+  width: fit-content;
+}
+
+.census-subtab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.15rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.census-subtab-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.census-subtab-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-subtle);
+}
+
+.census-subtab-btn.active {
+  background-color: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(22, 101, 52, 0.18);
+}
+
+.census-subtab-btn.active svg {
+  stroke: #ffffff;
+}
+
+.census-subtab-panel {
+  display: none;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.census-subtab-panel.active {
+  display: flex;
+}
+
+.census-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.panel-headline {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.panel-subtext {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.header-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.summary-chips-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.summary-chip {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.4rem 0.85rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.summary-chip .chip-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.summary-chip .chip-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.summary-chip.chip-emerald {
+  border-color: var(--emerald-border);
+  background-color: var(--emerald-subtle);
+}
+
+.summary-chip.chip-muted {
+  background-color: var(--bg-subtle);
+}
+
+.registry-filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 0.65rem 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.search-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1;
+  max-width: 420px;
+}
+
+.search-input-wrap svg {
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.table-search-input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 0.85rem;
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.filter-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.filter-select {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.82rem;
+  width: auto;
+}
+
+.modern-table-wrap {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Census Banner Card */
+.census-banner-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.banner-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.banner-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-top: 0.4rem;
+}
+
+.banner-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  max-width: 650px;
+  margin-top: 0.2rem;
+  line-height: 1.4;
+}
+
+.banner-action-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.next-run-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.next-run-text strong {
+  color: var(--primary);
+}
+
+.census-status-pill {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+}
+
+.census-status-pill.status-match {
+  background-color: var(--emerald-subtle);
+  color: var(--emerald);
+  border: 1px solid var(--emerald-border);
+}
+
+.census-status-pill.status-shortfall {
+  background-color: var(--rose-subtle);
+  color: var(--rose);
+  border: 1px solid var(--rose-border);
+}
+
+.census-status-pill.status-excess {
+  background-color: var(--amber-subtle);
+  color: var(--amber);
+  border: 1px solid var(--amber-border);
+}
+
+.census-status-pill.status-unverified {
+  background-color: var(--bg-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+}
+
+.census-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  background-color: var(--bg-subtle);
+  padding: 1.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.census-kpi-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.kpi-meta {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.kpi-number {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  line-height: 1.1;
+}
+
+.kpi-val-text {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.kpi-hint {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.census-shifts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.shift-card {
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.shift-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.shift-icon {
+  font-size: 1.4rem;
+}
+
+.shift-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.shift-card-body {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.history-section-header {
+  margin-top: 0.5rem;
+}
+
+.history-headline {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.history-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Feeding Layout Grid */
+.feeding-layout-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 1.25rem;
+}
+
+.modern-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-title-row h4 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.text-emerald {
+  color: var(--emerald) !important;
+}
+
+.cattle-modal-card {
+  max-width: 480px;
+}

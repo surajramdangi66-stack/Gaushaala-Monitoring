@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 import jwt
-from fastapi import HTTPException, Security, status, Depends
+from fastapi import HTTPException, Security, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from backend.app.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, DEFAULT_USERS
+from backend.app.db.database import SessionLocal
+from backend.app.db.models import UserModel
 
 security = HTTPBearer(auto_error=False)
 
@@ -11,12 +13,35 @@ def verify_password(plain_password: str, stored_password: str) -> bool:
     return plain_password == stored_password
 
 def authenticate_user(username: str, password: str) -> Optional[Dict[str, Any]]:
+    # First, query database
+    try:
+        db = SessionLocal()
+        try:
+            db_user = db.query(UserModel).filter(UserModel.username == username).first()
+            if db_user:
+                if verify_password(password, db_user.password_hash):
+                    return {
+                        "username": db_user.username,
+                        "full_name": db_user.full_name,
+                        "role": db_user.role
+                    }
+                return None
+        finally:
+            db.close()
+    except Exception:
+        pass
+
+    # Fallback to configured defaults
     user = DEFAULT_USERS.get(username)
     if not user:
         return None
     if not verify_password(password, user["password_hash"]):
         return None
-    return user
+    return {
+        "username": user["username"],
+        "full_name": user["full_name"],
+        "role": user["role"]
+    }
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
@@ -40,9 +65,27 @@ def get_user_from_token(token: str) -> Optional[Dict[str, Any]]:
     if payload is None:
         return None
     username = payload.get("sub")
-    if not username or username not in DEFAULT_USERS:
+    if not username:
         return None
-    return DEFAULT_USERS[username]
+
+    try:
+        db = SessionLocal()
+        try:
+            db_user = db.query(UserModel).filter(UserModel.username == username).first()
+            if db_user:
+                return {
+                    "username": db_user.username,
+                    "full_name": db_user.full_name,
+                    "role": db_user.role
+                }
+        finally:
+            db.close()
+    except Exception:
+        pass
+
+    if username in DEFAULT_USERS:
+        return DEFAULT_USERS[username]
+    return None
 
 def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] = Security(security)) -> Dict[str, Any]:
     if not credentials:

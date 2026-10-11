@@ -210,6 +210,14 @@
           <span class="tab-badge" id="alert-tab-badge" style="display:none;">0</span>
         </button>
 
+        <button class="nav-item-btn" data-tab="census" id="tab-census-btn" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 11l3 3L22 4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+          <span data-i18n="nav_census">Herd Census & Registry</span>
+        </button>
+
         <button class="nav-item-btn nav-item-ai" data-tab="ai" id="tab-ai-btn" role="tab" aria-selected="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
@@ -615,6 +623,255 @@
             </div>
 
           </div>
+        <!-- =====================================================================
+             TAB 5: HERD CENSUS, REGISTRY & FEEDING COMPLIANCE
+             ===================================================================== -->
+        <section class="view-panel" id="census-view" role="tabpanel" aria-labelledby="tab-census-btn">
+          <div class="census-view-container">
+            
+            <!-- Sub-tab Navigation Bar -->
+            <div class="census-subtabs-bar">
+              <button class="census-subtab-btn active" data-subtab="registry" id="subtab-btn-registry">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                <span data-i18n="subtab_registry">Cattle Registry</span>
+              </button>
+              <button class="census-subtab-btn" data-subtab="audit" id="subtab-btn-audit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+                <span data-i18n="subtab_census_audit">05:00 & 17:00 IST Census Audit</span>
+              </button>
+              <button class="census-subtab-btn" data-subtab="feeding" id="subtab-btn-feeding">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+                <span data-i18n="subtab_feeding">Feeding Compliance & Troughs</span>
+              </button>
+            </div>
+
+            <!-- SUBPANEL 1: CATTLE REGISTRY -->
+            <div class="census-subtab-panel active" id="subtab-registry">
+              <div class="census-panel-header">
+                <div>
+                  <h3 class="panel-headline" data-i18n="reg_headline">Official Cattle Herd Registry</h3>
+                  <p class="panel-subtext" data-i18n="reg_subtext">Persistent database register of active cattle heads, identification tags, and assigned enclosures</p>
+                </div>
+                <div class="header-actions-row">
+                  <div class="summary-chips-group">
+                    <div class="summary-chip">
+                      <span class="chip-label" data-i18n="lbl_total_reg">Total Registered</span>
+                      <strong class="chip-val" id="reg-total-cows">0</strong>
+                    </div>
+                    <div class="summary-chip chip-emerald">
+                      <span class="chip-label" data-i18n="lbl_active_herd">Active Herd</span>
+                      <strong class="chip-val text-emerald" id="reg-active-cows">0</strong>
+                    </div>
+                    <div class="summary-chip chip-muted">
+                      <span class="chip-label" data-i18n="lbl_inactive_herd">Inactive</span>
+                      <strong class="chip-val" id="reg-inactive-cows">0</strong>
+                    </div>
+                  </div>
+                  <button class="btn-primary" id="btn-open-add-cattle">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span data-i18n="btn_register_cow">+ Register Cattle</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Registry Search & Filter Controls -->
+              <div class="registry-filter-bar">
+                <div class="search-input-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="text" class="table-search-input" id="cattle-search-input" placeholder="Search by Tag ID, Name, or Breed..." data-i18n-ph="ph_search_cattle" />
+                </div>
+                <div class="filter-controls-right">
+                  <select class="form-select filter-select" id="cattle-status-filter" title="Filter by status">
+                    <option value="">All Statuses</option>
+                    <option value="active">Active Only</option>
+                    <option value="inactive">Inactive Only</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Cattle Registry Table -->
+              <div class="modern-table-wrap">
+                <table class="modern-table">
+                  <thead>
+                    <tr>
+                      <th data-i18n="th_tag_id">Tag / RFID ID</th>
+                      <th data-i18n="th_cow_name">Name / Identifier</th>
+                      <th data-i18n="th_cow_enclosure">Enclosure</th>
+                      <th data-i18n="th_cow_breed">Breed</th>
+                      <th data-i18n="th_cow_status">Status</th>
+                      <th data-i18n="th_cow_registered_at">Registered Date</th>
+                      <th data-i18n="th_cow_actions">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cattle-registry-tbody">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- SUBPANEL 2: 05:00 & 17:00 IST CENSUS AUDIT -->
+            <div class="census-subtab-panel" id="subtab-audit">
+              <div class="census-banner-card">
+                <div class="banner-top-row">
+                  <div>
+                    <div class="d-flex items-center gap-2">
+                      <span class="census-status-pill status-unverified" id="census-latest-status-pill">PENDING SCHEDULE</span>
+                      <span class="status-pill pill-active" id="census-cam-status-pill">Camera Online</span>
+                    </div>
+                    <h3 class="banner-title" data-i18n="census_audit_title">Automated Herd Census Verification</h3>
+                    <p class="banner-desc" data-i18n="census_audit_desc">Daily verified optical counts at 05:00 AM & 05:00 PM (Asia/Kolkata) comparing live YOLOv8 tracks against registered herd</p>
+                  </div>
+                  <div class="banner-action-col">
+                    <button class="btn-primary" id="btn-run-census-diagnostic">
+                      <span data-i18n="btn_run_diag_census">⚡ Run Diagnostic Census</span>
+                    </button>
+                    <span class="next-run-text"><span data-i18n="lbl_next_run">Next Scheduled:</span> <strong id="census-next-scheduled-time">05:00 / 17:00 IST</strong></span>
+                  </div>
+                </div>
+
+                <div class="census-kpi-row">
+                  <div class="census-kpi-item">
+                    <div class="kpi-meta" data-i18n="lbl_expected_herd">Registered Active Herd</div>
+                    <div class="kpi-number" id="census-registered-count">0</div>
+                    <div class="kpi-hint" data-i18n="lbl_expected_hint">Database baseline</div>
+                  </div>
+                  <div class="census-kpi-item">
+                    <div class="kpi-meta" data-i18n="lbl_detected_count">Verified Detected Count</div>
+                    <div class="kpi-number" id="census-detected-count">—</div>
+                    <div class="kpi-hint" data-i18n="lbl_detected_hint">Aggregated stable tracks</div>
+                  </div>
+                  <div class="census-kpi-item">
+                    <div class="kpi-meta" data-i18n="lbl_difference">Variance / Difference</div>
+                    <div class="kpi-number" id="census-diff-count">—</div>
+                    <div class="kpi-hint" data-i18n="lbl_diff_hint">Detected vs Expected</div>
+                  </div>
+                  <div class="census-kpi-item">
+                    <div class="kpi-meta" data-i18n="lbl_last_executed">Last Census Execution</div>
+                    <div class="kpi-val-text" id="census-last-executed-time">—</div>
+                    <div class="kpi-hint" data-i18n="lbl_auto_scheduler">Automated background job</div>
+                  </div>
+                </div>
+
+                <!-- Shift Session Breakdown Cards -->
+                <div class="census-shifts-grid">
+                  <div class="shift-card">
+                    <div class="shift-card-header">
+                      <span class="shift-icon">🌅</span>
+                      <div>
+                        <strong>Morning Census (05:00 AM IST)</strong>
+                        <div class="shift-sub">Mandatory dawn turnout audit</div>
+                      </div>
+                    </div>
+                    <div id="census-morning-status" class="shift-card-body">
+                      <span class="text-muted">Awaiting scheduled 05:00 AM run</span>
+                    </div>
+                  </div>
+                  <div class="shift-card">
+                    <div class="shift-card-header">
+                      <span class="shift-icon">🌇</span>
+                      <div>
+                        <strong>Evening Census (05:00 PM IST)</strong>
+                        <div class="shift-sub">Mandatory dusk lock-in audit</div>
+                      </div>
+                    </div>
+                    <div id="census-evening-status" class="shift-card-body">
+                      <span class="text-muted">Awaiting scheduled 17:00 PM run</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Historical Census Log Table -->
+              <div class="history-section-header">
+                <h4 class="history-headline" data-i18n="th_census_history">Census Audit History Log</h4>
+                <p class="history-sub" data-i18n="th_census_history_sub">Tamper-evident record of all automated scheduled and diagnostic headcounts</p>
+              </div>
+              <div class="modern-table-wrap">
+                <table class="modern-table">
+                  <thead>
+                    <tr>
+                      <th data-i18n="th_session_id">Session ID</th>
+                      <th data-i18n="th_enclosure">Enclosure</th>
+                      <th data-i18n="th_scheduled">Target Time</th>
+                      <th data-i18n="th_executed_at">Executed (UTC/IST)</th>
+                      <th data-i18n="th_expected">Expected</th>
+                      <th data-i18n="th_detected">Detected</th>
+                      <th data-i18n="th_status">Result Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="census-history-tbody">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- SUBPANEL 3: FEEDING COMPLIANCE & TROUGHS -->
+            <div class="census-subtab-panel" id="subtab-feeding">
+              <div class="census-panel-header">
+                <div>
+                  <h3 class="panel-headline" data-i18n="feeding_headline">Feeding Compliance & Trough Surveillance</h3>
+                  <p class="panel-subtext" data-i18n="feeding_subtext">Daily 10:00 AM feeding deadline compliance, feeder ROI inspection, and missed-ration alerts</p>
+                </div>
+                <div class="header-actions-row">
+                  <button class="btn-primary" id="btn-run-feeding-check">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <span data-i18n="btn_inspect_feeding">🔍 Check Feeding Compliance Now</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="feeding-layout-grid">
+                <!-- Configured Schedules Card -->
+                <div class="modern-card">
+                  <div class="card-title-row">
+                    <h4 data-i18n="th_feed_schedules">Configured Feeding Schedules</h4>
+                  </div>
+                  <div class="modern-table-wrap">
+                    <table class="modern-table">
+                      <thead>
+                        <tr>
+                          <th>Trough Area</th>
+                          <th>Camera</th>
+                          <th>Target Time</th>
+                          <th>Active</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody id="feeding-schedules-tbody">
+                        <!-- Populated dynamically -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Recent Compliance Observations Card -->
+                <div class="modern-card">
+                  <div class="card-title-row">
+                    <h4 data-i18n="th_feed_observations">Recent Feeding Observations</h4>
+                  </div>
+                  <div class="modern-table-wrap">
+                    <table class="modern-table">
+                      <thead>
+                        <tr>
+                          <th>Trough</th>
+                          <th>Timestamp</th>
+                          <th>Status</th>
+                          <th>Diagnostic Details</th>
+                          <th>Alert</th>
+                        </tr>
+                      </thead>
+                      <tbody id="feeding-observations-tbody">
+                        <!-- Populated dynamically -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </section>
 
       </main>
@@ -755,6 +1012,76 @@
     </div>
   </div>
 
+  <!-- Cattle Registration Modal -->
+  <div class="modal-overlay" id="cattle-modal">
+    <div class="modal-card cattle-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge icon-emerald">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="modal-title" data-i18n="modal_reg_cattle_title">Register Cattle Head</h2>
+            <p class="modal-subtitle" data-i18n="modal_reg_cattle_sub">Add a verified cow or calf to the official Gaushala registry</p>
+          </div>
+        </div>
+        <button class="btn-icon" id="close-cattle-modal-btn" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <form id="cattle-registration-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="cow-tag-id" class="form-label" data-i18n="lbl_tag_id">Ear Tag / Collar RFID *</label>
+            <input type="text" class="form-input font-mono" id="cow-tag-id" placeholder="e.g. IN-DL-001 or RFID-9021" required />
+          </div>
+
+          <div class="form-group">
+            <label for="cow-name" class="form-label" data-i18n="lbl_cow_name">Name / Cow Identifier (Optional)</label>
+            <input type="text" class="form-input" id="cow-name" placeholder="e.g. Nandini, Gauri, Krishna" />
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="cow-enclosure" class="form-label" data-i18n="lbl_cow_enclosure">Assigned Pen / Camera *</label>
+              <select class="form-select" id="cow-enclosure">
+                <option value="cam-01">Shed A - North Paddock (cam-01)</option>
+                <option value="cam-02">Shed B - Milking Barn (cam-02)</option>
+                <option value="cam-03">Shed C - Feed Lot (cam-03)</option>
+                <option value="cam-04">Shed D - Maternity Pen (cam-04)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="cow-breed" class="form-label" data-i18n="lbl_cow_breed">Breed</label>
+              <input type="text" class="form-input" id="cow-breed" value="Gir / Indigenous" placeholder="e.g. Gir, Sahiwal, Tharparkar" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="cow-notes" class="form-label" data-i18n="lbl_cow_notes">Health / Identification Notes</label>
+            <textarea class="form-textarea" id="cow-notes" rows="2" placeholder="Distinctive markings, age, health status..."></textarea>
+          </div>
+
+          <div class="modal-footer-actions">
+            <button type="button" class="btn-tool" id="cancel-cattle-modal-btn" data-i18n="btn_cancel">Cancel</button>
+            <button type="submit" class="btn-primary" id="submit-cattle-reg-btn">
+              <span data-i18n="btn_save_cattle">Save to Official Registry</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast-container"></div>
 
@@ -764,6 +1091,7 @@
   <script src="/static/js/monitor.js"></script>
   <script src="/static/js/alerts.js"></script>
   <script src="/static/js/ai.js"></script>
+  <script src="/static/js/census.js"></script>
   <script src="/static/js/app.js"></script>
 </body>
 </html>

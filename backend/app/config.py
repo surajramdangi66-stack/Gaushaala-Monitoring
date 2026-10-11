@@ -140,6 +140,10 @@ COCO_COW_CLASS_ID = 19
 DETECTION_CONF_THRESHOLD = 0.35
 IOU_TRACKER_THRESHOLD = 0.45
 
+# Pluggable Feed / Fodder Detection Settings
+FEED_MODEL_PATH = os.getenv("FEED_MODEL_PATH", "")
+FEED_DETECTION_CONF = float(os.getenv("FEED_DETECTION_CONF", "0.40"))
+
 # Alert Engine Constraints
 PROLONGED_INACTIVITY_THRESHOLD_SECONDS = 18.0  # Demonstrable prostration threshold in demo/runtime
 OVERCROWDING_THRESHOLD_DEFAULT = 4
