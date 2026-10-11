@@ -30,7 +30,10 @@ const TRANSLATIONS = {
     nav_cctv: "Live CCTV Feeds",
     nav_alerts: "AI Alerts",
     nav_census: "Herd Census & Registry",
+    nav_zones: "ROI Zone Editor",
     nav_groq: "Groq AI Automation",
+    zone_editor_title: "Interactive ROI Polygon Zone Editor",
+    zone_editor_desc: "Draw and configure virtual Geofence Boundaries, Feeder Troughs, and Quarantine Wards directly on live camera feeds",
     role_supervisor: "Supervisor",
     
     // Census & Feeding
@@ -193,7 +196,10 @@ const TRANSLATIONS = {
     nav_cctv: "लाइव सीसीटीवी",
     nav_alerts: "ए.आई. अलर्ट",
     nav_census: "गोवंश जनगणना एवं रजिस्टर",
+    nav_zones: "ज़ोन संपादक (ROI)",
     nav_groq: "ग्रोक ए.आई. स्वचालन",
+    zone_editor_title: "इंटरैक्टिव पॉलीगॉन ज़ोन संपादक (ROI)",
+    zone_editor_desc: "लाइव सीसीटीवी फीड पर सीधे बाड़ा सीमा, चारा चरणी और चिकित्सा वार्ड ड्रा करें",
     role_supervisor: "पर्यवेक्षक",
     
     // Census & Feeding
@@ -525,6 +531,10 @@ function switchTab(tabId) {
     if (typeof CensusModule !== 'undefined') {
       CensusModule.init();
     }
+  } else if (tabId === 'zones') {
+    if (typeof ZoneEditorModule !== 'undefined') {
+      ZoneEditorModule.init();
+    }
   } else if (tabId === 'ai') {
     AiModule.checkStatus();
   }
@@ -551,6 +561,10 @@ function updateTopBarTitle(tabId) {
     alerts: {
       en: { title: "AI Alerts & Distress Registry", desc: "Active behavioural anomalies and clinical logs" },
       hi: { title: "ए.आई. सतर्कता एवं संकट रजिस्टर", desc: "सक्रिय व्यवहारिक विसंगतियां एवं पशु चिकित्सा रिकॉर्ड" }
+    },
+    zones: {
+      en: { title: "ROI Polygon Zone Editor", desc: "Interactive canvas editor for virtual boundaries, feeder troughs, and quarantine wards" },
+      hi: { title: "पॉलीगॉन ज़ोन संपादक (ROI)", desc: "बाड़ा सीमा, चारा चरणी और पृथक वार्ड के लिए इंटरैक्टिव कैनवास संपादक" }
     },
     ai: {
       en: { title: "Groq AI Health Intelligence", desc: "Ultra-fast LLaMA-3.3 livestock clinical reasoning" },
@@ -625,6 +639,9 @@ function initAppSession() {
     (data) => {
       if (data.type === 'telemetry') {
         DashboardModule.updateTelemetry(data.metrics);
+        if (data.detections) {
+          DashboardModule.updateDetections(data.detections);
+        }
         if (data.latest_alert) {
           AppState.unreadAlertsCount++;
           updateAlertBadge();

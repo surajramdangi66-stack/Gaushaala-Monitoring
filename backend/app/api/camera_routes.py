@@ -101,3 +101,55 @@ async def toggle_camera_yolo(camera_id: str, enabled: bool, current_user: Dict[s
         raise HTTPException(status_code=404, detail="Camera not found")
     pipeline.use_yolo_model = enabled
     return {"message": f"YOLO inference {'enabled' if enabled else 'disabled'} for {camera_id}"}
+
+@router.get("/{camera_id}/zones")
+async def get_camera_zones(camera_id: str, current_user: Dict[str, Any] = Depends(get_current_user)):
+    manager = get_stream_manager()
+    pipeline = manager.get_pipeline(camera_id)
+    if not pipeline:
+        raise HTTPException(status_code=404, detail="Camera not found")
+    return {
+        "camera_id": camera_id,
+        "name": pipeline.name,
+        "zones": pipeline.get_zones()
+    }
+
+@router.post("/{camera_id}/zones")
+async def update_camera_zones(
+    camera_id: str,
+    zones_payload: Dict[str, Any],
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    manager = get_stream_manager()
+    pipeline = manager.get_pipeline(camera_id)
+    if not pipeline:
+        raise HTTPException(status_code=404, detail="Camera not found")
+
+    # Validate and sanitize zones structure
+    zones = zones_payload.get("zones", zones_payload)
+    if not isinstance(zones, dict):
+        raise HTTPException(status_code=400, detail="Invalid zones format; expected dictionary")
+
+    success = manager.save_camera_zones(camera_id, zones)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to save camera zones to storage")
+
+    return {
+        "message": f"Zones for {camera_id} updated successfully",
+        "camera_id": camera_id,
+        "zones": pipeline.get_zones()
+    }
+
+@router.post("/{camera_id}/zones/reset")
+async def reset_camera_zones(camera_id: str, current_user: Dict[str, Any] = Depends(get_current_user)):
+    manager = get_stream_manager()
+    success = manager.reset_camera_zones(camera_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Failed to reset zones or camera not found")
+    pipeline = manager.get_pipeline(camera_id)
+    return {
+        "message": f"Zones for {camera_id} reset to factory defaults",
+        "camera_id": camera_id,
+        "zones": pipeline.get_zones()
+    }
+

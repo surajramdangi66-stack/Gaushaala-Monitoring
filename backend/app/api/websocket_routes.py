@@ -7,6 +7,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 from backend.app.auth import decode_token
 from backend.app.camera.stream_manager import get_stream_manager
 from backend.app.alerts.alert_engine import get_alert_engine
+from backend.app.vision.presence_manager import get_presence_manager
 
 logger = logging.getLogger("gaushala.websocket")
 router = APIRouter(tags=["WebSockets"])
@@ -141,7 +142,8 @@ async def websocket_telemetry(websocket: WebSocket, token: str = Query(None)):
                 "type": "telemetry",
                 "metrics": metrics,
                 "latest_alert": new_alert,
-                "census": census_summary
+                "census": census_summary,
+                "detections": get_presence_manager().get_live_data()
             }
             await websocket.send_json(payload)
             await asyncio.sleep(1.0)  # Telemetry pulse every 1 second

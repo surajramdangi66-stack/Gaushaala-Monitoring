@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gaushala-vision-worker
+  namespace: gaushala-surveillance
+  labels:
+    app.kubernetes.io/name: gaushala-vision-worker
+    app.kubernetes.io/part-of: smart-gaushala-enterprise
+spec:
+  replicas: 4
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: gaushala-vision-worker
+  template:
+    metadata:
+      labels:
+        app: gaushala-vision-worker
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - gaushala-vision-worker
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: vision-pipeline
+          image: gaushala-registry.nic.in/ai-vision:v2.4.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: EDGE_ZERO_TRUST_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: gaushala-security-secrets
+                  key: zero-trust-key
+            - name: POSTGRES_URL
+              valueFrom:
+                secretKeyRef:
+                  name: gaushala-db-secrets
+                  key: postgres-connection-string
+            - name: MODEL_WEIGHTS_PATH
+              value: "/opt/models/gaushala_yolo_best.pt"
+          resources:
+            requests:
+              cpu: "1500m"
+              memory: "2Gi"
+            limits:
+              cpu: "4000m"
+              memory: "6Gi"
+              nvidia.com/gpu: "1"
+          livenessProbe:
+            httpGet:
+              path: /api/ai/status
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/ai/status
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gaushala-go-gateway
+  namespace: gaushala-surveillance
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: gaushala-go-gateway
+  template:
+    metadata:
+      labels:
+        app: gaushala-go-gateway
+    spec:
+      containers:
+        - name: go-gateway
+          image: gaushala-registry.nic.in/go-gateway:v1.2.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: EDGE_ZERO_TRUST_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: gaushala-security-secrets
+                  key: zero-trust-key
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "1Gi"

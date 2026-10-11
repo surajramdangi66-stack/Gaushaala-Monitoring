@@ -1,0 +1,41 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# YOLOv8 Training artifacts, runs and checkpoints
+runs/
+*.pt.cache
+
+# Alert crops and temporary generated snapshots
+data/snapshots/*
+!data/snapshots/.gitkeep
+
+# Environment and sensitive local keys
+.env
+.env.local
+.env.*.local
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# IDE & OS temporary files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+
+# Local databases and datasets
+data/*.db
+data/*.db-journal
+data/dataset/
+data/dataset_breeds/

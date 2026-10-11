@@ -10,6 +10,8 @@ class FrameAnalysisResult:
     def __init__(self):
         self.tracks: List[TrackedCattle] = []
         self.total_count: int = 0
+        self.cattle_count: int = 0
+        self.worker_count: int = 0
         self.active_count: int = 0
         self.resting_count: int = 0
         self.feeder_count: int = 0
@@ -35,8 +37,8 @@ class CameraAnalyticsEngine:
         if frame is None or frame.size == 0:
             return result
 
-        # Run real YOLOv8 livestock detection on incoming video frame
-        detections = self.detector.detect(frame)
+        # Run real YOLOv8 detection for both workers and desi cattle (no static trough clutter)
+        detections = self.detector.detect(frame, include_workers=True)
 
         # Update multi-object tracker
         tracks = self.tracker.update(detections)
@@ -46,9 +48,19 @@ class CameraAnalyticsEngine:
         active = 0
         resting = 0
         feeder_cattle = 0
+        worker_count = 0
+        cattle_count = 0
         max_feeder_cap = self.spatial.feeder_zone.max_capacity if self.spatial.feeder_zone else 4
 
         for track in tracks:
+            # Check entity type
+            if track.is_worker or track.entity_type == "worker":
+                worker_count += 1
+                continue
+
+            # Cattle entity
+            cattle_count += 1
+
             # Spatial assignment
             track.current_zone = self.spatial.get_zone_name_for_point(track.cx, track.cy)
 
@@ -69,13 +81,15 @@ class CameraAnalyticsEngine:
             if is_breached:
                 result.breaches_detected.append(track)
 
-            # Prolonged inactivity / prostration check
+            # Prolonged inactivity / prostration check (> 18s in runtime)
             if track.activity_state == "resting" and track.inactivity_duration >= PROLONGED_INACTIVITY_THRESHOLD_SECONDS:
                 track.is_prostrated = True
                 result.prostrations_detected.append(track)
             else:
                 track.is_prostrated = False
 
+        result.cattle_count = cattle_count
+        result.worker_count = worker_count
         result.active_count = active
         result.resting_count = resting
         result.feeder_count = feeder_cattle
@@ -84,7 +98,8 @@ class CameraAnalyticsEngine:
         # Zone stats breakdown
         result.zone_breakdown = {
             self.camera_name: {
-                "total": result.total_count,
+                "total": cattle_count,
+                "workers": worker_count,
                 "active": result.active_count,
                 "resting": result.resting_count,
                 "feeder": result.feeder_count

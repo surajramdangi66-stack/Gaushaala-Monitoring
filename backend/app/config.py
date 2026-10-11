@@ -136,13 +136,32 @@ DEFAULT_CAMERAS: List[Dict[str, Any]] = [
 
 # AI Detection Parameters
 YOLO_MODEL_PATH = str(BASE_DIR / "yolov8n.pt")
+CUSTOM_GAUSHALA_MODEL_PATH = str(BASE_DIR / "backend" / "data" / "models" / "gaushala_yolo_best.pt")
+CUSTOM_FEED_MODEL_PATH = str(BASE_DIR / "backend" / "data" / "models" / "feed_best.pt")
 COCO_COW_CLASS_ID = 19
 DETECTION_CONF_THRESHOLD = 0.35
 IOU_TRACKER_THRESHOLD = 0.45
 
+# Desi Indian Cattle Breed & Infrastructure Classes Definition
+GAUSHALA_CLASSES = {
+    0: "gir_cow_standing",
+    1: "gir_cow_lying",
+    2: "sahiwal_cow_standing",
+    3: "sahiwal_cow_lying",
+    4: "rathi_cow_standing",
+    5: "tharparkar_cow_standing",
+    6: "kankrej_cow_standing",
+    7: "calf",
+    8: "feed_trough_full",
+    9: "feed_trough_empty",
+    10: "water_kund"
+}
+
 # Pluggable Feed / Fodder Detection Settings
 FEED_MODEL_PATH = os.getenv("FEED_MODEL_PATH", "")
 FEED_DETECTION_CONF = float(os.getenv("FEED_DETECTION_CONF", "0.40"))
+ZONES_CONFIG_FILE = BASE_DIR / "data" / "camera_zones.json"
+
 
 # Alert Engine Constraints
 PROLONGED_INACTIVITY_THRESHOLD_SECONDS = 18.0  # Demonstrable prostration threshold in demo/runtime

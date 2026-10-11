@@ -18,6 +18,7 @@ from backend.app.api.websocket_routes import router as ws_router
 from backend.app.api.cattle_routes import router as cattle_router
 from backend.app.api.census_routes import router as census_router
 from backend.app.api.feeding_routes import router as feeding_router
+from backend.app.api.detection_routes import router as detection_router
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 FRONTEND_DIR = BASE_DIR / "frontend"
@@ -69,6 +70,7 @@ app.include_router(ai_router)
 app.include_router(cattle_router)
 app.include_router(census_router)
 app.include_router(feeding_router)
+app.include_router(detection_router)
 app.include_router(ws_router)
 
 # Mount Frontend static files

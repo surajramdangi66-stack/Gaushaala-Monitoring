@@ -109,8 +109,8 @@ const MonitorModule = {
             <span class="hud-pill" style="font-size:0.65rem; color:var(--text-muted);">${cam.location || 'परिसर'}</span>
           </div>
           <div class="cam-health-badge">
-            <span class="pulse-dot-green"></span>
-            <span id="cam-status-${cam.id}">सक्रिय (ONLINE)</span>
+            <span class="${cam.status === 'online' ? 'pulse-dot-green' : 'pulse-dot-amber'}" style="${cam.status === 'online' ? '' : 'background:#94a3b8; box-shadow:none;'}"></span>
+            <span id="cam-status-${cam.id}">${cam.status === 'online' ? 'सक्रिय (ONLINE)' : 'स्टैंडबाय (STANDBY / PAUSED)'}</span>
           </div>
         </div>
 
@@ -184,9 +184,14 @@ const MonitorModule = {
             if (placeholder) placeholder.style.display = 'none';
           }
         }
+        
+        const statusElem = document.getElementById(`cam-status-${camId}`);
+        if (statusElem && data.status) {
+          statusElem.textContent = (data.status === 'online') ? 'सक्रिय (ONLINE)' : 'स्टैंडबाय (STANDBY / PAUSED)';
+        }
 
-        if (hudFps) hudFps.textContent = `FPS: ${data.fps || 25}`;
-        if (hudCattle) hudCattle.textContent = `CATTLE: ${data.total}`;
+        if (hudFps) hudFps.textContent = `FPS: ${data.fps || 0}`;
+        if (hudCattle) hudCattle.textContent = (data.status === 'online') ? `CATTLE: ${data.total}` : 'NODE STANDBY';
         if (footerTotal) footerTotal.textContent = data.total;
         if (footerActive) footerActive.textContent = data.active;
         if (footerResting) footerResting.textContent = data.resting;

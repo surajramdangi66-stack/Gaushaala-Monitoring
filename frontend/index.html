@@ -218,7 +218,17 @@
           <span data-i18n="nav_census">Herd Census & Registry</span>
         </button>
 
+        <button class="nav-item-btn" data-tab="zones" id="tab-zones-btn" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+            <polyline points="2 17 12 22 22 17"/>
+            <polyline points="2 12 12 17 22 12"/>
+          </svg>
+          <span data-i18n="nav_zones">ROI Zone Editor</span>
+        </button>
+
         <button class="nav-item-btn nav-item-ai" data-tab="ai" id="tab-ai-btn" role="tab" aria-selected="false">
+
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
             <circle cx="12" cy="12" r="3"/>
@@ -370,6 +380,89 @@
                 </div>
               </div>
 
+            </div>
+
+            <!-- =====================================================================
+                 LIVE CCTV AI DETECTIONS & QUICK ACCESS PANEL
+                 ===================================================================== -->
+            <div class="dashboard-card live-detections-card" style="margin-bottom: 1.5rem;">
+              <div class="card-header-row" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                <div>
+                  <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <span class="pulse-dot-green"></span>
+                    <h2 class="card-heading" style="margin:0;">CCTV AI Live Detections & Quick Access</h2>
+                  </div>
+                  <p class="card-subheading" style="margin:0.25rem 0 0;">
+                    Real-time Worker & Desi Cattle Presence • Automatic deduplication with Entry and Exit time tracking
+                  </p>
+                </div>
+
+                <!-- Quick Access Telemetry Badges -->
+                <div class="quick-access-pills" style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+                  <div class="qa-pill qa-pill-worker" style="background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.3); border-radius:8px; padding:6px 12px; display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:1.15rem;">👷</span>
+                    <div>
+                      <div style="font-size:0.68rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Workers On-Site</div>
+                      <div style="font-size:1rem; font-weight:800; color:#f59e0b;" id="qa-worker-count">0</div>
+                    </div>
+                  </div>
+
+                  <div class="qa-pill qa-pill-cattle" style="background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:6px 12px; display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:1.15rem;">🐄</span>
+                    <div>
+                      <div style="font-size:0.68rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Cattle In-View</div>
+                      <div style="font-size:1rem; font-weight:800; color:#10b981;" id="qa-cattle-count">0</div>
+                    </div>
+                  </div>
+
+                  <div class="qa-pill qa-pill-entries" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:6px 12px; display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:1.15rem;">🚪</span>
+                    <div>
+                      <div style="font-size:0.68rem; color:var(--text-muted); text-transform:uppercase; font-weight:700;">Today's Entries</div>
+                      <div style="font-size:1rem; font-weight:800; color:#6366f1;" id="qa-entries-count">0</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Filter tabs & Status Row -->
+              <div style="display:flex; justify-content:space-between; align-items:center; margin:1rem 0 0.75rem; flex-wrap:wrap; gap:0.5rem; border-bottom:1px solid var(--border-subtle); padding-bottom:0.75rem;">
+                <div class="det-filter-group" style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                  <button class="det-filter-btn active" data-filter="all" id="filter-det-all">All Active Inside (<span id="count-filter-all">0</span>)</button>
+                  <button class="det-filter-btn" data-filter="workers" id="filter-det-workers">👷 Workers (<span id="count-filter-workers">0</span>)</button>
+                  <button class="det-filter-btn" data-filter="cattle" id="filter-det-cattle">🐄 Cattle (<span id="count-filter-cattle">0</span>)</button>
+                  <button class="det-filter-btn" data-filter="history" id="filter-det-history">📜 Entry/Exit Log</button>
+                </div>
+                <div style="font-size:0.75rem; color:var(--text-muted); display:flex; align-items:center; gap:5px;">
+                  <span class="pulse-dot-green" style="width:6px; height:6px;"></span>
+                  <span>Anti-Duplicate Deduplication Active (No repeated spam)</span>
+                </div>
+              </div>
+
+              <!-- Live Detections Table -->
+              <div class="table-responsive">
+                <table class="modern-table">
+                  <thead>
+                    <tr>
+                      <th>Entity / Tag</th>
+                      <th>Type / Breed</th>
+                      <th>CCTV Node</th>
+                      <th>Entry Time</th>
+                      <th>Exit Time</th>
+                      <th>Duration</th>
+                      <th>Presence Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="live-detections-table-body">
+                    <tr>
+                      <td colspan="7" style="text-align:center; padding:1.75rem; color:var(--text-muted);">
+                        <div style="font-size:1.5rem; margin-bottom:0.35rem;">📡</div>
+                        <div>Waiting for camera detection event... AI will detect workers & cattle as they enter.</div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <!-- Enclosure Operations & Herd Telemetry Register (Full-width clean table) -->
@@ -874,7 +967,140 @@
           </div>
         </section>
 
+        <!-- =====================================================================
+             TAB 6: INTERACTIVE ROI POLYGON ZONE EDITOR
+             ===================================================================== -->
+        <section class="view-panel" id="zones-view" role="tabpanel" aria-labelledby="tab-zones-btn">
+          <div class="zones-content">
+            
+            <div class="section-header-row" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem;">
+              <div>
+                <h2 class="section-title" data-i18n="zone_editor_title" style="display:flex; align-items:center; gap:8px;">
+                  <span class="pulse-dot"></span> Interactive ROI Polygon Zone Editor
+                </h2>
+                <p class="section-subtitle" data-i18n="zone_editor_desc">
+                  Draw and configure virtual Geofence Boundaries, Feeder Troughs, and Quarantine Wards directly on live camera feeds.
+                </p>
+              </div>
+
+              <div class="zone-cam-select-wrap" style="display:flex; align-items:center; gap:10px;">
+                <label for="zone-cam-select" style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">Target Camera:</label>
+                <select class="form-select" id="zone-cam-select" style="min-width:200px;">
+                  <!-- Populated dynamically -->
+                </select>
+                <button type="button" class="btn-tool" id="btn-zone-refresh-snap" title="Refresh Live Snapshot">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <polyline points="23 4 23 10 17 10"/>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                  </svg>
+                  <span>Refresh Feed</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Zone Selector Badges & Toolbar Row -->
+            <div class="zone-toolbar-card" style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:12px; padding:1rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+              
+              <!-- Zone Type Selector Pills -->
+              <div class="zone-type-pills" style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button type="button" class="btn-zone-pill zone-type-btn active" data-zone-type="feeder" style="border:1.5px solid #10b981; padding:6px 12px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
+                  <span style="width:10px; height:10px; border-radius:50%; background:#10b981; display:inline-block;"></span>
+                  <span>🟢 Feeder Zone (Trough)</span>
+                </button>
+                <button type="button" class="btn-zone-pill zone-type-btn" data-zone-type="boundary" style="border:1.5px solid #ef4444; padding:6px 12px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
+                  <span style="width:10px; height:10px; border-radius:50%; background:#ef4444; display:inline-block;"></span>
+                  <span>🔴 Pen Geofence Perimeter</span>
+                </button>
+                <button type="button" class="btn-zone-pill zone-type-btn" data-zone-type="quarantine" style="border:1.5px solid #f59e0b; padding:6px 12px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
+                  <span style="width:10px; height:10px; border-radius:50%; background:#f59e0b; display:inline-block;"></span>
+                  <span>🟡 Quarantine Ward</span>
+                </button>
+                <button type="button" class="btn-zone-pill zone-type-btn" data-zone-type="resting" style="border:1.5px solid #3b82f6; padding:6px 12px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
+                  <span style="width:10px; height:10px; border-radius:50%; background:#3b82f6; display:inline-block;"></span>
+                  <span>🔵 Resting Bay</span>
+                </button>
+              </div>
+
+              <!-- Feeder Capacity Input (shown when feeder selected) -->
+              <div class="zone-cap-group" style="display:flex; align-items:center; gap:8px;">
+                <label for="zone-capacity-input" style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Max Feeder Cap:</label>
+                <input type="number" id="zone-capacity-input" value="4" min="1" max="25" class="form-input" style="width:70px; padding:4px 8px; font-size:0.85rem;" />
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="zone-action-btns" style="display:flex; gap:8px;">
+                <button type="button" class="btn-tool" id="btn-zone-undo" title="Remove last clicked point">
+                  <span>↩ Undo Point</span>
+                </button>
+                <button type="button" class="btn-tool" id="btn-zone-close-poly" title="Close polygon loop" style="font-weight:600; color:var(--text-primary);">
+                  <span>✔ Close Loop</span>
+                </button>
+                <button type="button" class="btn-tool text-critical" id="btn-zone-clear" title="Clear current zone">
+                  <span>🗑 Clear</span>
+                </button>
+                <button type="button" class="btn-tool" id="btn-zone-reset-default" title="Reset all to defaults">
+                  <span>↺ Defaults</span>
+                </button>
+                <button type="button" class="btn-primary" id="btn-zone-save-all" style="padding:0.45rem 1rem;">
+                  <span>💾 Save & Apply Live</span>
+                </button>
+              </div>
+
+            </div>
+
+            <!-- Main Interactive Editor Canvas Layout -->
+            <div class="zone-editor-layout" style="display:grid; grid-template-columns:1fr 300px; gap:1.25rem;">
+              
+              <!-- Left: Canvas Area -->
+              <div class="zone-canvas-card" style="background:#090d16; border:1px solid var(--border-subtle); border-radius:12px; overflow:hidden; position:relative;">
+                <div style="position:relative; width:100%; aspect-ratio:4/3; max-height:540px; display:flex; align-items:center; justify-content:center; background:#000;">
+                  <canvas id="zone-editor-canvas" width="640" height="480" style="width:100%; height:100%; object-fit:contain; cursor:crosshair;"></canvas>
+                </div>
+                <div style="padding:10px 16px; background:rgba(17,24,39,0.85); border-top:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Active Drawing:</span>
+                    <span class="tab-badge" id="active-zone-badge" style="background:#10b981; color:#fff; font-size:0.75rem; padding:2px 8px; border-radius:4px;">Safe Feeding Zone</span>
+                  </div>
+                  <div id="zone-points-list" style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:340px;">
+                    Click canvas to draw vertices (3+ required)
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Info & Status Drawer -->
+              <div class="zone-sidebar-card" style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:12px; padding:1.25rem; display:flex; flex-direction:column; gap:1.25rem;">
+                
+                <div>
+                  <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:6px;">Zone Instructions</h3>
+                  <ol style="font-size:0.8rem; color:var(--text-muted); padding-left:1.2rem; line-height:1.5;">
+                    <li>Select the target camera feed.</li>
+                    <li>Choose the zone type to draw.</li>
+                    <li>Click on the video feed to place boundary vertices.</li>
+                    <li>Double-click or click <strong>Close Loop</strong> when finished.</li>
+                    <li>Click <strong>Save & Apply Live</strong> to update YOLO vision pipelines immediately.</li>
+                  </ol>
+                </div>
+
+                <div>
+                  <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:8px;">Active Configured Zones</h3>
+                  <div id="zone-summary-list" style="display:flex; flex-direction:column; gap:4px;">
+                    <!-- Populated dynamically -->
+                  </div>
+                </div>
+
+                <div style="background:var(--bg-base); border-radius:8px; padding:10px; font-size:0.75rem; color:var(--text-muted); border-left:3px solid #10b981;">
+                  <strong>AI Note:</strong> Live YOLO detection automatically checks cattle centroids against these updated coordinates without restarting the server.
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
       </main>
+
 
     </div>
   </div>
@@ -1092,6 +1318,8 @@
   <script src="/static/js/alerts.js"></script>
   <script src="/static/js/ai.js"></script>
   <script src="/static/js/census.js"></script>
+  <script src="/static/js/zones.js"></script>
   <script src="/static/js/app.js"></script>
 </body>
 </html>
+
