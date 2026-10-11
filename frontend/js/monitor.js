@@ -60,13 +60,12 @@ const MonitorModule = {
         e.preventDefault();
         const name = document.getElementById('cam-input-name').value.trim();
         const rtsp = document.getElementById('cam-input-rtsp').value.trim();
-        const isSim = document.getElementById('cam-input-simulated').checked;
         if (!name || !rtsp) return;
 
         try {
           await apiRequest('/api/cameras', {
             method: 'POST',
-            body: JSON.stringify({ name, rtsp_url: rtsp, is_simulated: isSim })
+            body: JSON.stringify({ name, rtsp_url: rtsp })
           });
           showToast(`Camera '${name}' added successfully`, 'info');
           modal.classList.remove('active');

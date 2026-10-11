@@ -1,11 +1,45 @@
 const AiModule = {
   initialized: false,
+  cachedAlerts: [],
 
   init() {
     if (this.initialized) return;
     this.initialized = true;
     this.bindEvents();
     this.checkStatus();
+    this.refreshAlertSelect();
+  },
+
+  async refreshAlertSelect() {
+    const select = document.getElementById('ai-diag-select');
+    if (!select) return;
+
+    try {
+      const res = await apiRequest('/api/alerts');
+      this.cachedAlerts = Array.isArray(res) ? res : (res.alerts || []);
+      const lang = AppState.lang || 'en';
+
+      if (this.cachedAlerts.length === 0) {
+        select.innerHTML = `
+          <option value="" disabled selected>
+            ${lang === 'hi' ? '-- कोई सक्रिय असामान्य अलर्ट नहीं है --' : '-- No Active Distress Alerts Detected --'}
+          </option>
+        `;
+        return;
+      }
+
+      select.innerHTML = `
+        <option value="" disabled selected>
+          ${lang === 'hi' ? '-- लाइव असामान्य अलर्ट चुनें --' : '-- Select Live Distress Alert Event --'}
+        </option>
+      ` + this.cachedAlerts.map(a => `
+        <option value="${a.id}">
+          [${a.alert_type}] #${a.entity_id || 'Cattle'} - ${a.message} (${a.zone_name || 'Pen'})
+        </option>
+      `).join('');
+    } catch (e) {
+      console.debug('Failed to fetch alerts for AI select:', e);
+    }
   },
 
   async checkStatus() {
@@ -59,28 +93,21 @@ const AiModule = {
 
   async handleRunDiagnosis() {
     const select = document.getElementById('ai-diag-select');
-    const val = select ? select.value : 'PROSTRATION_104';
+    const alertId = select ? select.value : '';
     const outputBox = document.getElementById('ai-diag-output');
     const lang = AppState.lang || 'en';
 
-    let alert_type = 'PROSTRATION_DISTRESS';
-    let message = 'Cattle #104 motionless in Shed A for 600s';
-    let entity_id = '104';
-    let duration = 600;
-    let zone_name = 'Shed A - Main Enclosure';
+    if (!alertId) {
+      showToast(lang === 'hi' 
+        ? 'कृपया पहले सूची से कोई सक्रिय लाइव अलर्ट चुनें।' 
+        : 'Please select an active live alert from the list first.', 'warning');
+      return;
+    }
 
-    if (val === 'BREACH_112') {
-      alert_type = 'GEOFENCE_BREACH';
-      message = 'Cattle #112 detected outside outer perimeter fence';
-      entity_id = '112';
-      duration = 45;
-      zone_name = 'Outer Paddock Perimeter';
-    } else if (val === 'FEEDER_098') {
-      alert_type = 'FEEDER_OVERCROWDING';
-      message = 'High density crush at Feeder Station 2 (7 head / 4 capacity)';
-      entity_id = '098';
-      duration = 180;
-      zone_name = 'Feeder Station 2';
+    const alert = this.cachedAlerts.find(a => String(a.id) === String(alertId));
+    if (!alert) {
+      showToast(lang === 'hi' ? 'चुना गया अलर्ट उपलब्ध नहीं है।' : 'Selected alert not found.', 'warning');
+      return;
     }
 
     if (outputBox) {
@@ -88,7 +115,7 @@ const AiModule = {
       outputBox.innerHTML = `
         <div class="ai-loading-spinner">
           <div class="spinner"></div>
-          <span>${lang === 'hi' ? 'ग्रोक ए.आई. नैदानिक विश्लेषण लोड हो रहा है...' : 'Running Groq Veterinary AI inference...'}</span>
+          <span>${lang === 'hi' ? 'ग्रोक ए.आई. नैदानिक विश्लेषण लोड हो रहा है...' : 'Running Groq Veterinary AI inference on live alert...'}</span>
         </div>
       `;
     }
@@ -97,11 +124,11 @@ const AiModule = {
       const res = await apiRequest('/api/ai/diagnose', {
         method: 'POST',
         body: JSON.stringify({
-          alert_type,
-          message,
-          entity_id,
-          duration,
-          zone_name,
+          alert_type: alert.alert_type,
+          message: alert.message,
+          entity_id: String(alert.entity_id || 'Livestock'),
+          duration: alert.duration_seconds || 60,
+          zone_name: alert.zone_name,
           lang
         })
       });
@@ -127,8 +154,8 @@ const AiModule = {
 
     if (modalTitle) {
       modalTitle.textContent = lang === 'hi' 
-        ? `ग्रोक ए.आई. नैदानिक परामर्श: गोवंश #${alert.entity_id || '104'}` 
-        : `Groq AI Clinical Diagnosis: Cattle #${alert.entity_id || '104'}`;
+        ? `ग्रोक ए.आई. नैदानिक परामर्श: गोवंश #${alert.entity_id || 'Livestock'}` 
+        : `Groq AI Clinical Diagnosis: Cattle #${alert.entity_id || 'Livestock'}`;
     }
 
     modalBody.innerHTML = `
@@ -144,8 +171,8 @@ const AiModule = {
         body: JSON.stringify({
           alert_type: alert.alert_type,
           message: alert.message,
-          entity_id: String(alert.entity_id || '104'),
-          duration: alert.duration_seconds || 600,
+          entity_id: String(alert.entity_id || 'Livestock'),
+          duration: alert.duration_seconds || 60,
           zone_name: alert.zone_name,
           lang
         })

@@ -42,13 +42,12 @@ DEFAULT_USERS = {
 DEFAULT_CAMERAS: List[Dict[str, Any]] = [
     {
         "id": "cam-01",
-        "name": "Shed A - Main Pen",
+        "name": "Main Enclosure - North Pen",
         "location": "North Wing, Barn 1",
-        "rtsp_url": "rtsp://simulation/shed_a_main",
-        "status": "online",
-        "resolution": "1920x1080",
+        "rtsp_url": "0",  # Default USB/Local CCTV Camera 0
+        "status": "offline",
+        "resolution": "1280x720",
         "fps": 25,
-        "is_simulated": True,
         "zones": {
             "feeder": {
                 "name": "Feeder Trough A",
@@ -72,11 +71,10 @@ DEFAULT_CAMERAS: List[Dict[str, Any]] = [
         "id": "cam-02",
         "name": "Shed B - Feeder Bay",
         "location": "East Wing, Barn 2",
-        "rtsp_url": "rtsp://simulation/shed_b_feeder",
-        "status": "online",
+        "rtsp_url": "",
+        "status": "offline",
         "resolution": "1920x1080",
         "fps": 25,
-        "is_simulated": True,
         "zones": {
             "feeder": {
                 "name": "Feeder Trough B",
@@ -95,11 +93,10 @@ DEFAULT_CAMERAS: List[Dict[str, Any]] = [
         "id": "cam-03",
         "name": "Open Paddock / Yard",
         "location": "South Yard Grazing Area",
-        "rtsp_url": "rtsp://simulation/paddock_yard",
-        "status": "online",
+        "rtsp_url": "",
+        "status": "offline",
         "resolution": "1920x1080",
         "fps": 25,
-        "is_simulated": True,
         "zones": {
             "feeder": {
                 "name": "Water Trough & Salt Lick",
@@ -118,11 +115,10 @@ DEFAULT_CAMERAS: List[Dict[str, Any]] = [
         "id": "cam-04",
         "name": "Calving & Medical Bay",
         "location": "Quarantine & Care Center",
-        "rtsp_url": "rtsp://simulation/medical_quarantine",
-        "status": "online",
+        "rtsp_url": "",
+        "status": "offline",
         "resolution": "1920x1080",
         "fps": 25,
-        "is_simulated": True,
         "zones": {
             "resting": {
                 "name": "Medical Observation Bed",

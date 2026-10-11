@@ -28,24 +28,15 @@ class CameraAnalyticsEngine:
 
     def process_frame(
         self,
-        frame: np.ndarray,
-        simulated_detections: Optional[List[Dict[str, Any]]] = None,
-        use_yolo: bool = False
+        frame: np.ndarray
     ) -> FrameAnalysisResult:
         result = FrameAnalysisResult()
 
         if frame is None or frame.size == 0:
             return result
 
-        # Detect cattle: Use real YOLO model if enabled/configured or use simulated ground-truth
-        detections = []
-        if use_yolo:
-            detections = self.detector.detect(frame)
-        elif simulated_detections:
-            detections = simulated_detections
-        else:
-            # Fallback to YOLO inference
-            detections = self.detector.detect(frame)
+        # Run real YOLOv8 livestock detection on incoming video frame
+        detections = self.detector.detect(frame)
 
         # Update multi-object tracker
         tracks = self.tracker.update(detections)

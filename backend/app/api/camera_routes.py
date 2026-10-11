@@ -12,7 +12,6 @@ class CameraConfigPayload(BaseModel):
     name: str
     location: Optional[str] = "Main Barn"
     rtsp_url: str
-    is_simulated: Optional[bool] = False
     fps: Optional[int] = 25
 
 class ProbeRequest(BaseModel):
@@ -23,9 +22,6 @@ async def probe_camera_stream(payload: ProbeRequest, current_user: Dict[str, Any
     url = payload.rtsp_url.strip()
     if not url:
         raise HTTPException(status_code=400, detail="Stream URL or device index cannot be empty")
-    
-    if url.startswith("rtsp://simulation"):
-        return {"online": True, "resolution": "1920x1080", "fps": 25, "message": "Simulation stream verified"}
     
     import cv2
     target = int(url) if url.isdigit() else url

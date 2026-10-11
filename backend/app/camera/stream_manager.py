@@ -18,8 +18,7 @@ class CameraPipeline:
         self.source = CameraSource(
             camera_id=self.camera_id,
             name=self.name,
-            rtsp_url=config.get("rtsp_url", "rtsp://simulation/feed"),
-            is_simulated=config.get("is_simulated", True),
+            rtsp_url=config.get("rtsp_url", ""),
             fps=config.get("fps", 25)
         )
         self.analytics = CameraAnalyticsEngine(
@@ -34,7 +33,6 @@ class CameraPipeline:
         self.lock = threading.Lock()
         self.is_running = False
         self.worker_thread: Optional[threading.Thread] = None
-        self.use_yolo_model = False  # Set to True if user enables full YOLO inference
 
     def start(self):
         self.source.start()
@@ -55,14 +53,8 @@ class CameraPipeline:
                 time.sleep(0.04)
                 continue
 
-            sim_detections = self.source.get_latest_detections()
-
-            # Process frame through analytics engine
-            result = self.analytics.process_frame(
-                raw_frame,
-                simulated_detections=sim_detections,
-                use_yolo=self.use_yolo_model
-            )
+            # Process real incoming video frame with YOLOv8
+            result = self.analytics.process_frame(raw_frame)
 
             # Check for Alerts
             # 1. Geofence breach
@@ -204,15 +196,16 @@ class CameraPipeline:
 
     def get_summary(self) -> Dict[str, Any]:
         with self.lock:
-            total = self.latest_result.total_count if self.latest_result else len(self.source.cattle_entities)
-            active = self.latest_result.active_count if self.latest_result else sum(1 for c in self.source.cattle_entities if not c.is_lying)
-            resting = self.latest_result.resting_count if self.latest_result else sum(1 for c in self.source.cattle_entities if c.is_lying)
-            feeder = self.latest_result.feeder_count if self.latest_result else 0
-            has_breach = len(self.latest_result.breaches_detected) > 0 if self.latest_result else False
-            has_prostration = len(self.latest_result.prostrations_detected) > 0 if self.latest_result else False
+            is_on = self.source.is_online
+            total = self.latest_result.total_count if (self.latest_result and is_on) else 0
+            active = self.latest_result.active_count if (self.latest_result and is_on) else 0
+            resting = self.latest_result.resting_count if (self.latest_result and is_on) else 0
+            feeder = self.latest_result.feeder_count if (self.latest_result and is_on) else 0
+            has_breach = (len(self.latest_result.breaches_detected) > 0) if (self.latest_result and is_on) else False
+            has_prostration = (len(self.latest_result.prostrations_detected) > 0) if (self.latest_result and is_on) else False
 
             tracks_payload = []
-            if self.latest_result:
+            if self.latest_result and is_on:
                 for t in self.latest_result.tracks:
                     tracks_payload.append({
                         "id": t.track_id,
@@ -230,11 +223,10 @@ class CameraPipeline:
                 "id": self.camera_id,
                 "name": self.name,
                 "location": self.config.get("location", ""),
-                "status": "online" if self.source.is_online else "offline",
+                "status": "online" if is_on else "offline",
                 "fps": round(self.source.actual_fps, 1),
                 "resolution": f"{self.source.width}x{self.source.height}",
                 "rtsp_url": self.config.get("rtsp_url", ""),
-                "is_simulated": self.config.get("is_simulated", True),
                 "total_cattle": total,
                 "active_cattle": active,
                 "resting_cattle": resting,

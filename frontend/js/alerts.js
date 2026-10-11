@@ -38,6 +38,7 @@ const AlertsModule = {
           await apiRequest('/api/alerts/clear', { method: 'POST' });
           this.alerts = [];
           this.renderAlerts();
+          if (typeof AiModule !== 'undefined' && AiModule.refreshAlertSelect) AiModule.refreshAlertSelect();
           showToast(AppState.lang === 'hi' ? 'अलर्ट लॉग साफ़ किया गया' : 'Alerts log cleared', 'info');
         } catch (err) {
           showToast(AppState.lang === 'hi' ? 'अलर्ट साफ़ करने में विफल' : 'Failed to clear alerts', 'critical');
@@ -50,6 +51,7 @@ const AlertsModule = {
     try {
       this.alerts = await apiRequest('/api/alerts?limit=100');
       this.renderAlerts();
+      if (typeof AiModule !== 'undefined' && AiModule.refreshAlertSelect) AiModule.refreshAlertSelect();
     } catch (err) {
       console.debug('Failed to load alerts:', err);
     }
@@ -59,6 +61,7 @@ const AlertsModule = {
     if (!this.alerts.some(a => a.id === alert.id)) {
       this.alerts.unshift(alert);
       this.renderAlerts();
+      if (typeof AiModule !== 'undefined' && AiModule.refreshAlertSelect) AiModule.refreshAlertSelect();
     }
   },
 

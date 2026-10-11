@@ -178,16 +178,7 @@
         </div>
       </div>
 
-      <!-- Quick Action: Connect CCTV Feed -->
-      <div class="sidebar-action-wrap">
-        <button class="btn-connect-cctv-sidebar" id="sidebar-connect-cctv-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-          </svg>
-          <span data-i18n="btn_connect_cctv_side">Connect Live CCTV</span>
-        </button>
-      </div>
+
 
       <!-- Left Vertically-Aligned Navigation Menus -->
       <nav class="sidebar-nav" role="tablist">
@@ -273,36 +264,21 @@
         </div>
 
         <div class="top-bar-right">
-          <!-- Connect Feed Button in Top Bar -->
-          <button class="btn-primary-subtle" id="topbar-connect-cctv-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            <span data-i18n="btn_connect_feed">+ Connect Live CCTV</span>
-          </button>
-
-          <!-- Telemetry Live Status Beacon -->
-          <div class="live-status-pill" title="System Operational Status">
-            <span class="pulse-dot"></span>
-            <span id="header-system-status">4/4 Online</span>
-          </div>
-
           <!-- Clock Display -->
           <div class="clock-display" id="utc-clock-display">--:--:--</div>
         </div>
       </header>
 
       <!-- Main Application Views Container -->
-      <main class="app-container" id="main-container">
+      <main class="app-container" id="main-content">
 
         <!-- =====================================================================
-             TAB 1: DASHBOARD VIEW
+             TAB 1: DASHBOARD VIEW (COMMAND CENTER)
              ===================================================================== -->
         <section class="view-panel active" id="dashboard-view" role="tabpanel" aria-labelledby="tab-dashboard-btn">
           <div class="dashboard-content">
             
-            <!-- Executive KPI Metrics Row -->
+            <!-- Compact Executive KPI Metrics Row -->
             <div class="metrics-grid">
               
               <!-- Metric 1: Total Cattle -->
@@ -319,19 +295,18 @@
                   </div>
                 </div>
                 <div class="metric-value-row">
-                  <span class="metric-number" id="metric-total-cattle">--</span>
+                  <span class="metric-number" id="metric-total-cattle">0</span>
                   <span class="metric-unit" data-i18n="metric_cattle_unit">Heads</span>
                 </div>
                 <div class="metric-footer">
-                  <span class="badge-success-subtle" data-i18n="metric_verified">✓ AI Vision Verified</span>
-                  <span class="metric-sub-label" data-i18n="metric_total_sub">Real-time YOLOv8 tracker</span>
+                  <span class="metric-sub-label" data-i18n="metric_total_sub">Across all active pens</span>
                 </div>
               </div>
 
               <!-- Metric 2: Active / Grazing -->
               <div class="metric-card">
                 <div class="metric-card-top">
-                  <div class="metric-label" data-i18n="metric_active_title">Active & Grazing Cattle</div>
+                  <div class="metric-label" data-i18n="metric_active_title">Active & Grazing</div>
                   <div class="metric-icon-wrap icon-emerald">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -339,19 +314,18 @@
                   </div>
                 </div>
                 <div class="metric-value-row">
-                  <span class="metric-number text-emerald" id="metric-active-cattle">--</span>
+                  <span class="metric-number text-emerald" id="metric-active-cattle">0</span>
                   <span class="metric-unit" data-i18n="metric_active_unit">Active</span>
                 </div>
                 <div class="metric-footer">
-                  <span class="badge-emerald-subtle" data-i18n="metric_active_subtle">● Nominal Motion</span>
-                  <span class="metric-sub-label" data-i18n="metric_active_sub">Feeding & roaming naturally</span>
+                  <span class="metric-sub-label" data-i18n="metric_active_sub">Nominal roaming & feeding</span>
                 </div>
               </div>
 
               <!-- Metric 3: Resting / Recumbent -->
               <div class="metric-card">
                 <div class="metric-card-top">
-                  <div class="metric-label" data-i18n="metric_resting_title">Resting / Idle Cattle</div>
+                  <div class="metric-label" data-i18n="metric_resting_title">Resting / Idle</div>
                   <div class="metric-icon-wrap icon-amber">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
@@ -359,12 +333,11 @@
                   </div>
                 </div>
                 <div class="metric-value-row">
-                  <span class="metric-number text-amber" id="metric-resting-cattle">--</span>
+                  <span class="metric-number text-amber" id="metric-resting-cattle">0</span>
                   <span class="metric-unit" data-i18n="metric_resting_unit">Resting</span>
                 </div>
                 <div class="metric-footer">
-                  <span class="badge-amber-subtle" data-i18n="metric_resting_subtle">● Monitored Rest</span>
-                  <span class="metric-sub-label" data-i18n="metric_resting_sub">Within safe rumination limits</span>
+                  <span class="metric-sub-label" data-i18n="metric_resting_sub">Monitored rumination & rest</span>
                 </div>
               </div>
 
@@ -382,56 +355,40 @@
                   </div>
                 </div>
                 <div class="metric-value-row">
-                  <span class="metric-number text-indigo" id="metric-system-status">--</span>
+                  <span class="metric-number text-indigo" id="metric-system-status">0/4</span>
                 </div>
                 <div class="metric-footer">
-                  <span class="badge-indigo-subtle" data-i18n="metric_system_subtle">✓ 24/7 Optical Feed</span>
-                  <span class="metric-sub-label" data-i18n="metric_system_sub">High frame-rate analysis</span>
+                  <span class="metric-sub-label" data-i18n="metric_system_sub">Configured RTSP camera feeds</span>
                 </div>
               </div>
 
             </div>
 
-            <!-- Section: Enclosure / Zone Distribution -->
-            <div class="dashboard-section">
-              <div class="section-title-bar">
+            <!-- Enclosure Operations & Herd Telemetry Register (Full-width clean table) -->
+            <div class="dashboard-card enclosure-operations-card">
+              <div class="card-header-row">
                 <div>
-                  <h2 class="section-heading" data-i18n="sec_zones_title">Enclosure & Pen Herd Distribution</h2>
-                  <p class="section-subheading" data-i18n="sec_zones_desc">Live occupancy, motion ratios, and feeder availability per shed</p>
+                  <h2 class="card-heading" data-i18n="sec_enclosures_title">Enclosure Operations & Herd Telemetry</h2>
+                  <p class="card-subheading" data-i18n="sec_enclosures_desc">Live headcount, motion ratio, bunk capacity, and geofence safety register</p>
                 </div>
               </div>
-              <div class="zones-grid" id="zones-breakdown-container">
-                <!-- Dynamic Zone Cards populated by dashboard.js -->
-              </div>
-            </div>
-
-            <!-- Section: Facility Telemetry & Compliance Table -->
-            <div class="dashboard-section">
-              <div class="section-title-bar">
-                <div>
-                  <h2 class="section-heading" data-i18n="sec_telemetry_title">Facility Telemetry & Inspection Register</h2>
-                  <p class="section-subheading" data-i18n="sec_telemetry_desc">Real-time camera feed status, livestock capacity, and geofence safety</p>
-                </div>
-              </div>
-              <div class="table-card">
-                <div class="table-responsive">
-                  <table class="modern-table">
-                    <thead>
-                      <tr>
-                        <th data-i18n="th_enclosure">Enclosure Name</th>
-                        <th data-i18n="th_camera_id">Node ID</th>
-                        <th data-i18n="th_stream">Stream Pipeline</th>
-                        <th data-i18n="th_live_census">Live Census</th>
-                        <th data-i18n="th_feeder">Feeder Trough</th>
-                        <th data-i18n="th_perimeter">Perimeter Safety</th>
-                        <th data-i18n="th_status">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody id="telemetry-table-body">
-                      <!-- Populated dynamically by dashboard.js -->
-                    </tbody>
-                  </table>
-                </div>
+              <div class="table-responsive">
+                <table class="modern-table">
+                  <thead>
+                    <tr>
+                      <th data-i18n="th_enclosure">Enclosure / Pen</th>
+                      <th data-i18n="th_camera_id">Camera Node</th>
+                      <th data-i18n="th_live_census">Live Census</th>
+                      <th data-i18n="th_motion_ratio">Motion Ratio (Active / Rest)</th>
+                      <th data-i18n="th_feeder">Feeder Trough</th>
+                      <th data-i18n="th_perimeter">Perimeter Safety</th>
+                      <th style="text-align:right;" data-i18n="th_action">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="telemetry-table-body">
+                    <!-- Populated dynamically by dashboard.js -->
+                  </tbody>
+                </table>
               </div>
             </div>
 
@@ -471,7 +428,7 @@
                     <line x1="12" y1="5" x2="12" y2="19"/>
                     <line x1="5" y1="12" x2="19" y2="12"/>
                   </svg>
-                  <span data-i18n="btn_connect_feed">+ Connect CCTV Feed</span>
+                  <span data-i18n="btn_connect_feed">Connect CCTV Feed</span>
                 </button>
               </div>
             </div>
@@ -568,11 +525,9 @@
                   </div>
                 </div>
                 <div class="ai-card-body">
-                  <label class="form-label" data-i18n="ai_select_alert">Select Distress Trigger:</label>
+                  <label class="form-label" data-i18n="ai_select_alert">Select Live Distress Alert / Livestock Anomaly:</label>
                   <select class="form-select" id="ai-diag-select">
-                    <option value="PROSTRATION_104">Cattle #104: Prolonged Prostration Distress (Zone A - 600s)</option>
-                    <option value="BREACH_112">Cattle #112: Perimeter Geofence Breach (East Fence Line)</option>
-                    <option value="FEEDER_098">Feeder Trough 2: Overcrowding & Aggression Alert</option>
+                    <option value="" disabled selected>-- No Active Distress Alerts Detected --</option>
                   </select>
                   <div class="form-actions">
                     <button class="btn-groq" id="run-groq-diag-btn">
@@ -706,7 +661,6 @@
               <option value="rtsp">RTSP Network Camera (rtsp://admin:pass@ip:554/h264)</option>
               <option value="http">HTTP / MJPEG IP Camera (http://ip:port/stream)</option>
               <option value="webcam">Local USB / Laptop Webcam (Device 0, 1)</option>
-              <option value="simulation">Simulated Gaushala Vision Feed (YOLOv8 Demo)</option>
             </select>
           </div>
 
@@ -729,7 +683,7 @@
           <div class="presets-row">
             <button type="button" class="preset-btn" data-url="0" data-name="USB Barn Camera #0">📹 Local Webcam 0</button>
             <button type="button" class="preset-btn" data-url="1" data-name="Secondary Barn Webcam #1">📹 Webcam 1</button>
-            <button type="button" class="preset-btn" data-url="rtsp://simulation/shed_c_feed" data-name="Shed C - High-Res Sim">🐄 Cattle Vision Feed</button>
+            <button type="button" class="preset-btn" data-url="rtsp://192.168.1.120:554/live/ch0" data-name="Shed C - IP CCTV">📡 RTSP Camera</button>
           </div>
 
           <!-- Stream Probe Test Button & Result Box -->
@@ -741,14 +695,6 @@
               <span data-i18n="btn_probe_stream">Probe / Test Feed Connection</span>
             </button>
             <div class="probe-result-status" id="probe-status-msg" style="display:none;"></div>
-          </div>
-
-          <!-- AI & Simulation Settings -->
-          <div class="checkbox-row">
-            <input type="checkbox" id="cam-input-simulated" checked>
-            <label for="cam-input-simulated" class="form-label-inline" data-i18n="modal_lbl_cam_sim">
-              Fallback to simulated high-accuracy vision feed if network camera is offline
-            </label>
           </div>
 
           <button type="submit" class="btn-primary btn-block" style="margin-top:0.5rem;" id="btn-submit-connect-cam">

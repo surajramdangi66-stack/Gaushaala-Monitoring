@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import logging
 from typing import Dict, Any, List, Optional
 from backend.app.config import GROQ_API_KEY, GROQ_MODEL
@@ -79,12 +80,15 @@ class GroqAIAutomationService:
 
         # Intelligent Automated Clinical Fallback when Groq key is pending in .env
         is_hi = (lang == "hi")
+        target_name = f"#{entity_id}" if entity_id else "अज्ञात गोवंश" if is_hi else "monitored cattle"
+        pen_name = zone_name or ("निगरानी बाड़ा" if is_hi else "monitored pen")
+
         if alert_type == "PROSTRATION_DISTRESS":
             return {
                 "assessment": (
-                    f"गोवंश #{entity_id or '104'} पिछले {int(duration or 600)} सेकंड से असामान्य रूप से स्थिर है। संभवतः तीव्र पेट दर्द (Colic), हाइपोकैल्सीमिया (Milk Fever), अथवा अत्यधिक गर्मी/थकान के लक्षण।"
+                    f"गोवंश {target_name} ({pen_name}) पिछले {int(duration or 60)} सेकंड से असामान्य रूप से स्थिर है। संभवतः तीव्र पेट दर्द (Colic), हाइपोकैल्सीमिया (Milk Fever), अथवा अत्यधिक गर्मी/थकान के लक्षण।"
                     if is_hi else
-                    f"Cattle #{entity_id or '104'} has remained motionless for {int(duration or 600)}s. Indicates high risk of sternal/lateral recumbency distress, hypocalcemia (milk fever), or acute heat stress."
+                    f"Cattle {target_name} in {pen_name} has remained motionless for {int(duration or 60)}s. Indicates high risk of sternal/lateral recumbency distress, hypocalcemia (milk fever), or acute heat stress."
                 ),
                 "risk_score": 8.5,
                 "immediate_actions": [
@@ -98,18 +102,18 @@ class GroqAIAutomationService:
                     "Prepare electrolyte hydration, warm water drenching, and hold Calcium Borogluconate (CBG) under veterinary supervision."
                 ),
                 "shift_recommendation": (
-                    "अगले 2 घंटे तक सीसीटीवी कैमरा DL-GAU-CAM-01 पर लगातार निगरानी रखें।"
+                    f"अगले 2 घंटे तक {pen_name} पर लगातार वीडियो एवं प्रत्यक्ष निगरानी रखें।"
                     if is_hi else
-                    "Maintain continuous 15-minute observational loop on Camera Node DL-GAU-CAM-01."
+                    f"Maintain continuous 15-minute observational loop on {pen_name}."
                 ),
                 "powered_by": "Automated Veterinary Rules Engine (Add GROQ_API_KEY in .env for live Groq LLaMA-3.3 acceleration)"
             }
         elif alert_type == "GEOFENCE_BREACH":
             return {
                 "assessment": (
-                    f"गोवंश #{entity_id or '146'} द्वारा बाड़ा परिधि का उल्लंघन दर्ज किया गया है। बाउंड्री गेट में ढीलापन या गोवंश में घबराहट की संभावना।"
+                    f"गोवंश {target_name} द्वारा {pen_name} की परिधि का उल्लंघन दर्ज किया गया है। बाउंड्री गेट में ढीलापन या गोवंश में घबराहट की संभावना।"
                     if is_hi else
-                    f"Cattle #{entity_id or '146'} crossed the safety perimeter geofence. Potential boundary latch failure, panic trigger, or feed attraction outside pen."
+                    f"Cattle {target_name} crossed the {pen_name} safety perimeter geofence. Potential boundary latch failure, panic trigger, or feed attraction outside pen."
                 ),
                 "risk_score": 7.0,
                 "immediate_actions": [
@@ -159,21 +163,29 @@ class GroqAIAutomationService:
         Generates an automated executive AI shift audit report.
         """
         if not metrics:
-            metrics = {
-                "total_cattle": 18,
-                "active_cattle": 6,
-                "resting_cattle": 12,
-                "cameras_online": 4
-            }
-        total = metrics.get("total_cattle", 18)
-        active = metrics.get("active_cattle", 6)
-        resting = metrics.get("resting_cattle", 12)
-        cams = metrics.get("cameras_online", 4)
+            try:
+                from backend.app.camera.stream_manager import get_stream_manager
+                metrics = get_stream_manager().get_system_metrics()
+            except Exception:
+                metrics = {}
+
+        total = metrics.get("total_cattle", 0)
+        active = metrics.get("active_cattle", 0)
+        resting = metrics.get("resting_cattle", 0)
+        cams_online = metrics.get("cameras_online", 0)
+        cams_total = metrics.get("cameras_total", 4)
         is_hi = (lang == "hi")
+
+        try:
+            from backend.app.alerts.alert_engine import get_alert_engine
+            alerts_list = get_alert_engine().get_alerts()
+            alerts_logged = len(alerts_list)
+        except Exception:
+            alerts_logged = 0
 
         user_content = (
             f"Generate a Gaushala Veterinary Shift Audit Report.\n"
-            f"Metrics: Total Cattle: {total}, Active: {active}, Resting: {resting}, Surveillance Cameras Online: {cams}/4.\n"
+            f"Metrics: Total Cattle: {total}, Active: {active}, Resting: {resting}, Surveillance Cameras Online: {cams_online}/{cams_total}, Logged Alerts: {alerts_logged}.\n"
             f"Language: {'Hindi' if is_hi else 'English'}."
         )
 
@@ -198,9 +210,9 @@ class GroqAIAutomationService:
                     "title": "गौशाला ए.आई. शिफ्ट ऑडिट रिपोर्ट" if is_hi else "Gaushala AI Shift Audit Report",
                     "report_markdown": markdown,
                     "key_clinical_findings": [
-                        "YOLOv8 vision census verified across all active barn zones",
-                        "Recumbency within standard rumination limits, single prostration alert monitored",
-                        "Perimeter fences secure across all 4 optical nodes"
+                        f"YOLOv8 optical census: {total} cattle tracked across operational camera feeds",
+                        f"Activity ratio: {active} active, {resting} resting within expected rumination curve",
+                        f"Surveillance status: {cams_online}/{cams_total} camera nodes online, {alerts_logged} active alerts logged"
                     ],
                     "supervisor_tasks": [
                         "Complete physical vital sign check on quarantined or motionless cattle",
@@ -209,41 +221,41 @@ class GroqAIAutomationService:
                     ],
                     "herd_census": {
                         "total_headcount": total,
-                        "motion_nominal_percent": f"{int((active/max(1, total))*100)}%",
-                        "alerts_logged": 2
+                        "motion_nominal_percent": f"{int((active/max(1, total))*100)}%" if total > 0 else "0%",
+                        "alerts_logged": alerts_logged
                     },
-                    "generated_at": "Live Stream Telemetry",
-                    "shift": "Shift-A (Current Duty)",
+                    "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "shift": "Current Duty Shift",
                     "model": self.model,
                     "powered_by": f"Groq Cloud AI ({self.model})"
                 }
             except Exception as e:
                 logger.error(f"Groq shift report error: {e}")
 
-        # Intelligent Structured Fallback Report
+        # Intelligent Structured Fallback Report using live telemetry
         if is_hi:
             report_title = "गौशाला ए.आई. शिफ्ट ऑडिट रिपोर्ट"
             findings = [
-                f"कुल {total} गोवंश में से {active} सक्रिय एवं {resting} विश्रामरत हैं (सामान्य जुगाली चक्र)।",
-                "शेड A में गोवंश #104 की असामान्य सुस्ती पर निरंतर विज़न नज़र रखी जा रही है।",
-                "सभी 4 सीसीटीवी नोड्स एवं परिधि फेंस 100% सुरक्षित स्थिति में हैं।"
+                f"वास्तविक समय YOLOv8 विज़न गणना: कुल {total} गोवंश ट्रैक किए गए ({active} सक्रिय, {resting} विश्रामरत)।",
+                f"सीसीटीवी नोड्स: {cams_online}/{cams_total} नोड्स सक्रिय। कुल दर्ज अलर्ट: {alerts_logged}।",
+                "कैमरा विज़न आधारित व्यवहार एवं परिधि सुरक्षा निरंतर सक्रिय।"
             ]
             tasks = [
-                "शेड परिचारक द्वारा गोवंश #104 का शारीरिक परीक्षण एवं तापमान दर्ज किया जाए।",
+                "सक्रिय अलर्ट रजिस्टर की समीक्षा करें और आवश्यक निवारण कदम उठाएं।",
                 "पानी के गर्तों में ताज़ा जल आपूर्ति स्तर 80% से ऊपर बनाए रखें।",
                 "शाम की ड्यूटी शिफ्ट हेतु चारे का समान वितरण सुनिश्चित करें।"
             ]
         else:
             report_title = "Gaushala AI Veterinary Shift Audit Report"
             findings = [
-                f"Active census tracks {total} total head ({active} grazing/active, {resting} resting within expected rumination curve).",
-                "Shed A prostration alert for cattle #104 currently under continuous optical watch.",
-                "All 4 surveillance nodes operating with 100% geofence integrity."
+                f"Real-time YOLOv8 optical census tracks {total} total head ({active} active, {resting} resting).",
+                f"Surveillance node availability: {cams_online}/{cams_total} online with {alerts_logged} logged alerts.",
+                "Automated behavioral analytics and boundary geofences actively monitoring."
             ]
             tasks = [
-                "Perform physical vital assessment (pupil, temperature) on recumbent cow #104.",
+                "Inspect any active alerts logged in the Alert Registry.",
                 "Maintain clean fresh water supply at all drinking trough stations above 80%.",
-                "Replenish mineral salt licks and prepare evening forage ration distribution."
+                "Replenish mineral salt licks and confirm feed availability."
             ]
 
         return {
@@ -252,11 +264,11 @@ class GroqAIAutomationService:
             "supervisor_tasks": tasks,
             "herd_census": {
                 "total_headcount": total,
-                "motion_nominal_percent": f"{int((active/max(1, total))*100)}%",
-                "alerts_logged": 2
+                "motion_nominal_percent": f"{int((active/max(1, total))*100)}%" if total > 0 else "0%",
+                "alerts_logged": alerts_logged
             },
-            "generated_at": "Live Stream Telemetry",
-            "shift": "Shift-A (Current Duty)",
+            "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "shift": "Current Duty Shift",
             "model": "Hybrid Clinical Rules Engine (Groq ready in .env)",
             "powered_by": "Gaushala AI Automation Engine"
         }
@@ -294,7 +306,7 @@ class GroqAIAutomationService:
 
         # Intelligent Fallback
         q_lower = question.lower()
-        if "prostrat" in q_lower or "distress" in q_lower or "104" in q_lower or "बीमार" in question or "बैठ" in question:
+        if "prostrat" in q_lower or "distress" in q_lower or "recumben" in q_lower or "बीमार" in question or "बैठ" in question:
             ans = (
                 "गोवंश यदि 15-20 मिनट से अधिक बिना हिले-डुले लेटा रहे, तो यह हाइपोकैल्सीमिया (Milk Fever), आफरा (Tympanites/Bloat), अथवा पेट दर्द का संकेत हो सकता है। "
                 "तुरंत परिचारक को भेजकर श्वास दर (सामान्य: 15-30/मिनट), पेट का फूलना, एवं आंख की चमक जांचें। यदि आवश्यक हो तो पशु चिकित्सक को तुरंत सूचित करें।"

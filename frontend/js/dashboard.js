@@ -1,3 +1,7 @@
+/**
+ * Smart Gaushala Monitoring - Dashboard Module
+ * Dedicated Overview: Live herd KPIs and clean full-width enclosure operations table.
+ */
 const DashboardModule = {
   initialized: false,
 
@@ -28,102 +32,76 @@ const DashboardModule = {
     return name;
   },
 
+  inspectCamera(camId) {
+    if (typeof switchTab === 'function') {
+      switchTab('monitor');
+    }
+  },
+
   updateTelemetry(metrics) {
     if (!metrics) return;
     const lang = AppState.lang || 'en';
     const isHi = (lang === 'hi');
 
-    // 1. Summary Metrics Numbers
+    // 1. KPI Metric Numbers
     const totalElem = document.getElementById('metric-total-cattle');
     const activeElem = document.getElementById('metric-active-cattle');
     const restingElem = document.getElementById('metric-resting-cattle');
     const statusElem = document.getElementById('metric-system-status');
-    const headerStatus = document.getElementById('header-system-status');
 
-    if (totalElem) totalElem.textContent = metrics.total_cattle;
-    if (activeElem) activeElem.textContent = metrics.active_cattle;
-    if (restingElem) restingElem.textContent = metrics.resting_cattle;
+    if (totalElem) totalElem.textContent = metrics.total_cattle ?? 0;
+    if (activeElem) activeElem.textContent = metrics.active_cattle ?? 0;
+    if (restingElem) restingElem.textContent = metrics.resting_cattle ?? 0;
     if (statusElem) {
-      statusElem.textContent = `${metrics.cameras_online}/${metrics.cameras_total} ${isHi ? 'सक्रिय' : 'Active'}`;
-    }
-    if (headerStatus) {
-      headerStatus.textContent = `${metrics.cameras_online}/${metrics.cameras_total} ${isHi ? 'ऑनलाइन' : 'Online'}`;
+      statusElem.textContent = `${metrics.cameras_online ?? 0}/${metrics.cameras_total ?? 4}`;
     }
 
-    // 2. Zone Breakdown Cards
-    const zonesContainer = document.getElementById('zones-breakdown-container');
-    if (zonesContainer && metrics.zones) {
-      zonesContainer.innerHTML = '';
-      metrics.zones.forEach(zone => {
-        const activePercent = zone.total > 0 ? Math.round((zone.active / zone.total) * 100) : 0;
-        const restingPercent = zone.total > 0 ? Math.round((zone.resting / zone.total) * 100) : 0;
-        const isAlert = zone.health === 'Alert';
-        const localizedName = this.getZoneName(zone.name, lang);
-
-        const card = document.createElement('div');
-        card.className = 'zone-card';
-        card.innerHTML = `
-          <div class="zone-card-top">
-            <div class="zone-name">${localizedName}</div>
-            <div class="zone-badge ${isAlert ? 'badge-alert' : 'badge-nominal'}">
-              <span class="status-dot ${isAlert ? 'dot-red' : 'dot-green'}"></span>
-              ${isAlert ? (isHi ? 'अलर्ट (ALERT)' : 'ALERT') : (isHi ? 'सामान्य (NOMINAL)' : 'NOMINAL')}
-            </div>
-          </div>
-
-          <div class="zone-stats-row">
-            <div class="stat-col">
-              <span class="stat-lbl">${isHi ? 'कुल गोवंश' : 'Total Cattle'}</span>
-              <span class="stat-val">${zone.total}</span>
-            </div>
-            <div class="stat-col">
-              <span class="stat-lbl">${isHi ? 'सक्रिय' : 'Active'}</span>
-              <span class="stat-val text-emerald">${zone.active}</span>
-            </div>
-            <div class="stat-col">
-              <span class="stat-lbl">${isHi ? 'विश्राम' : 'Resting'}</span>
-              <span class="stat-val text-amber">${zone.resting}</span>
-            </div>
-          </div>
-
-          <div class="ratio-progress-wrap">
-            <div class="ratio-labels">
-              <span>${isHi ? 'गतिविधि अनुपात' : 'Motion Ratio'}</span>
-              <span>${activePercent}% ${isHi ? 'सक्रिय' : 'Active'} / ${restingPercent}% ${isHi ? 'विश्राम' : 'Rest'}</span>
-            </div>
-            <div class="ratio-bar">
-              <div class="ratio-fill-active" style="width: ${activePercent}%;"></div>
-              <div class="ratio-fill-resting" style="width: ${restingPercent}%;"></div>
-            </div>
-          </div>
-        `;
-        zonesContainer.appendChild(card);
-      });
-    }
-
-    // 3. Telemetry Table
+    // 2. Enclosure Operations & Telemetry Table (Clean, Full-Width)
     const tableBody = document.getElementById('telemetry-table-body');
-    if (tableBody && metrics.zones) {
+    if (tableBody) {
       tableBody.innerHTML = '';
-      metrics.zones.forEach(zone => {
+      const zones = (metrics.zones && metrics.zones.length > 0)
+        ? metrics.zones
+        : [
+            { camera_id: '01', name: 'Shed A - Main Herd', total: 0, active: 0, resting: 0, feeder: 0, health: 'Nominal' },
+            { camera_id: '02', name: 'Shed B - Milking Bay', total: 0, active: 0, resting: 0, feeder: 0, health: 'Nominal' },
+            { camera_id: '03', name: 'Open Grazing Paddock', total: 0, active: 0, resting: 0, feeder: 0, health: 'Nominal' },
+            { camera_id: '04', name: 'Calving & Medical Pen', total: 0, active: 0, resting: 0, feeder: 0, health: 'Nominal' }
+          ];
+
+      zones.forEach(zone => {
+        const total = zone.total ?? 0;
+        const active = zone.active ?? 0;
+        const resting = zone.resting ?? 0;
+        const activePercent = total > 0 ? Math.round((active / total) * 100) : 0;
+        const restingPercent = total > 0 ? Math.round((resting / total) * 100) : 0;
         const isAlert = zone.health === 'Alert';
         const localizedName = this.getZoneName(zone.name, lang);
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${localizedName}</strong></td>
-          <td><code class="code-badge">CAM-${(zone.camera_id || '01').toUpperCase()}</code></td>
-          <td class="text-muted" style="font-size:0.75rem; font-family:var(--font-mono);">rtsp://stream/${zone.camera_id || 'main'}</td>
-          <td><strong>${zone.total}</strong> ${isHi ? 'गोवंश' : 'Cattle'}</td>
-          <td>${zone.feeder ?? 0} / 4 ${isHi ? 'क्षमता' : 'Bunks'}</td>
+          <td><code class="code-badge">CAM-${String(zone.camera_id || '01').toUpperCase()}</code></td>
+          <td><strong>${total}</strong> <span class="text-muted" style="font-size:0.75rem;">${isHi ? 'गोवंश' : 'Heads'}</span></td>
+          <td>
+            <div class="tbl-ratio-bar-wrap">
+              <div class="tbl-ratio-bar">
+                <div class="tbl-fill-active" style="width: ${activePercent}%;"></div>
+                <div class="tbl-fill-resting" style="width: ${restingPercent}%;"></div>
+              </div>
+              <span class="tbl-ratio-text">${active} ${isHi ? 'सक्रिय' : 'Act'} / ${resting} ${isHi ? 'विश्राम' : 'Rest'}</span>
+            </div>
+          </td>
+          <td>${zone.feeder ?? 0} / 4 <span class="text-muted" style="font-size:0.75rem;">${isHi ? 'गर्त' : 'Bunks'}</span></td>
           <td>
             <span class="chip-status ${isAlert ? 'status-danger' : 'status-safe'}">
-              ${isAlert ? (isHi ? '⚠ उल्लंघन' : '⚠ Breach Alert') : (isHi ? '✓ सुरक्षित' : '✓ Secure')}
+              ${isAlert ? (isHi ? '⚠ परिधि उल्लंघन' : '⚠ Geofence Breach') : (isHi ? '✓ सुरक्षित' : '✓ Secure')}
             </span>
           </td>
-          <td>
-            <span class="chip-status ${isAlert ? 'status-danger' : 'status-safe'}">
-              ${isAlert ? (isHi ? 'ध्यान दें' : 'Attention') : (isHi ? 'सामान्य' : 'Nominal')}
-            </span>
+          <td style="text-align:right;">
+            <button class="btn-tbl-inspect" onclick="DashboardModule.inspectCamera('${zone.camera_id}')">
+              ${isHi ? 'लाइव देखें' : 'View Stream'}
+            </button>
           </td>
         `;
         tableBody.appendChild(tr);

@@ -24,7 +24,7 @@ const TRANSLATIONS = {
     
     lbl_language: "Language:",
     btn_connect_cctv_side: "Connect Live CCTV",
-    btn_connect_feed: "+ Connect Live CCTV",
+    btn_connect_feed: "Connect Live CCTV",
     
     nav_dashboard: "Dashboard",
     nav_cctv: "Live CCTV Feeds",
@@ -35,37 +35,40 @@ const TRANSLATIONS = {
     // Dashboard KPIs
     metric_total_title: "Total Live Cattle Census",
     metric_cattle_unit: "Heads",
-    metric_verified: "✓ AI Vision Verified",
-    metric_total_sub: "Real-time YOLOv8 tracker",
+    metric_total_sub: "Across all active pens",
     
-    metric_active_title: "Active & Grazing Cattle",
+    metric_active_title: "Active & Grazing",
     metric_active_unit: "Active",
-    metric_active_subtle: "● Nominal Motion",
-    metric_active_sub: "Feeding & roaming naturally",
+    metric_active_sub: "Nominal roaming & feeding",
     
-    metric_resting_title: "Resting / Idle Cattle",
+    metric_resting_title: "Resting / Idle",
     metric_resting_unit: "Resting",
-    metric_resting_subtle: "● Monitored Rest",
-    metric_resting_sub: "Within safe rumination limits",
+    metric_resting_sub: "Monitored rumination & rest",
     
     metric_system_title: "Surveillance Nodes",
-    metric_system_subtle: "✓ 24/7 Optical Feed",
-    metric_system_sub: "High frame-rate analysis",
+    metric_system_sub: "Configured RTSP camera feeds",
     
     // Dashboard Sections
-    sec_zones_title: "Enclosure & Pen Herd Distribution",
-    sec_zones_desc: "Live occupancy, motion ratios, and feeder availability per shed",
-    sec_telemetry_title: "Facility Telemetry & Inspection Register",
-    sec_telemetry_desc: "Real-time camera feed status, livestock capacity, and geofence safety",
+    sec_cctv_matrix_title: "Live CCTV Optical Matrix",
+    sec_cctv_matrix_desc: "Real-time surveillance feeds across Gaushala pens",
+    btn_full_quad: "Open Full Quad Monitor",
+    sec_enclosures_title: "Enclosure Operations & Herd Telemetry",
+    sec_enclosures_desc: "Live headcount, motion ratio, bunk capacity, and geofence safety register",
     
     // Table Headers
-    th_enclosure: "Enclosure Name",
-    th_camera_id: "Node ID",
-    th_stream: "Stream Pipeline",
+    th_enclosure: "Enclosure / Pen",
+    th_camera_id: "Camera Node",
     th_live_census: "Live Census",
+    th_motion_ratio: "Motion Ratio (Active / Rest)",
     th_feeder: "Feeder Trough",
     th_perimeter: "Perimeter Safety",
-    th_status: "Status",
+    th_action: "Action",
+    
+    // Side Widgets
+    sec_incidents_title: "Live Distress & Alerts",
+    btn_view_alerts_log: "View Full Alerts Log →",
+    sec_engine_status_title: "AI Engine Telemetry",
+    btn_quick_shift_report: "Generate Shift Report",
     
     // Monitor Tab
     lbl_layout: "LAYOUT:",
@@ -103,7 +106,6 @@ const TRANSLATIONS = {
     modal_lbl_feed_type: "Camera Feed Protocol / Type",
     modal_lbl_cam_name: "Enclosure / Barn Name",
     modal_lbl_cam_rtsp: "Stream URL or Webcam Device Index",
-    modal_lbl_cam_sim: "Fallback to simulated high-accuracy vision feed if network camera is offline",
     btn_probe_stream: "Probe / Test Feed Connection",
     btn_connect_and_monitor: "Connect & Start Live Monitoring"
   },
@@ -132,7 +134,7 @@ const TRANSLATIONS = {
     
     lbl_language: "भाषा:",
     btn_connect_cctv_side: "लाइव सीसीटीवी कनेक्ट करें",
-    btn_connect_feed: "+ सीसीटीवी जोड़ें",
+    btn_connect_feed: "सीसीटीवी जोड़ें",
     
     nav_dashboard: "डैशबोर्ड",
     nav_cctv: "लाइव सीसीटीवी",
@@ -143,37 +145,40 @@ const TRANSLATIONS = {
     // Dashboard KPIs
     metric_total_title: "कुल जीवित गोवंश संख्या",
     metric_cattle_unit: "गोवंश",
-    metric_verified: "✓ ए.आई. विज़न सत्यापित",
-    metric_total_sub: "वास्तविक समय YOLOv8 ट्रैकर",
+    metric_total_sub: "सभी सक्रिय बाड़ों में",
     
     metric_active_title: "सक्रिय एवं विचरणरत गोवंश",
     metric_active_unit: "सक्रिय",
-    metric_active_subtle: "● सामान्य गतिशीलता",
-    metric_active_sub: "चारागाह व शेड में विचरण",
+    metric_active_sub: "चारागाह व शेड में सामान्य विचरण",
     
     metric_resting_title: "विश्रामरत गोवंश संख्या",
     metric_resting_unit: "विश्रामरत",
-    metric_resting_subtle: "● सुरक्षित विश्राम",
-    metric_resting_sub: "सामान्य जुगाली सीमा में",
+    metric_resting_sub: "निरीक्षित जुगाली एवं विश्राम",
     
     metric_system_title: "सीसीटीवी निगरानी नोड्स",
-    metric_system_subtle: "✓ 24/7 ऑप्टिकल फीड",
-    metric_system_sub: "उच्च फ्रेम-दर विश्लेषण",
+    metric_system_sub: "सक्रिय सीसीटीवी एवं आरटीएसपी स्ट्रीम्स",
     
     // Dashboard Sections
-    sec_zones_title: "गौशाला बाड़ा-वार गोवंश स्थिति एवं घनत्व",
-    sec_zones_desc: "प्रत्येक शेड में वास्तविक समय उपस्थिति, गतिविधि अनुपात एवं चारा गर्त स्थिति",
-    sec_telemetry_title: "सुविधा टेलीमेट्री एवं निरीक्षण रजिस्टर",
-    sec_telemetry_desc: "लाइव कैमरा फीड स्थिति, गोवंश क्षमता एवं बाड़ा परिधि सुरक्षा",
+    sec_cctv_matrix_title: "लाइव सीसीटीवी ऑप्टिकल मैट्रिक्स",
+    sec_cctv_matrix_desc: "गौशाला के बाड़ों से वास्तविक समय सीसीटीवी फीड",
+    btn_full_quad: "संपूर्ण क्वाड मॉनिटर खोलें",
+    sec_enclosures_title: "बाड़ा संचालन एवं गोवंश टेलीमेट्री",
+    sec_enclosures_desc: "लाइव गणना, गतिविधि अनुपात, चारा गर्त क्षमता एवं परिधि सुरक्षा रजिस्टर",
     
     // Table Headers
     th_enclosure: "बाड़ा / परिसर नाम",
-    th_camera_id: "नोड कोड",
-    th_stream: "स्ट्रीम पाइपलाइन",
+    th_camera_id: "कैमरा नोड",
     th_live_census: "जीवित गणना",
+    th_motion_ratio: "गतिविधि अनुपात (सक्रिय / विश्राम)",
     th_feeder: "चारागाह गर्त",
     th_perimeter: "परिधि सुरक्षा",
-    th_status: "स्थिति",
+    th_action: "कार्रवाई",
+    
+    // Side Widgets
+    sec_incidents_title: "सक्रिय संकट एवं विसंगतियां",
+    btn_view_alerts_log: "सम्पूर्ण अलर्ट लॉग देखें →",
+    sec_engine_status_title: "ए.आई. इंजन टेलीमेट्री",
+    btn_quick_shift_report: "शिफ्ट रिपोर्ट बनाएं",
     
     // Monitor Tab
     lbl_layout: "लेआउट:",
@@ -683,13 +688,12 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const name = document.getElementById('cam-input-name').value.trim();
       const rtsp = document.getElementById('cam-input-rtsp').value.trim();
-      const isSim = document.getElementById('cam-input-simulated').checked;
       if (!name || !rtsp) return;
 
       try {
         await apiRequest('/api/cameras', {
           method: 'POST',
-          body: JSON.stringify({ name, rtsp_url: rtsp, is_simulated: isSim })
+          body: JSON.stringify({ name, rtsp_url: rtsp })
         });
         showToast(AppState.lang === 'hi' ? `कैमरा '${name}' सफलतापूर्वक जोड़ा गया` : `Camera '${name}' connected & monitoring started!`, 'info');
         if (addCamModal) addCamModal.classList.remove('active');
