@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gaushala AI | Smart Livestock Vision & Welfare Platform</title>
+  <meta name="description" content="AI-Powered Livestock Surveillance, YOLOv8 Vision Tracking, Behavioral Welfare Analytics, and Groq Clinical Automation">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="light-theme">
+
+  <!-- =========================================================================
+       1. FULL-SCREEN AUTHENTICATION GATEWAY (LOGIN & SIGNUP WITH GAUSHALA HERO)
+       Shown when user is not authenticated
+       ========================================================================= -->
+  <div class="auth-gateway-overlay" id="auth-gateway">
+    <div class="auth-gateway-container">
+      
+      <!-- Left Visual Showcase Panel: Gaushala Cattle Animals -->
+      <div class="auth-visual-pane">
+        <div class="auth-visual-image-wrap">
+          <img src="/static/images/gaushala_hero.jpg" alt="Sacred Indian Gaushala Sanctuary" class="auth-hero-img" id="auth-hero-img" />
+          <div class="auth-visual-gradient"></div>
+        </div>
+
+        <div class="auth-visual-content">
+          <div class="auth-mission-pill">
+            <span class="pulse-dot"></span>
+            <span data-i18n="auth_mission_tag">★ National Gaushala Vision & Welfare Intelligence</span>
+          </div>
+
+          <h1 class="auth-visual-title" data-i18n="auth_visual_title">
+            Protecting & Nurturing Gomata with Vision AI
+          </h1>
+          <p class="auth-visual-desc" data-i18n="auth_visual_desc">
+            Continuous 24x7 computer vision surveillance, non-invasive behavioral telemetry, and ultra-fast Groq LLaMA-3.3 clinical livestock healthcare automation.
+          </p>
+
+          <!-- Telemetry Highlights Badge Grid -->
+          <div class="auth-telemetry-highlights">
+            <div class="highlight-chip">
+              <span class="highlight-num">99.4%</span>
+              <span class="highlight-lbl" data-i18n="hl_yolo">YOLOv8 Detection</span>
+            </div>
+            <div class="highlight-chip">
+              <span class="highlight-num">&lt; 15s</span>
+              <span class="highlight-lbl" data-i18n="hl_distress">Distress Mitigation</span>
+            </div>
+            <div class="highlight-chip">
+              <span class="highlight-num">24x7</span>
+              <span class="highlight-lbl" data-i18n="hl_cctv">Continuous Rec</span>
+            </div>
+          </div>
+
+          <div class="auth-quote-box">
+            <p>“गौमाता सर्वदेवमयी — Serving livestock welfare with compassion and modern artificial intelligence.”</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Form Panel: Modern Login & Sign Up Forms -->
+      <div class="auth-form-pane">
+        <div class="auth-form-header">
+          <div class="auth-brand-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a10 10 0 0 1 10 10c0 5.5-4.5 10-10 10S2 17.5 2 12A10 10 0 0 1 12 2z"/>
+              <path d="M7 11c1.5-2 3.5-3 5-3s3.5 1 5 3"/>
+              <circle cx="9" cy="14" r="1.5" fill="currentColor"/>
+              <circle cx="15" cy="14" r="1.5" fill="currentColor"/>
+              <path d="M10 18c1 .7 3 .7 4 0"/>
+            </svg>
+          </div>
+          <div>
+            <div class="auth-brand-name">GAUSHALA <span class="brand-tag">AI</span></div>
+            <div class="auth-brand-sub" data-i18n="brand_subtitle">Smart Vision & Cattle Welfare Intelligence</div>
+          </div>
+        </div>
+
+        <!-- Auth Tabs: Sign In / Create Account -->
+        <div class="auth-tabs-toggle">
+          <button class="auth-tab-btn active" id="tab-signin-toggle" data-i18n="btn_signin_tab">Sign In</button>
+          <button class="auth-tab-btn" id="tab-signup-toggle" data-i18n="btn_signup_tab">Create Account</button>
+        </div>
+
+        <!-- Form 1: Sign In -->
+        <form id="signin-form" class="auth-form active">
+          <div class="form-group">
+            <label for="signin-username" class="form-label" data-i18n="login_lbl_user">Username</label>
+            <input type="text" class="form-input" id="signin-username" value="admin" required autocomplete="username" placeholder="Enter username">
+          </div>
+          <div class="form-group">
+            <label for="signin-password" class="form-label" data-i18n="login_lbl_pass">Password</label>
+            <input type="password" class="form-input" id="signin-password" value="gaushala2026" required autocomplete="current-password" placeholder="Enter password">
+          </div>
+
+          <!-- Click-to-autofill default credentials -->
+          <div class="demo-credentials-pill" id="demo-credentials-btn">
+            <span class="demo-icon">💡</span>
+            <div>
+              <strong data-i18n="demo_creds">Demo Credentials:</strong>
+              <div><code>admin</code> / <code>gaushala2026</code> (<span data-i18n="demo_click_fill">click to autofill</span>)</div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary btn-block" style="margin-top:0.5rem;" id="signin-submit-btn">
+            <span data-i18n="btn_login">Sign In to Dashboard</span>
+          </button>
+        </form>
+
+        <!-- Form 2: Sign Up (Register) -->
+        <form id="signup-form" class="auth-form">
+          <div class="form-group">
+            <label for="signup-fullname" class="form-label" data-i18n="signup_lbl_name">Full Name</label>
+            <input type="text" class="form-input" id="signup-fullname" placeholder="e.g. Dr. Rajesh Sharma" required>
+          </div>
+          <div class="form-group">
+            <label for="signup-username" class="form-label" data-i18n="signup_lbl_user">Desired Username</label>
+            <input type="text" class="form-input" id="signup-username" placeholder="e.g. rajesh_vet" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label for="signup-password" class="form-label" data-i18n="signup_lbl_pass">Create Password</label>
+            <input type="password" class="form-input" id="signup-password" placeholder="At least 4 characters" required autocomplete="new-password">
+          </div>
+          <div class="form-group">
+            <label for="signup-role" class="form-label" data-i18n="signup_lbl_role">Assign Role</label>
+            <select class="form-select" id="signup-role">
+              <option value="supervisor">Gaushala Supervisor</option>
+              <option value="veterinarian">Chief Veterinarian</option>
+              <option value="operator">CCTV Control Operator</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn-primary btn-block" style="margin-top:0.5rem;" id="signup-submit-btn">
+            <span data-i18n="btn_signup">Create Account & Enter</span>
+          </button>
+        </form>
+
+        <!-- Quick Language Switcher on Auth Screen -->
+        <div class="auth-bottom-lang">
+          <span style="font-size:0.75rem; color:var(--text-muted);" data-i18n="lbl_language">Language:</span>
+          <div class="lang-switch-toggle">
+            <button class="lang-btn active" data-lang="en">EN</button>
+            <button class="lang-btn" data-lang="hi">हिन्दी</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- =========================================================================
+       2. AUTHENTICATED APP WORKSPACE: LEFT VERTICAL SIDEBAR + MAIN CONTENT
+       ========================================================================= -->
+  <div class="app-workspace" id="app-workspace">
+    
+    <!-- LEFT VERTICAL SIDEBAR MENU -->
+    <aside class="app-sidebar" id="app-sidebar" aria-label="Vertical Navigation">
+      
+      <!-- Sidebar Brand Identity -->
+      <div class="sidebar-brand">
+        <div class="brand-logo" title="Gaushala AI Vision">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a10 10 0 0 1 10 10c0 5.5-4.5 10-10 10S2 17.5 2 12A10 10 0 0 1 12 2z"/>
+            <path d="M7 11c1.5-2 3.5-3 5-3s3.5 1 5 3"/>
+            <circle cx="9" cy="14" r="1.5" fill="currentColor"/>
+            <circle cx="15" cy="14" r="1.5" fill="currentColor"/>
+            <path d="M10 18c1 .7 3 .7 4 0"/>
+          </svg>
+        </div>
+        <div class="sidebar-brand-text">
+          <div class="sidebar-brand-title">GAUSHALA <span class="brand-tag">AI</span></div>
+          <div class="sidebar-brand-sub" data-i18n="brand_subtitle">Smart Vision & Cattle Welfare</div>
+        </div>
+      </div>
+
+      <!-- Quick Action: Connect CCTV Feed -->
+      <div class="sidebar-action-wrap">
+        <button class="btn-connect-cctv-sidebar" id="sidebar-connect-cctv-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          <span data-i18n="btn_connect_cctv_side">Connect Live CCTV</span>
+        </button>
+      </div>
+
+      <!-- Left Vertically-Aligned Navigation Menus -->
+      <nav class="sidebar-nav" role="tablist">
+        
+        <button class="nav-item-btn active" data-tab="dashboard" id="tab-dashboard-btn" role="tab" aria-selected="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="9" rx="1.5"/>
+            <rect x="14" y="3" width="7" height="5" rx="1.5"/>
+            <rect x="14" y="12" width="7" height="9" rx="1.5"/>
+            <rect x="3" y="16" width="7" height="5" rx="1.5"/>
+          </svg>
+          <span data-i18n="nav_dashboard">Dashboard</span>
+        </button>
+
+        <button class="nav-item-btn" data-tab="monitor" id="tab-monitor-btn" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 7l-7 5 7 5V7z"/>
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+          </svg>
+          <span data-i18n="nav_cctv">Live CCTV Feeds</span>
+        </button>
+
+        <button class="nav-item-btn" data-tab="alerts" id="tab-alerts-btn" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <span data-i18n="nav_alerts">AI Alerts</span>
+          <span class="tab-badge" id="alert-tab-badge" style="display:none;">0</span>
+        </button>
+
+        <button class="nav-item-btn nav-item-ai" data-tab="ai" id="tab-ai-btn" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <span data-i18n="nav_groq">Groq AI Automation</span>
+          <span class="ai-spark-pill">LLaMA 3.3</span>
+        </button>
+
+      </nav>
+
+      <!-- Sidebar Bottom: Language Toggle & User Profile -->
+      <div class="sidebar-footer">
+        
+        <!-- Language Switcher Toggle -->
+        <div class="sidebar-lang-row">
+          <span style="font-size:0.75rem; font-weight:600; color:var(--text-muted);" data-i18n="lbl_language">Language:</span>
+          <div class="lang-switch-toggle" id="lang-switch-toggle" aria-label="Change Language">
+            <button class="lang-btn active" data-lang="en" id="lang-btn-en" title="Switch to English">EN</button>
+            <button class="lang-btn" data-lang="hi" id="lang-btn-hi" title="हिन्दी में बदलें">हिन्दी</button>
+          </div>
+        </div>
+
+        <!-- User Profile Card -->
+        <div class="sidebar-user-card">
+          <div class="user-avatar" id="user-avatar">A</div>
+          <div class="user-info">
+            <span class="user-name" id="user-name-display">admin</span>
+            <span class="user-role" id="user-role-display" data-i18n="role_supervisor">Supervisor</span>
+          </div>
+          <button class="btn-logout" id="logout-btn" title="Sign Out">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+
+    </aside>
+
+    <!-- RIGHT MAIN CONTENT WORKSPACE -->
+    <div class="app-main-area">
+      
+      <!-- Top Action & Telemetry Header Bar -->
+      <header class="main-top-bar">
+        <div class="top-bar-left">
+          <div class="active-tab-title" id="active-tab-title">Dashboard Overview</div>
+          <div class="active-tab-desc" id="active-tab-desc">Real-time cattle census and facility monitoring</div>
+        </div>
+
+        <div class="top-bar-right">
+          <!-- Connect Feed Button in Top Bar -->
+          <button class="btn-primary-subtle" id="topbar-connect-cctv-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span data-i18n="btn_connect_feed">+ Connect Live CCTV</span>
+          </button>
+
+          <!-- Telemetry Live Status Beacon -->
+          <div class="live-status-pill" title="System Operational Status">
+            <span class="pulse-dot"></span>
+            <span id="header-system-status">4/4 Online</span>
+          </div>
+
+          <!-- Clock Display -->
+          <div class="clock-display" id="utc-clock-display">--:--:--</div>
+        </div>
+      </header>
+
+      <!-- Main Application Views Container -->
+      <main class="app-container" id="main-container">
+
+        <!-- =====================================================================
+             TAB 1: DASHBOARD VIEW
+             ===================================================================== -->
+        <section class="view-panel active" id="dashboard-view" role="tabpanel" aria-labelledby="tab-dashboard-btn">
+          <div class="dashboard-content">
+            
+            <!-- Executive KPI Metrics Row -->
+            <div class="metrics-grid">
+              
+              <!-- Metric 1: Total Cattle -->
+              <div class="metric-card">
+                <div class="metric-card-top">
+                  <div class="metric-label" data-i18n="metric_total_title">Total Live Cattle Census</div>
+                  <div class="metric-icon-wrap icon-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="metric-value-row">
+                  <span class="metric-number" id="metric-total-cattle">--</span>
+                  <span class="metric-unit" data-i18n="metric_cattle_unit">Heads</span>
+                </div>
+                <div class="metric-footer">
+                  <span class="badge-success-subtle" data-i18n="metric_verified">✓ AI Vision Verified</span>
+                  <span class="metric-sub-label" data-i18n="metric_total_sub">Real-time YOLOv8 tracker</span>
+                </div>
+              </div>
+
+              <!-- Metric 2: Active / Grazing -->
+              <div class="metric-card">
+                <div class="metric-card-top">
+                  <div class="metric-label" data-i18n="metric_active_title">Active & Grazing Cattle</div>
+                  <div class="metric-icon-wrap icon-emerald">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="metric-value-row">
+                  <span class="metric-number text-emerald" id="metric-active-cattle">--</span>
+                  <span class="metric-unit" data-i18n="metric_active_unit">Active</span>
+                </div>
+                <div class="metric-footer">
+                  <span class="badge-emerald-subtle" data-i18n="metric_active_subtle">● Nominal Motion</span>
+                  <span class="metric-sub-label" data-i18n="metric_active_sub">Feeding & roaming naturally</span>
+                </div>
+              </div>
+
+              <!-- Metric 3: Resting / Recumbent -->
+              <div class="metric-card">
+                <div class="metric-card-top">
+                  <div class="metric-label" data-i18n="metric_resting_title">Resting / Idle Cattle</div>
+                  <div class="metric-icon-wrap icon-amber">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="metric-value-row">
+                  <span class="metric-number text-amber" id="metric-resting-cattle">--</span>
+                  <span class="metric-unit" data-i18n="metric_resting_unit">Resting</span>
+                </div>
+                <div class="metric-footer">
+                  <span class="badge-amber-subtle" data-i18n="metric_resting_subtle">● Monitored Rest</span>
+                  <span class="metric-sub-label" data-i18n="metric_resting_sub">Within safe rumination limits</span>
+                </div>
+              </div>
+
+              <!-- Metric 4: CCTV Video Nodes -->
+              <div class="metric-card">
+                <div class="metric-card-top">
+                  <div class="metric-label" data-i18n="metric_system_title">Surveillance Nodes</div>
+                  <div class="metric-icon-wrap icon-indigo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+                      <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                      <line x1="6" y1="6" x2="6.01" y2="6"/>
+                      <line x1="6" y1="18" x2="6.01" y2="18"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="metric-value-row">
+                  <span class="metric-number text-indigo" id="metric-system-status">--</span>
+                </div>
+                <div class="metric-footer">
+                  <span class="badge-indigo-subtle" data-i18n="metric_system_subtle">✓ 24/7 Optical Feed</span>
+                  <span class="metric-sub-label" data-i18n="metric_system_sub">High frame-rate analysis</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Section: Enclosure / Zone Distribution -->
+            <div class="dashboard-section">
+              <div class="section-title-bar">
+                <div>
+                  <h2 class="section-heading" data-i18n="sec_zones_title">Enclosure & Pen Herd Distribution</h2>
+                  <p class="section-subheading" data-i18n="sec_zones_desc">Live occupancy, motion ratios, and feeder availability per shed</p>
+                </div>
+              </div>
+              <div class="zones-grid" id="zones-breakdown-container">
+                <!-- Dynamic Zone Cards populated by dashboard.js -->
+              </div>
+            </div>
+
+            <!-- Section: Facility Telemetry & Compliance Table -->
+            <div class="dashboard-section">
+              <div class="section-title-bar">
+                <div>
+                  <h2 class="section-heading" data-i18n="sec_telemetry_title">Facility Telemetry & Inspection Register</h2>
+                  <p class="section-subheading" data-i18n="sec_telemetry_desc">Real-time camera feed status, livestock capacity, and geofence safety</p>
+                </div>
+              </div>
+              <div class="table-card">
+                <div class="table-responsive">
+                  <table class="modern-table">
+                    <thead>
+                      <tr>
+                        <th data-i18n="th_enclosure">Enclosure Name</th>
+                        <th data-i18n="th_camera_id">Node ID</th>
+                        <th data-i18n="th_stream">Stream Pipeline</th>
+                        <th data-i18n="th_live_census">Live Census</th>
+                        <th data-i18n="th_feeder">Feeder Trough</th>
+                        <th data-i18n="th_perimeter">Perimeter Safety</th>
+                        <th data-i18n="th_status">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="telemetry-table-body">
+                      <!-- Populated dynamically by dashboard.js -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- =====================================================================
+             TAB 2: MONITOR VIEW (LIVE CCTV FEEDS & RTSP INGESTION)
+             ===================================================================== -->
+        <section class="view-panel" id="monitor-view" role="tabpanel" aria-labelledby="tab-monitor-btn">
+          <div class="monitor-content">
+            
+            <!-- Monitor Toolbar -->
+            <div class="monitor-toolbar">
+              <div class="toolbar-left">
+                <span class="toolbar-label" data-i18n="lbl_layout">LAYOUT:</span>
+                <div class="grid-selector">
+                  <button class="grid-btn" data-grid="1x1">1x1 Single</button>
+                  <button class="grid-btn active" data-grid="2x2">2x2 Quad</button>
+                  <button class="grid-btn" data-grid="3x3">3x3 Grid</button>
+                </div>
+              </div>
+
+              <div class="toolbar-right">
+                <!-- Overlay Toggle Button -->
+                <button class="btn-tool" id="global-overlay-toggle" title="Toggle AI Vision Overlays">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <span class="overlay-status-text" data-i18n="btn_overlay_on">AI Overlays ON</span>
+                </button>
+
+                <!-- Dedicated Connect CCTV Button -->
+                <button class="btn-primary" id="add-camera-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  <span data-i18n="btn_connect_feed">+ Connect CCTV Feed</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- CCTV Video Feeds Grid -->
+            <div class="cctv-grid grid-2x2" id="cctv-grid-container">
+              <!-- Populated by monitor.js -->
+            </div>
+
+          </div>
+        </section>
+
+        <!-- =====================================================================
+             TAB 3: ALERTS VIEW (AI DISTRESS EVENT FEED & CLINICAL DIAGNOSIS)
+             ===================================================================== -->
+        <section class="view-panel" id="alerts-view" role="tabpanel" aria-labelledby="tab-alerts-btn">
+          <div class="alerts-content">
+            
+            <!-- Alerts Toolbar -->
+            <div class="alerts-toolbar">
+              <div class="filter-group">
+                <span class="toolbar-label" data-i18n="lbl_severity">FILTER:</span>
+                <button class="chip active" data-severity="ALL" data-i18n="chip_all">All Alerts</button>
+                <button class="chip chip-critical" data-severity="CRITICAL" data-i18n="chip_critical">Critical</button>
+                <button class="chip chip-warning" data-severity="WARNING" data-i18n="chip_warning">Warning</button>
+                <button class="chip chip-info" data-severity="INFO" data-i18n="chip_info">Info</button>
+              </div>
+
+              <button class="btn-tool" id="clear-alerts-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                <span data-i18n="btn_clear_log">Clear Log</span>
+              </button>
+            </div>
+
+            <!-- Alerts Cards Container -->
+            <div class="alerts-container" id="alerts-list-container">
+              <!-- Rendered dynamically by alerts.js -->
+            </div>
+
+          </div>
+        </section>
+
+        <!-- =====================================================================
+             TAB 4: GROQ AI AUTOMATION & VETERINARY INTELLIGENCE
+             Powered by Groq Cloud & .env configuration
+             ===================================================================== -->
+        <section class="view-panel" id="ai-view" role="tabpanel" aria-labelledby="tab-ai-btn">
+          <div class="ai-automation-content">
+            
+            <!-- Groq Hero Header Banner -->
+            <div class="ai-hero-card">
+              <div class="ai-hero-left">
+                <div class="ai-badge-chip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spark-icon">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                  </svg>
+                  <span id="groq-model-status-text">Groq Cloud AI Engine (LLaMA-3.3-70B)</span>
+                </div>
+                <h1 class="ai-hero-title" data-i18n="ai_hero_title">Livestock Health Automation & Diagnostic AI</h1>
+                <p class="ai-hero-desc" data-i18n="ai_hero_desc">
+                  Harness ultra-fast LLaMA-3.3 reasoning powered by Groq to diagnose cattle distress, generate veterinary shift handover audit reports, and provide immediate caretaker action protocols.
+                </p>
+              </div>
+              <div class="ai-hero-right">
+                <div class="env-config-box">
+                  <div class="env-badge">
+                    <span class="dot-green"></span>
+                    <span>.env Configured</span>
+                  </div>
+                  <div class="env-details" id="ai-status-summary">
+                    <code>GROQ_MODEL=llama-3.3-70b-versatile</code>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3 Groq AI Feature Cards -->
+            <div class="ai-features-grid">
+              
+              <!-- Card 1: One-Click Clinical Distress Diagnosis -->
+              <div class="ai-card">
+                <div class="ai-card-header">
+                  <div class="ai-card-icon icon-rose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="ai-card-title" data-i18n="ai_diag_title">Clinical Distress Diagnosis</h3>
+                    <p class="ai-card-sub" data-i18n="ai_diag_sub">Instant clinical diagnosis & caretaker action protocol</p>
+                  </div>
+                </div>
+                <div class="ai-card-body">
+                  <label class="form-label" data-i18n="ai_select_alert">Select Distress Trigger:</label>
+                  <select class="form-select" id="ai-diag-select">
+                    <option value="PROSTRATION_104">Cattle #104: Prolonged Prostration Distress (Zone A - 600s)</option>
+                    <option value="BREACH_112">Cattle #112: Perimeter Geofence Breach (East Fence Line)</option>
+                    <option value="FEEDER_098">Feeder Trough 2: Overcrowding & Aggression Alert</option>
+                  </select>
+                  <div class="form-actions">
+                    <button class="btn-groq" id="run-groq-diag-btn">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                      </svg>
+                      <span data-i18n="btn_run_diag">Run Groq Diagnosis</span>
+                    </button>
+                  </div>
+                  <div class="ai-result-box" id="ai-diag-output" style="display:none;">
+                    <!-- Diagnosis Output Container -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 2: Shift Handover & Audit Report Generator -->
+              <div class="ai-card">
+                <div class="ai-card-header">
+                  <div class="ai-card-icon icon-indigo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                      <polyline points="14 2 14 8 20 8"/>
+                      <line x1="16" y1="13" x2="8" y2="13"/>
+                      <line x1="16" y1="17" x2="8" y2="17"/>
+                      <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="ai-card-title" data-i18n="ai_audit_title">AI Shift Audit Report</h3>
+                    <p class="ai-card-sub" data-i18n="ai_audit_sub">Automated veterinary handover summary</p>
+                  </div>
+                </div>
+                <div class="ai-card-body">
+                  <p class="card-desc-text" data-i18n="ai_audit_desc">
+                    Generates a structured clinical inspection and shift audit report summarizing cattle herd count, active alerts, prostration events, and recommended supervisor tasks.
+                  </p>
+                  <div class="form-actions">
+                    <button class="btn-primary" id="generate-shift-report-btn">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                      </svg>
+                      <span data-i18n="btn_gen_report">Generate Shift Report</span>
+                    </button>
+                  </div>
+                  <div class="ai-result-box" id="ai-audit-output" style="display:none;">
+                    <!-- Audit Report Output Container -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 3: Interactive Veterinary Health Assistant Chat -->
+              <div class="ai-card ai-card-full">
+                <div class="ai-card-header">
+                  <div class="ai-card-icon icon-emerald">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="ai-card-title" data-i18n="ai_chat_title">Interactive Livestock Intelligence Assistant</h3>
+                    <p class="ai-card-sub" data-i18n="ai_chat_sub">Ask clinical, nutrition, or telemetry questions to Groq LLaMA-3.3</p>
+                  </div>
+                </div>
+                <div class="ai-card-body">
+                  <div class="chat-history-box" id="ai-chat-history">
+                    <div class="chat-bubble chat-bubble-ai">
+                      <div class="chat-sender">Groq Cattle AI</div>
+                      <div class="chat-text" data-i18n="ai_chat_welcome">
+                        Hello! I am your 24/7 Groq Veterinary and Telemetry Intelligence Assistant. Ask me about cow recumbency protocols, heat stress, feed ratios, or perimeter security.
+                      </div>
+                    </div>
+                  </div>
+
+                  <form id="ai-chat-form" class="chat-input-row">
+                    <input type="text" class="chat-input" id="ai-chat-input" placeholder="Ask a question (e.g., 'What are the first symptoms of milk fever?')..." data-i18n-ph="ai_chat_placeholder" required />
+                    <button type="submit" class="btn-groq">
+                      <span data-i18n="btn_ask">Ask AI</span>
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+
+    </div>
+  </div>
+
+
+  <!-- =======================================================================
+       3. MODALS (CONNECT CCTV FEED, LIGHTBOX, GROQ DIAGNOSIS)
+       ======================================================================= -->
+
+  <!-- FEATURE: Dedicated "Connect CCTV Feed & Monitor Live" Modal -->
+  <div class="modal-overlay" id="add-camera-modal">
+    <div class="modal-card cctv-connect-modal">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge icon-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M23 7l-7 5 7 5V7z"/>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="modal-title" data-i18n="modal_add_cam_title">Connect & Monitor Live CCTV Feed</h2>
+            <p class="modal-subtitle" data-i18n="modal_add_cam_subtitle">Directly ingest RTSP, HTTP IP cameras, or USB webcams into live AI tracking</p>
+          </div>
+        </div>
+        <button class="btn-icon" id="close-add-camera-modal" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <form id="add-camera-form">
+        <div class="modal-body">
+          
+          <!-- Source Type Selector -->
+          <div class="form-group">
+            <label for="cam-stream-type" class="form-label" data-i18n="modal_lbl_feed_type">Camera Feed Protocol / Type</label>
+            <select class="form-select" id="cam-stream-type">
+              <option value="rtsp">RTSP Network Camera (rtsp://admin:pass@ip:554/h264)</option>
+              <option value="http">HTTP / MJPEG IP Camera (http://ip:port/stream)</option>
+              <option value="webcam">Local USB / Laptop Webcam (Device 0, 1)</option>
+              <option value="simulation">Simulated Gaushala Vision Feed (YOLOv8 Demo)</option>
+            </select>
+          </div>
+
+          <!-- Enclosure Name -->
+          <div class="form-group">
+            <label for="cam-input-name" class="form-label" data-i18n="modal_lbl_cam_name">Enclosure / Barn Name</label>
+            <input type="text" class="form-input" id="cam-input-name" placeholder="e.g. Shed C - Quarantine Paddock" required value="Shed C - North Paddock">
+          </div>
+
+          <!-- Stream URL / Device Input -->
+          <div class="form-group">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label for="cam-input-rtsp" class="form-label" data-i18n="modal_lbl_cam_rtsp">Stream URL or Webcam Device Index</label>
+              <span class="preset-hint" id="stream-preset-hint">Preset Quick-Fill</span>
+            </div>
+            <input type="text" class="form-input font-mono" id="cam-input-rtsp" placeholder="rtsp://admin:pass@192.168.1.120:554/h264" required value="0">
+          </div>
+
+          <!-- Quick Presets Row -->
+          <div class="presets-row">
+            <button type="button" class="preset-btn" data-url="0" data-name="USB Barn Camera #0">📹 Local Webcam 0</button>
+            <button type="button" class="preset-btn" data-url="1" data-name="Secondary Barn Webcam #1">📹 Webcam 1</button>
+            <button type="button" class="preset-btn" data-url="rtsp://simulation/shed_c_feed" data-name="Shed C - High-Res Sim">🐄 Cattle Vision Feed</button>
+          </div>
+
+          <!-- Stream Probe Test Button & Result Box -->
+          <div class="probe-action-box">
+            <button type="button" class="btn-tool" id="btn-probe-stream">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+              <span data-i18n="btn_probe_stream">Probe / Test Feed Connection</span>
+            </button>
+            <div class="probe-result-status" id="probe-status-msg" style="display:none;"></div>
+          </div>
+
+          <!-- AI & Simulation Settings -->
+          <div class="checkbox-row">
+            <input type="checkbox" id="cam-input-simulated" checked>
+            <label for="cam-input-simulated" class="form-label-inline" data-i18n="modal_lbl_cam_sim">
+              Fallback to simulated high-accuracy vision feed if network camera is offline
+            </label>
+          </div>
+
+          <button type="submit" class="btn-primary btn-block" style="margin-top:0.5rem;" id="btn-submit-connect-cam">
+            <span data-i18n="btn_connect_and_monitor">Connect & Start Live Monitoring</span>
+          </button>
+
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Snapshot Lightbox Modal -->
+  <div class="modal-overlay" id="lightbox-modal">
+    <div class="modal-card lightbox-modal">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title" id="lightbox-title">AI Snapshot Evidence</h2>
+          <p class="modal-subtitle" id="lightbox-desc">Digital Inspection Evidence Capture</p>
+        </div>
+        <button class="btn-icon" id="close-lightbox-btn" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="lightbox-img-wrap">
+        <img id="lightbox-img" src="" alt="Snapshot Evidence" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Groq Clinical Diagnosis Modal -->
+  <div class="modal-overlay" id="diagnosis-modal">
+    <div class="modal-card diagnosis-modal">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge icon-spark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="modal-title" id="diag-modal-title">Groq AI Veterinary Diagnosis</h2>
+            <p class="modal-subtitle" id="diag-modal-subtitle">Real-time Clinical Guidance & Caretaker Protocol</p>
+          </div>
+        </div>
+        <button class="btn-icon" id="close-diag-modal-btn" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" id="diag-modal-body">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Application Scripts -->
+  <script src="/static/js/websocket.js"></script>
+  <script src="/static/js/dashboard.js"></script>
+  <script src="/static/js/monitor.js"></script>
+  <script src="/static/js/alerts.js"></script>
+  <script src="/static/js/ai.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
