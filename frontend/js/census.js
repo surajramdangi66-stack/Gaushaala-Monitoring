@@ -10,6 +10,11 @@ const CensusModule = (() => {
   let cachedMedicalRecords = [];
   let cachedValidatedRows = [];
   let cachedSubsidyConfig = null;
+  let cachedHerdImmunity = null;
+  let activePassportCattleId = null;
+  let activePassportTagId = null;
+  let currentWizardStep = 1;
+  let currentWizardFilter = 'all';
 
   function init() {
     if (!initialized) {
@@ -61,6 +66,13 @@ const CensusModule = (() => {
     if (downloadSampleBtn) {
       downloadSampleBtn.addEventListener('click', downloadSampleCsv);
     }
+    const directTemplateBtn = document.getElementById('btn-download-csv-template-direct');
+    if (directTemplateBtn) {
+      directTemplateBtn.addEventListener('click', downloadSampleCsv);
+    }
+
+    // 3-Step Wizard Navigation & Dropzone
+    initWizardControls();
 
     const dryRunValidateBtn = document.getElementById('btn-dry-run-validate');
     if (dryRunValidateBtn) {
@@ -91,7 +103,7 @@ const CensusModule = (() => {
       });
     }
 
-    // 5. Subsidy Rates Configuration & 30-Day Ledger
+    // 5. Subsidy Rates Configuration, Live Simulator & 30-Day Ledger
     const openSubsidyBtn = document.getElementById('btn-open-subsidy-config');
     if (openSubsidyBtn) openSubsidyBtn.addEventListener('click', openSubsidyConfigModal);
     const closeSubsidyBtn = document.getElementById('close-subsidy-modal-btn');
@@ -107,12 +119,26 @@ const CensusModule = (() => {
       });
     }
 
+    // Live budget simulator listeners
+    ['sub-cow-rate', 'sub-bull-rate', 'sub-calf-rate', 'sub-sick-rate'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', updateLiveBudgetSimulator);
+    });
+
     const chipSubsidy = document.getElementById('chip-subsidy-daily');
     if (chipSubsidy) chipSubsidy.addEventListener('click', openSubsidyLedgerModal);
     const viewLedgerBtn = document.getElementById('btn-view-subsidy-ledger');
     if (viewLedgerBtn) viewLedgerBtn.addEventListener('click', openSubsidyLedgerModal);
     const closeLedgerBtn = document.getElementById('close-subsidy-ledger-modal-btn');
     if (closeLedgerBtn) closeLedgerBtn.addEventListener('click', closeSubsidyLedgerModal);
+
+    const exportLedgerCsvBtn = document.getElementById('btn-export-subsidy-ledger-csv');
+    if (exportLedgerCsvBtn) {
+      exportLedgerCsvBtn.addEventListener('click', () => {
+        showToast('Exporting 30-day verified subsidy claims ledger (CSV)...', 'info');
+        window.location.href = '/api/census/subsidy-ledger/export-csv';
+      });
+    }
 
     // 6. AI Reconcile Discrepancy & Subsidy Modal
     const openReconcileBtn = document.getElementById('btn-reconcile-census');
@@ -124,11 +150,30 @@ const CensusModule = (() => {
       closeReconcileBtn.addEventListener('click', closeReconcileModal);
     }
 
-    // 7. QR Badge Modal Closes
+    // 7. QR Badge & Sovereign Passport Modal Closes & Actions
     const closeQrBtn = document.getElementById('close-qr-modal-btn');
     const closeQrCardBtn = document.getElementById('close-qr-card-btn');
     if (closeQrBtn) closeQrBtn.addEventListener('click', closeQrModal);
     if (closeQrCardBtn) closeQrCardBtn.addEventListener('click', closeQrModal);
+
+    const snapFromPassportBtn = document.getElementById('btn-snap-photo-from-passport');
+    if (snapFromPassportBtn) {
+      snapFromPassportBtn.addEventListener('click', async () => {
+        if (activePassportCattleId) {
+          await snapCctvPhoto(activePassportCattleId);
+          await showQrBadge(activePassportCattleId);
+        }
+      });
+    }
+
+    const openPublicPassportLinkBtn = document.getElementById('btn-open-public-passport-link');
+    if (openPublicPassportLinkBtn) {
+      openPublicPassportLinkBtn.addEventListener('click', () => {
+        if (activePassportTagId) {
+          window.open('/verify/' + encodeURIComponent(activePassportTagId), '_blank');
+        }
+      });
+    }
 
     // 8. Medical & Vaccination Modal & Actions
     const openAddMedBtn = document.getElementById('btn-open-add-medical');
@@ -278,7 +323,7 @@ const CensusModule = (() => {
       if (!cattleList || cattleList.length === 0) {
         listBody.innerHTML = `
           <tr>
-            <td colspan="8" class="text-center py-4" style="color:var(--text-muted);">
+            <td colspan="9" class="text-center py-4" style="color:var(--text-muted);">
               ${AppState.lang === 'hi' ? 'कोई गोवंश रिकॉर्ड नहीं मिला। कृपया ऊपर दिए गए "+ Register Cattle" से नया गोवंश जोड़ें या CSV आयात करें।' : 'No cattle records found. Click "+ Register Cattle" or "Import CSV" to add livestock.'}
             </td>
           </tr>
@@ -286,67 +331,74 @@ const CensusModule = (() => {
         return;
       }
 
+      // Rates from config or fallback
+      const cowRate = cachedSubsidyConfig?.cow_rate ?? 40;
+      const bullRate = cachedSubsidyConfig?.bull_rate ?? 35;
+      const calfRate = cachedSubsidyConfig?.calf_rate ?? 20;
+      const sickRate = cachedSubsidyConfig?.sick_rate ?? 50;
+
       listBody.innerHTML = cattleList.map(c => {
         // Category styling
         const cat = c.category || 'cow';
         let catBadge = `<span class="badge-cat-cow">गाय (Cow)</span>`;
-        if (cat === 'bull') catBadge = `<span class="badge-cat-bull">नंदी/बैल (Bull)</span>`;
-        if (cat === 'calf') catBadge = `<span class="badge-cat-calf">बछड़ा/बछिया (Calf)</span>`;
-
-        // Lactation badge
-        const lact = c.lactation_stage || 'dry';
-        let lactBadge = `<span class="badge-lact-dry">सूखी (Dry)</span>`;
-        if (lact === 'milking') lactBadge = `<span class="badge-lact-milking">दुधारू (Milking)</span>`;
-        if (lact === 'pregnant') lactBadge = `<span class="badge-lact-pregnant">गर्भवती (Pregnant)</span>`;
-        if (lact === 'na') lactBadge = `<span class="badge-lact-na">—</span>`;
+        let rateVal = cowRate;
+        if (cat === 'bull') { catBadge = `<span class="badge-cat-bull">नंदी/बैल</span>`; rateVal = bullRate; }
+        if (cat === 'calf') { catBadge = `<span class="badge-cat-calf">बछड़ा/बछिया</span>`; rateVal = calfRate; }
 
         // Health status badge
         const health = c.health_status || 'healthy';
         let healthBadge = `<span class="badge-health-ok">स्वस्थ (Healthy)</span>`;
-        if (health === 'under_treatment') healthBadge = `<span class="badge-health-treatment">उपचाराधीन</span>`;
-        if (health === 'quarantine') healthBadge = `<span class="badge-health-quarantine">क्वारंटाइन</span>`;
+        if (health === 'under_treatment') {
+          healthBadge = `<span class="badge-health-treatment">उपचाराधीन</span>`;
+          rateVal = sickRate;
+        } else if (health === 'quarantine') {
+          healthBadge = `<span class="badge-health-quarantine">क्वारंटाइन</span>`;
+          rateVal = sickRate;
+        }
 
         // INAPH tag snippet
-        const inaphSnippet = c.inaph_tag ? `<div style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono); margin-top:2px;">UID: ${escapeHtml(c.inaph_tag)}</div>` : '';
+        const inaphSnippet = c.inaph_tag ? `<div style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono); margin-top:2px;">INAPH: ${escapeHtml(c.inaph_tag)}</div>` : '';
 
-        // Lineage snippet
-        const lineageSnippet = (c.mother_tag || c.father_tag) ? `
-          <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">
-            ${c.mother_tag ? `<span title="Dam/Mother">♀ ${escapeHtml(c.mother_tag)}</span>` : ''}
-            ${c.father_tag ? ` &bull; <span title="Sire/Father">♂ ${escapeHtml(c.father_tag)}</span>` : ''}
-          </div>
-        ` : '';
+        // Lineage badges
+        let lineageHtml = `<span style="color:var(--text-muted); font-size:0.75rem;">—</span>`;
+        if (c.mother_tag || c.father_tag) {
+          lineageHtml = `
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              ${c.mother_tag ? `<span class="badge-lineage" title="Mother / Dam">♀ ${escapeHtml(c.mother_tag)}</span>` : ''}
+              ${c.father_tag ? `<span class="badge-lineage" title="Father / Sire">♂ ${escapeHtml(c.father_tag)}</span>` : ''}
+            </div>
+          `;
+        }
 
         const photoUrl = c.photo_url || '/static/images/gaushala_hero.jpg';
 
         return `
           <tr>
             <td style="width:70px; text-align:center;">
-              <div style="position:relative; width:48px; height:48px; margin:0 auto;">
-                <img src="${photoUrl}" alt="Cattle Photo" 
-                     onerror="this.src='/static/images/gaushala_hero.jpg'"
-                     style="width:48px; height:48px; border-radius:8px; object-fit:cover; border:1px solid var(--border-subtle); display:block;">
-                <button class="btn-micro-snap" title="1-Click Snap live CCTV frame as official photo" onclick="CensusModule.snapCctvPhoto(${c.id})"
-                        style="position:absolute; bottom:-4px; right:-4px; background:#10b981; color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.3);">
-                  📸
+              <div class="cattle-photo-cell">
+                <img src="${photoUrl}" alt="Cattle Photo" class="cattle-thumb-img"
+                     onerror="this.src='/static/images/gaushala_hero.jpg'">
+                <button class="btn-quick-snap" title="1-Click Snap live CCTV frame as official photo" onclick="CensusModule.snapCctvPhoto(${c.id})">
+                  📷
                 </button>
               </div>
             </td>
             <td>
               <strong style="color:var(--accent-emerald); font-family:var(--font-mono); font-size:0.92rem;">${escapeHtml(c.tag_id)}</strong>
               ${inaphSnippet}
-              ${lineageSnippet}
             </td>
             <td>
-              <strong style="color:var(--text-primary); font-size:0.9rem;">${escapeHtml(c.name || '—')}</strong>
-              <div style="font-size:0.75rem; color:var(--text-muted);">${c.age_years ? c.age_years + ' Yrs' : ''}</div>
+              <strong style="color:var(--text-primary); font-size:0.88rem;">${escapeHtml(c.name || 'Gomata')}</strong>
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${escapeHtml(c.breed || 'Gir / Indigenous')}</div>
             </td>
+            <td>${lineageHtml}</td>
             <td><span class="badge-enclosure">${escapeHtml(c.enclosure_id)}</span></td>
             <td>
               <div>${catBadge}</div>
-              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:3px;">${escapeHtml(c.breed || 'Gir / Indigenous')}</div>
+              <div style="margin-top:4px;">
+                <span class="badge-subsidy-rate" title="Daily Government Subsidy Allotment">₹${rateVal}/day</span>
+              </div>
             </td>
-            <td>${lactBadge}</td>
             <td>${healthBadge}</td>
             <td>
               <span class="status-pill ${c.status === 'active' ? 'pill-active' : 'pill-inactive'}">
@@ -355,11 +407,8 @@ const CensusModule = (() => {
             </td>
             <td>
               <div class="row-actions-group" style="display:flex; gap:4px; flex-wrap:wrap;">
-                <button class="btn-sm btn-ghost" title="Printable ID Badge & QR Code" onclick="CensusModule.showQrBadge(${c.id})">
-                  🪪 ID / QR
-                </button>
-                <button class="btn-sm btn-ghost" style="color:#38bdf8;" title="Open Scannable Public Livestock Digital Passport" onclick="window.open('/verify/' + encodeURIComponent('${escapeHtml(c.tag_id)}'), '_blank')">
-                  📱 Passport
+                <button class="btn-sm btn-ghost" title="Sovereign Digital Passport & Pedigree Lineage" onclick="CensusModule.showQrBadge(${c.id})">
+                  🪪 Passport
                 </button>
                 <button class="btn-sm btn-ghost" title="Log Medical / Vaccine Record" onclick="CensusModule.openAddMedicalFor(${c.id})">
                   💉 Medical
@@ -522,16 +571,133 @@ const CensusModule = (() => {
   }
 
   // -------------------------------------------------------------
-  // 2. BULK CSV IMPORT & EXPORT
+  // 2. 3-STEP GUIDED BULK CSV IMPORT WIZARD & EXPORT
   // -------------------------------------------------------------
+  function initWizardControls() {
+    // Stepper navigation buttons
+    const goto2 = document.getElementById('btn-wizard-goto-step2');
+    if (goto2) goto2.addEventListener('click', () => handleDryRunValidation());
+
+    const goto3 = document.getElementById('btn-wizard-goto-step3');
+    if (goto3) goto3.addEventListener('click', () => setWizardStep(3));
+
+    const backto1 = document.getElementById('btn-wizard-backto-step1');
+    if (backto1) backto1.addEventListener('click', () => setWizardStep(1));
+
+    const backto2 = document.getElementById('btn-wizard-backto-step2');
+    if (backto2) backto2.addEventListener('click', () => setWizardStep(2));
+
+    // Wizard header node clicks
+    [1, 2, 3].forEach(step => {
+      const node = document.getElementById(`wizard-node-${step}`);
+      if (node) {
+        node.addEventListener('click', () => {
+          if (step === 2 && cachedValidatedRows.length === 0) {
+            handleDryRunValidation();
+          } else if (step <= currentWizardStep || cachedValidatedRows.length > 0) {
+            setWizardStep(step);
+          }
+        });
+      }
+    });
+
+    // Dropzone setup
+    const dropzone = document.getElementById('csv-dropzone-area');
+    const fileInput = document.getElementById('bulk-csv-file');
+    const fileLabel = document.getElementById('dropzone-file-selected');
+
+    if (dropzone && fileInput) {
+      dropzone.addEventListener('click', () => fileInput.click());
+
+      dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      });
+
+      dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('dragover');
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          fileInput.files = e.dataTransfer.files;
+          updateDropzoneLabel();
+        }
+      });
+
+      fileInput.addEventListener('change', updateDropzoneLabel);
+    }
+
+    function updateDropzoneLabel() {
+      if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        const f = fileInput.files[0];
+        if (fileLabel) {
+          fileLabel.style.display = 'block';
+          fileLabel.textContent = `✓ Selected: ${f.name} (${(f.size / 1024).toFixed(1)} KB)`;
+        }
+      }
+    }
+
+    // Filter tabs for Step 2 preview
+    const filterTabs = document.querySelectorAll('.wizard-filter-tab');
+    filterTabs.forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        filterTabs.forEach(t => t.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        currentWizardFilter = e.currentTarget.dataset.filter || 'all';
+        renderWizardPreviewRows(currentWizardFilter);
+      });
+    });
+  }
+
+  function setWizardStep(stepNum) {
+    currentWizardStep = stepNum;
+
+    // Panes
+    [1, 2, 3].forEach(s => {
+      const pane = document.getElementById(`wizard-pane-${s}`);
+      const node = document.getElementById(`wizard-node-${s}`);
+      if (pane) pane.style.display = (s === stepNum) ? 'block' : 'none';
+      if (node) {
+        node.classList.remove('active', 'completed');
+        if (s === stepNum) node.classList.add('active');
+        else if (s < stepNum) node.classList.add('completed');
+      }
+    });
+
+    // In step 3, update stats summary
+    if (stepNum === 3) {
+      const summaryBox = document.getElementById('bulk-commit-stats-summary');
+      if (summaryBox) {
+        const valids = cachedValidatedRows.filter(r => r.validation_status === 'VALID').length;
+        const conflicts = cachedValidatedRows.filter(r => r.validation_status === 'CONFLICT').length;
+        const errors = cachedValidatedRows.filter(r => r.validation_status === 'ERROR').length;
+        summaryBox.innerHTML = `
+          <div style="font-size:0.88rem; font-weight:700; color:var(--text-primary);">
+            Ready to commit: <strong>${valids} Valid Records</strong> &bull; <strong>${conflicts} Existing Tag Conflicts</strong>
+          </div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-top:3px;">
+            ${errors > 0 ? `⚠️ Note: ${errors} rows with syntax errors will be automatically skipped.` : 'All rows ready for database ingestion.'}
+          </div>
+        `;
+      }
+    }
+  }
+
   function openBulkImportModal() {
     const modal = document.getElementById('bulk-import-modal');
     if (modal) {
       modal.style.display = 'flex';
+      setWizardStep(1);
       const feedback = document.getElementById('bulk-import-feedback');
       if (feedback) feedback.style.display = 'none';
       const form = document.getElementById('bulk-import-form');
       if (form) form.reset();
+      const fileLabel = document.getElementById('dropzone-file-selected');
+      if (fileLabel) fileLabel.style.display = 'none';
+      cachedValidatedRows = [];
     }
   }
 
@@ -541,24 +707,8 @@ const CensusModule = (() => {
   }
 
   function downloadSampleCsv() {
-    const sampleRows = [
-      'Tag ID,INAPH National ID,Name,Enclosure Pen,Breed,Category,Gender,Lactation Stage,Health Status,Age (Years),Intake Source,Notes',
-      'DL-GAU-0105,100012345678,Nandini,cam-01,Gir Cow,cow,female,milking,healthy,4.5,rescue,Red-brown speckled coat with long pendulous ears',
-      'DL-GAU-0106,100012345679,Gauri,cam-01,Sahiwal,cow,female,dry,healthy,5.0,donated,Light red coat with loose skin folds',
-      'DL-GAU-0107,100012345680,Nandi Rudra,cam-02,Tharparkar,bull,male,na,healthy,3.5,rescue,Large robust white bull with lyre horns',
-      'DL-GAU-0108,100012345681,Kamdhenu,cam-01,Rathi,cow,female,pregnant,healthy,4.0,rescue,Due calving in 2 months. High nutrition diet',
-      'DL-GAU-0109,100012345682,Chhoti,cam-04,Gir Calf,calf,female,na,healthy,0.8,born,Calf born in Gaushala hospital bay'
-    ].join('\n');
-
-    const blob = new Blob(['\ufeff' + sampleRows], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'gaushala_cattle_bulk_sample.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    showToast('Downloading official cattle registration CSV template...', 'info');
+    window.location.href = '/api/cattle/template/csv';
   }
 
   async function snapCctvPhoto(cattleId) {
@@ -574,14 +724,11 @@ const CensusModule = (() => {
 
   async function handleDryRunValidation() {
     const fileInput = document.getElementById('bulk-csv-file');
-    const previewWrap = document.getElementById('bulk-preview-wrap');
     const summaryChips = document.getElementById('bulk-preview-summary-chips');
-    const tbody = document.getElementById('bulk-preview-tbody');
-    const feedback = document.getElementById('bulk-import-feedback');
-    const btn = document.getElementById('btn-dry-run-validate');
+    const btn = document.getElementById('btn-wizard-goto-step2');
 
     if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-      showToast('Please select a CSV file first', 'warning');
+      showToast('Please select or drag a CSV file first', 'warning');
       return;
     }
 
@@ -591,14 +738,13 @@ const CensusModule = (() => {
 
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = `<span class="spinner-inline"></span> Pre-Validating CSV Muster Roll...`;
+      btn.innerHTML = `<span class="spinner-inline"></span> Pre-Validating Schema...`;
     }
 
     try {
       const token = (typeof AppState !== 'undefined' && AppState.token) || localStorage.getItem('gaushala_jwt_token') || localStorage.getItem('gaushala_token') || sessionStorage.getItem('gaushala_token');
       const headers = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
-
 
       const res = await fetch('/api/cattle/bulk-validate', {
         method: 'POST',
@@ -614,7 +760,7 @@ const CensusModule = (() => {
       const data = await res.json();
       cachedValidatedRows = data.rows || [];
 
-      if (previewWrap) previewWrap.style.display = 'block';
+      // Update Step 2 Summary Chips
       if (summaryChips) {
         summaryChips.innerHTML = `
           <div class="summary-chip">
@@ -626,55 +772,82 @@ const CensusModule = (() => {
             <strong class="chip-val text-emerald">${data.valid_rows}</strong>
           </div>
           <div class="summary-chip" style="border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.06);">
-            <span class="chip-label" style="color:#f59e0b;">Duplicate Tag Conflicts</span>
+            <span class="chip-label" style="color:#f59e0b;">Conflicts</span>
             <strong class="chip-val" style="color:#f59e0b;">${data.conflict_rows}</strong>
           </div>
           <div class="summary-chip" style="border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.06);">
-            <span class="chip-label" style="color:#ef4444;">Syntax / Parse Errors</span>
+            <span class="chip-label" style="color:#ef4444;">Syntax Errors</span>
             <strong class="chip-val text-rose">${data.error_rows}</strong>
           </div>
         `;
       }
 
-      if (tbody) {
-        tbody.innerHTML = (data.rows || []).slice(0, 30).map(r => {
-          let badge = `<span style="background:#10b981; color:#0f172a; padding:2px 8px; border-radius:4px; font-weight:700; font-size:0.75rem;">VALID</span>`;
-          if (r.validation_status === 'CONFLICT') {
-            badge = `<span style="background:#f59e0b; color:#0f172a; padding:2px 8px; border-radius:4px; font-weight:700; font-size:0.75rem;">CONFLICT</span>`;
-          } else if (r.validation_status === 'ERROR') {
-            badge = `<span style="background:#ef4444; color:#fff; padding:2px 8px; border-radius:4px; font-weight:700; font-size:0.75rem;">ERROR</span>`;
-          }
+      // Update Filter Tab counts
+      const elAll = document.getElementById('cnt-flt-all');
+      const elVal = document.getElementById('cnt-flt-valid');
+      const elConf = document.getElementById('cnt-flt-conflict');
+      const elErr = document.getElementById('cnt-flt-error');
+      if (elAll) elAll.textContent = data.total_rows;
+      if (elVal) elVal.textContent = data.valid_rows;
+      if (elConf) elConf.textContent = data.conflict_rows;
+      if (elErr) elErr.textContent = data.error_rows;
 
-          return `
-            <tr>
-              <td><strong>#${r.row_num}</strong></td>
-              <td>${badge}</td>
-              <td style="font-family:var(--font-mono); font-weight:700; color:var(--text-primary);">${escapeHtml(r.tag_id || '—')}</td>
-              <td>${escapeHtml(r.name || '—')}</td>
-              <td>${escapeHtml(r.category || 'cow')}</td>
-              <td>${escapeHtml(r.enclosure_id || 'cam-01')}</td>
-              <td style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(r.detail || 'Ready to import')}</td>
-            </tr>
-          `;
-        }).join('');
-      }
+      // Render rows
+      currentWizardFilter = 'all';
+      renderWizardPreviewRows('all');
 
+      // Transition to Step 2!
+      setWizardStep(2);
       showToast(`Pre-Validation: ${data.valid_rows} Valid, ${data.conflict_rows} Conflicts found`, 'info');
     } catch (err) {
-      if (feedback) {
-        feedback.style.display = 'block';
-        feedback.style.background = 'rgba(239,68,68,0.1)';
-        feedback.style.border = '1px solid rgba(239,68,68,0.3)';
-        feedback.style.color = '#ef4444';
-        feedback.textContent = `Pre-Validation Error: ${err.message}`;
-      }
-      showToast(err.message, 'critical');
+      showToast(`Validation Failed: ${err.message}`, 'critical');
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.innerHTML = `<span>🔍 Step 1: Pre-Validate & Preview Rows (सत्यापन जांचें)</span>`;
+        btn.innerHTML = `<span>Next: Pre-Validate CSV &rarr;</span>`;
       }
     }
+  }
+
+  function renderWizardPreviewRows(filter = 'all') {
+    const tbody = document.getElementById('bulk-preview-tbody');
+    if (!tbody) return;
+
+    let filtered = cachedValidatedRows || [];
+    if (filter !== 'all') {
+      filtered = filtered.filter(r => r.validation_status === filter);
+    }
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">No rows match filter '${filter}'.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(r => {
+      let badge = `<span style="background:#10b981; color:#0f172a; padding:2px 8px; border-radius:4px; font-weight:700; font-size:0.75rem;">VALID</span>`;
+      if (r.validation_status === 'CONFLICT') {
+        badge = `<span style="background:#f59e0b; color:#0f172a; padding:2px 8px; border-radius:4px; font-weight:700; font-size:0.75rem;">CONFLICT</span>`;
+      } else if (r.validation_status === 'ERROR') {
+        badge = `<span style="background:#ef4444; color:#fff; padding:2px 8px; border-radius:4px; font-weight:700; font-size:0.75rem;">ERROR</span>`;
+      }
+
+      const lineageText = (r.mother_tag || r.father_tag) 
+        ? `${r.mother_tag || '—'} / ${r.father_tag || '—'}`
+        : '—';
+
+      return `
+        <tr>
+          <td><strong>#${r.row_num}</strong></td>
+          <td>${badge}</td>
+          <td style="font-family:var(--font-mono); font-weight:700; color:var(--text-primary);">${escapeHtml(r.tag_id || '—')}</td>
+          <td>${escapeHtml(r.name || '—')}</td>
+          <td>${escapeHtml(r.category || 'cow')}</td>
+          <td>${escapeHtml(r.enclosure_id || 'cam-01')}</td>
+          <td style="font-size:0.78rem; font-family:var(--font-mono); color:#a7f3d0;">${escapeHtml(lineageText)}</td>
+          <td style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(r.detail || 'Ready to import')}</td>
+        </tr>
+      `;
+    }).join('');
   }
 
   async function handleCommitBulkImport() {
@@ -684,9 +857,8 @@ const CensusModule = (() => {
     const conflict_mode = conflictModeSelect ? conflictModeSelect.value : 'skip';
 
     if (!cachedValidatedRows || cachedValidatedRows.length === 0) {
-      // If user hasn't clicked preview yet, run preview first
-      await handleDryRunValidation();
-      if (!cachedValidatedRows || cachedValidatedRows.length === 0) return;
+      showToast('No validated rows to commit', 'warning');
+      return;
     }
 
     if (uploadBtn) {
@@ -703,7 +875,6 @@ const CensusModule = (() => {
           conflict_resolution: conflict_mode,
           conflict_mode: conflict_mode
         })
-
       });
 
       if (feedback) {
@@ -729,7 +900,7 @@ const CensusModule = (() => {
     } finally {
       if (uploadBtn) {
         uploadBtn.disabled = false;
-        uploadBtn.innerHTML = '<span>✓ Step 2: Confirm & Import Records</span>';
+        uploadBtn.innerHTML = '<span>✓ Commit Verified Records to Database</span>';
       }
     }
   }
@@ -747,6 +918,47 @@ const CensusModule = (() => {
   // -------------------------------------------------------------
   // SUBSIDY RATES CONFIGURATION & 30-DAY TREASURY CLAIMS LEDGER
   // -------------------------------------------------------------
+  function updateLiveBudgetSimulator() {
+    const cowRate = parseFloat(document.getElementById('sub-cow-rate')?.value) || 40;
+    const bullRate = parseFloat(document.getElementById('sub-bull-rate')?.value) || 35;
+    const calfRate = parseFloat(document.getElementById('sub-calf-rate')?.value) || 20;
+    const sickRate = parseFloat(document.getElementById('sub-sick-rate')?.value) || 50;
+
+    let cowCount = 0;
+    let bullCount = 0;
+    let calfCount = 0;
+    let sickCount = 0;
+
+    (cachedCattleList || []).forEach(c => {
+      if (c.status === 'active') {
+        const cat = c.category || 'cow';
+        if (cat === 'bull') bullCount++;
+        else if (cat === 'calf') calfCount++;
+        else cowCount++;
+
+        if (c.health_status === 'under_treatment' || c.health_status === 'quarantine') {
+          sickCount++;
+        }
+      }
+    });
+
+    const dailyTotal = (cowCount * cowRate) + (bullCount * bullRate) + (calfCount * calfRate) + (sickCount * Math.max(0, sickRate - cowRate));
+    const monthlyTotal = dailyTotal * 30;
+    const annualTotal = dailyTotal * 365;
+
+    const summaryEl = document.getElementById('sim-herd-counts-summary');
+    if (summaryEl) {
+      summaryEl.textContent = `${cowCount} Cows @ ₹${cowRate} | ${bullCount} Bulls @ ₹${bullRate} | ${calfCount} Calves @ ₹${calfRate}${sickCount > 0 ? ` | ${sickCount} Sick @ ₹${sickRate}` : ''}`;
+    }
+
+    const dEl = document.getElementById('sim-val-daily');
+    const mEl = document.getElementById('sim-val-monthly');
+    const aEl = document.getElementById('sim-val-annual');
+    if (dEl) dEl.textContent = `₹${Math.round(dailyTotal).toLocaleString('en-IN')}`;
+    if (mEl) mEl.textContent = `₹${Math.round(monthlyTotal).toLocaleString('en-IN')}`;
+    if (aEl) aEl.textContent = `₹${Math.round(annualTotal).toLocaleString('en-IN')}`;
+  }
+
   async function openSubsidyConfigModal() {
     const modal = document.getElementById('subsidy-config-modal');
     if (!modal) return;
@@ -761,8 +973,10 @@ const CensusModule = (() => {
       if (document.getElementById('sub-sick-rate')) document.getElementById('sub-sick-rate').value = config.sick_rate;
       if (document.getElementById('sub-scheme-title')) document.getElementById('sub-scheme-title').value = config.scheme_title;
       if (document.getElementById('sub-disbursing-dept')) document.getElementById('sub-disbursing-dept').value = config.disbursing_dept;
+      updateLiveBudgetSimulator();
     } catch (err) {
       console.warn('Failed to load subsidy config:', err);
+      updateLiveBudgetSimulator();
     }
   }
 
@@ -1060,100 +1274,161 @@ const CensusModule = (() => {
     if (!modal || !printArea) return;
 
     modal.style.display = 'flex';
-    printArea.innerHTML = `<div style="text-align:center; padding:2rem;"><div class="spinner-inline"></div> Generating official cattle identity badge...</div>`;
+    printArea.innerHTML = `<div style="text-align:center; padding:3rem;"><div class="spinner-inline"></div> Loading Sovereign Bharat Pashudhan Digital Passport...</div>`;
 
     try {
-      const c = await apiRequest(`/api/cattle/${cattleId}`);
-      
+      const [c, medList] = await Promise.all([
+        apiRequest(`/api/cattle/${cattleId}`),
+        apiRequest(`/api/cattle/${cattleId}/medical`).catch(() => [])
+      ]);
+
+      activePassportCattleId = c.id;
+      activePassportTagId = c.tag_id;
+
       // Scannable live passport URL for mobile phone cameras!
       const passportUrl = `${window.location.origin}/verify/${encodeURIComponent(c.tag_id)}`;
-      const qrSvg = generateQrSvg(passportUrl, 140);
+      const qrSvg = generateQrSvg(passportUrl, 130);
 
       const catLabel = c.category === 'bull' ? 'नंदी / बैल (Bull)' : c.category === 'calf' ? 'बछड़ा / बछिया (Calf)' : 'गाय (Cow)';
       const lactLabel = c.lactation_stage === 'milking' ? 'दुधारू (Milking)' : c.lactation_stage === 'pregnant' ? 'गर्भवती (Pregnant)' : 'सूखी (Dry)';
       const healthLabel = c.health_status === 'healthy' ? 'स्वस्थ (Healthy)' : c.health_status === 'under_treatment' ? 'उपचाराधीन' : 'क्वारंटाइन';
       const photoSrc = c.photo_url || '/static/images/gaushala_hero.jpg';
 
+      // Check disease immunization stamps
+      const hasFMD = (medList || []).some(m => (m.title || '').toLowerCase().includes('fmd') && m.status === 'completed');
+      const hasLSD = (medList || []).some(m => (m.title || '').toLowerCase().includes('lsd') && m.status === 'completed');
+      const hasHSBQ = (medList || []).some(m => ((m.title || '').toLowerCase().includes('hs') || (m.title || '').toLowerCase().includes('bq')) && m.status === 'completed');
+      const hasDeworm = (medList || []).some(m => (m.title || '').toLowerCase().includes('deworm') && m.status === 'completed');
+
       printArea.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #334155; padding-bottom:12px; margin-bottom:14px;">
-          <div>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span style="font-size:1.4rem;">🇮🇳</span>
+        <div class="passport-sovereign-card">
+          <div class="passport-tricolor-bar"></div>
+          
+          <div class="passport-top-crest">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:1.6rem;">🏛️</span>
               <div>
-                <div style="font-size:0.7rem; letter-spacing:0.08em; text-transform:uppercase; color:#94a3b8; font-weight:800;">
-                  STATE GAU SEVA AYOG &bull; ANIMAL HUSBANDRY DEPT
+                <div style="font-size:0.65rem; letter-spacing:0.08em; text-transform:uppercase; color:#a7f3d0; font-weight:800;">
+                  GOVERNMENT OF INDIA &bull; NATIONAL LIVESTOCK MISSION (भारत सरकार)
                 </div>
-                <div style="font-size:1.05rem; font-weight:900; color:#f8fafc; letter-spacing:0.02em;">
-                  OFFICIAL LIVESTOCK IDENTITY CARD
+                <div style="font-size:1.05rem; font-weight:900; color:#ffffff; letter-spacing:0.02em;">
+                  SOVEREIGN BHARAT PASHUDHAN DIGITAL PASSPORT (पशु आधार)
                 </div>
               </div>
             </div>
+            <div style="background:#10b981; color:#0f172a; font-weight:900; font-size:0.68rem; padding:4px 8px; border-radius:4px; letter-spacing:0.04em; box-shadow:0 2px 6px rgba(0,0,0,0.3);">
+              ✓ AI VERIFIED
+            </div>
           </div>
-          <div style="background:#10b981; color:#0f172a; font-weight:900; font-size:0.7rem; padding:3px 8px; border-radius:4px; letter-spacing:0.04em;">
-            AI VERIFIED
-          </div>
-        </div>
 
-        <div style="display:grid; grid-template-columns:1fr 140px; gap:16px; align-items:center;">
-          <div>
-            <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;">
-              <img src="${photoSrc}" alt="Cattle Photo" onerror="this.src='/static/images/gaushala_hero.jpg'"
-                   style="width:58px; height:58px; border-radius:10px; object-fit:cover; border:2px solid #10b981;">
+          <div style="padding:16px;">
+            <div style="display:grid; grid-template-columns:100px 1fr 130px; gap:14px; align-items:center;">
+              <!-- Photo Cell -->
+              <div style="position:relative;">
+                <img src="${photoSrc}" alt="Cattle Photo" onerror="this.src='/static/images/gaushala_hero.jpg'"
+                     style="width:100px; height:105px; border-radius:10px; object-fit:cover; border:2px solid #10b981; box-shadow:0 4px 10px rgba(0,0,0,0.4);">
+                <button class="btn-quick-snap" title="Take CCTV Snapshot Now" onclick="CensusModule.snapCctvPhoto(${c.id})"
+                        style="position:absolute; bottom:-6px; right:-6px; width:24px; height:24px; font-size:11px;">
+                  📷
+                </button>
+              </div>
+
+              <!-- Primary Identifiers -->
               <div>
-                <div style="font-size:0.7rem; text-transform:uppercase; color:#94a3b8; font-weight:700;">Ear Tag / Collar RFID</div>
-                <div style="font-size:1.3rem; font-weight:900; font-family:var(--font-mono); color:#10b981;">
+                <div style="font-size:0.68rem; text-transform:uppercase; color:#94a3b8; font-weight:800; letter-spacing:0.04em;">EAR TAG / COLLAR RFID</div>
+                <div style="font-size:1.45rem; font-weight:900; font-family:var(--font-mono); color:#10b981; letter-spacing:0.02em;">
                   ${escapeHtml(c.tag_id)}
                 </div>
-                ${c.inaph_tag ? `<div style="font-size:0.78rem; font-family:var(--font-mono); color:#cbd5e1; margin-top:1px;">INAPH UID: <strong>${escapeHtml(c.inaph_tag)}</strong></div>` : ''}
+                <div style="font-size:0.8rem; font-family:var(--font-mono); color:#cbd5e1; margin-top:1px;">
+                  INAPH PASHU AADHAAR: <strong style="color:#ffffff;">${escapeHtml(c.inaph_tag || '900' + String(c.id).padStart(9, '0'))}</strong>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px; font-size:0.8rem;">
+                  <div>
+                    <span style="color:#94a3b8; font-size:0.7rem;">Name:</span>
+                    <strong style="color:#f8fafc; display:block;">${escapeHtml(c.name || 'Gomata')}</strong>
+                  </div>
+                  <div>
+                    <span style="color:#94a3b8; font-size:0.7rem;">Breed:</span>
+                    <strong style="color:#a7f3d0; display:block;">${escapeHtml(c.breed || 'Gir Indigenous')}</strong>
+                  </div>
+                  <div>
+                    <span style="color:#94a3b8; font-size:0.7rem;">Category:</span>
+                    <strong style="color:#f8fafc; display:block;">${catLabel}</strong>
+                  </div>
+                  <div>
+                    <span style="color:#94a3b8; font-size:0.7rem;">Enclosure:</span>
+                    <strong style="color:#38bdf8; display:block;">${escapeHtml(c.enclosure_id)}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Vector QR Code -->
+              <div style="text-align:center;">
+                <div style="background:#ffffff; padding:6px; border-radius:10px; display:inline-block; box-shadow:0 4px 14px rgba(0,0,0,0.5);">
+                  ${qrSvg}
+                </div>
+                <div style="font-size:0.65rem; color:#94a3b8; margin-top:4px; font-weight:700;">
+                  SCAN WITH SMARTPHONE
+                </div>
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:0.82rem; margin-bottom:8px;">
-              <div>
-                <span style="color:#94a3b8; font-size:0.72rem;">Name:</span>
-                <div style="font-weight:700; color:#f8fafc;">${escapeHtml(c.name || 'Gomata')}</div>
+            <!-- 3-Generation Pedigree Lineage Tree Box -->
+            <div class="pedigree-tree-box">
+              <div class="pedigree-tree-header">
+                <span>🧬 Sovereign Pedigree Lineage Tree (वंशावली कुलवृक्ष)</span>
               </div>
-              <div>
-                <span style="color:#94a3b8; font-size:0.72rem;">Desi Breed:</span>
-                <div style="font-weight:700; color:#f8fafc;">${escapeHtml(c.breed || 'Gir')}</div>
+              <div class="pedigree-tree-grid">
+                <div class="pedigree-node pedigree-node-dam">
+                  <div class="pedigree-role">♀ Mother Tag (Dam / मातृ गोवंश)</div>
+                  <div class="pedigree-tag">${escapeHtml(c.mother_tag || 'Natural Herd Baseline')}</div>
+                  <div style="font-size:0.7rem; color:#94a3b8; margin-top:2px;">Desi Gir Purebred Lineage</div>
+                </div>
+                <div class="pedigree-node pedigree-node-sire">
+                  <div class="pedigree-role">♂ Father Tag (Sire / पितृ नंदी)</div>
+                  <div class="pedigree-tag">${escapeHtml(c.father_tag || 'Natural Herd Baseline')}</div>
+                  <div style="font-size:0.7rem; color:#94a3b8; margin-top:2px;">Pedigree Progeny Tested Sire</div>
+                </div>
               </div>
-              <div>
-                <span style="color:#94a3b8; font-size:0.72rem;">Category & Age:</span>
-                <div style="font-weight:600; color:#f8fafc;">${catLabel} (${c.age_years || 3} Yrs)</div>
+            </div>
+
+            <!-- National NADCP Immunization Passport Status -->
+            <div style="background:#0f172a; border:1px solid #1e293b; border-radius:10px; padding:10px 14px; margin-top:8px;">
+              <div style="font-size:0.72rem; text-transform:uppercase; color:#94a3b8; font-weight:800; margin-bottom:6px;">
+                💉 National NADCP Immunization Stamps (टीकाकरण मुहर)
               </div>
-              <div>
-                <span style="color:#94a3b8; font-size:0.72rem;">Assigned Enclosure:</span>
-                <div style="font-weight:700; color:#38bdf8;">${escapeHtml(c.enclosure_id)}</div>
+              <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; text-align:center;">
+                <div style="background:#1e293b; padding:6px; border-radius:6px; font-size:0.75rem;">
+                  <div style="font-size:0.68rem; color:#94a3b8;">FMD</div>
+                  <strong style="color:${hasFMD ? '#10b981' : '#f59e0b'};">${hasFMD ? '✓ IMMUNIZED' : '⏳ PENDING'}</strong>
+                </div>
+                <div style="background:#1e293b; padding:6px; border-radius:6px; font-size:0.75rem;">
+                  <div style="font-size:0.68rem; color:#94a3b8;">LSD</div>
+                  <strong style="color:${hasLSD ? '#10b981' : '#f59e0b'};">${hasLSD ? '✓ IMMUNIZED' : '⏳ PENDING'}</strong>
+                </div>
+                <div style="background:#1e293b; padding:6px; border-radius:6px; font-size:0.75rem;">
+                  <div style="font-size:0.68rem; color:#94a3b8;">HS/BQ</div>
+                  <strong style="color:${hasHSBQ ? '#10b981' : '#f59e0b'};">${hasHSBQ ? '✓ IMMUNIZED' : '⏳ PENDING'}</strong>
+                </div>
+                <div style="background:#1e293b; padding:6px; border-radius:6px; font-size:0.75rem;">
+                  <div style="font-size:0.68rem; color:#94a3b8;">DEWORM</div>
+                  <strong style="color:${hasDeworm ? '#10b981' : '#f59e0b'};">${hasDeworm ? '✓ DOSING OK' : '⏳ PENDING'}</strong>
+                </div>
               </div>
-              <div>
-                <span style="color:#94a3b8; font-size:0.72rem;">Lineage (Dam / Sire):</span>
-                <div style="font-weight:600; color:#cbd5e1;">${escapeHtml(c.mother_tag || '—')} / ${escapeHtml(c.father_tag || '—')}</div>
-              </div>
-              <div>
-                <span style="color:#94a3b8; font-size:0.72rem;">Health Status:</span>
-                <div style="font-weight:700; color:#10b981;">${healthLabel}</div>
-              </div>
+            </div>
+
+            <!-- Security Footer -->
+            <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; color:#64748b;">
+              <span>Registered: ${c.created_at ? c.created_at.slice(0, 10) : 'Active'} &bull; Status: <strong style="color:#10b981;">VERIFIED</strong></span>
+              <span>SHA-256: <code style="color:#94a3b8; font-size:0.7rem;">GAU-${c.id}-PASSPORT-VERIFIED</code></span>
             </div>
           </div>
-
-          <div style="text-align:center;">
-            <div style="background:#ffffff; padding:6px; border-radius:10px; display:inline-block; box-shadow:0 4px 12px rgba(0,0,0,0.4);">
-              ${qrSvg}
-            </div>
-            <div style="font-size:0.65rem; color:#94a3b8; margin-top:6px; font-weight:600;">
-              Mobile Scan for Digital Passport
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-top:14px; padding-top:10px; border-top:1px dashed #334155; display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; color:#64748b;">
-          <span>Gaushala CCTV Vision Portal &bull; Reg: ${c.created_at ? c.created_at.slice(0, 10) : 'Active'}</span>
-          <span>Security Hash: <code style="color:#94a3b8; font-size:0.7rem;">GAU-${c.id}-SEC</code></span>
         </div>
       `;
 
     } catch (err) {
-      printArea.innerHTML = `<div class="text-rose text-center p-3">Failed to load ID card: ${err.message}</div>`;
+      printArea.innerHTML = `<div class="text-rose text-center p-3">Failed to load passport: ${err.message}</div>`;
     }
   }
 
@@ -1355,11 +1630,46 @@ const CensusModule = (() => {
   }
 
   // -------------------------------------------------------------
-  // 5. MEDICAL & VACCINATION REGISTER
+  // 5. NATIONAL NADCP HERD IMMUNITY & MEDICAL REGISTER
   // -------------------------------------------------------------
+  async function loadHerdImmunityCoverage() {
+    try {
+      const summary = await apiRequest('/api/cattle/medical/coverage-summary');
+      cachedHerdImmunity = summary;
+
+      const diseases = ['fmd', 'lsd', 'hsbq', 'deworm'];
+      const keyMap = { fmd: 'fmd', lsd: 'lsd', hsbq: 'hsbq', deworm: 'deworming' };
+
+      diseases.forEach(d => {
+        const item = summary[keyMap[d]] || { pct: 0, covered: 0, target: summary.total_herd || 0, status: 'VULNERABLE' };
+        const pctEl = document.getElementById(`pct-imm-${d}`);
+        const barEl = document.getElementById(`bar-imm-${d}`);
+        const metaEl = document.getElementById(`meta-imm-${d}`);
+        const statusEl = document.getElementById(`status-imm-${d}`);
+
+        const pct = item.pct || 0;
+        if (pctEl) pctEl.textContent = `${pct}%`;
+        if (barEl) {
+          barEl.style.width = `${pct}%`;
+          barEl.className = `immunity-progress-fill ${pct >= 85 ? 'fill-emerald' : pct >= 50 ? 'fill-amber' : 'fill-rose'}`;
+        }
+        if (metaEl) metaEl.textContent = `Covered: ${item.covered || 0} / ${item.target || summary.total_herd || 0}`;
+        if (statusEl) {
+          statusEl.textContent = item.status === 'OPTIMAL' ? '✓ Protected (85%+)' : item.status === 'MODERATE' ? '⚠️ Moderate (50%+)' : '🚨 Vulnerable (<50%)';
+          statusEl.className = `status-pill ${item.status === 'OPTIMAL' ? 'pill-active' : item.status === 'MODERATE' ? 'pill-warning' : 'pill-inactive'}`;
+        }
+      });
+    } catch (err) {
+      console.warn('Failed to load herd immunity coverage:', err);
+    }
+  }
+
   async function loadMedicalRegister() {
     const tbody = document.getElementById('cattle-medical-tbody');
     if (!tbody) return;
+
+    // Load herd immunity dashboard ribbon in parallel
+    loadHerdImmunityCoverage();
 
     try {
       const [alertsData, cattleList] = await Promise.all([

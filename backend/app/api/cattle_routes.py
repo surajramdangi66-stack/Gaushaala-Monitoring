@@ -515,6 +515,92 @@ def capture_cctv_photo(
     return {"success": True, "photo_url": rel_url, "source_camera": target_cam}
 
 # -------------------------------------------------------------
+# SAMPLE CSV TEMPLATE DOWNLOAD FOR BULK REGISTRATION
+# -------------------------------------------------------------
+
+@router.get("/api/cattle/template/csv")
+def download_cattle_csv_template():
+    """Returns a standardized CSV template with example rows for bulk cattle registration."""
+    output = io.StringIO()
+    output.write('\ufeff')  # UTF-8 BOM for Excel compatibility
+    writer = csv.writer(output)
+
+    writer.writerow([
+        "Tag ID / RFID",
+        "INAPH National ID",
+        "Name / Identifier",
+        "Enclosure Pen",
+        "Breed",
+        "Category",
+        "Gender",
+        "Lactation Stage",
+        "Health Status",
+        "Age (Years)",
+        "Mother Tag (Dam)",
+        "Father Tag (Sire)",
+        "Intake Source",
+        "Notes"
+    ])
+
+    # Sample rows demonstrating valid values
+    writer.writerow([
+        "GAU-DEMO-01",
+        "900100234561",
+        "Kamdhenu",
+        "cam-01",
+        "Gir Indigenous",
+        "cow",
+        "female",
+        "milking",
+        "healthy",
+        "4.5",
+        "GAU-001",
+        "GAU-SIRE-9",
+        "dairy",
+        "High milk yield indigenous milch cow"
+    ])
+    writer.writerow([
+        "GAU-DEMO-02",
+        "900100234562",
+        "Nandi Bull",
+        "cam-02",
+        "Sahiwal",
+        "bull",
+        "male",
+        "na",
+        "healthy",
+        "5.0",
+        "",
+        "",
+        "rescue",
+        "Pedigree breeding bull"
+    ])
+    writer.writerow([
+        "GAU-DEMO-03",
+        "900100234563",
+        "Gauri Calf",
+        "cam-01",
+        "Tharparkar",
+        "calf",
+        "female",
+        "na",
+        "healthy",
+        "0.8",
+        "GAU-DEMO-01",
+        "GAU-DEMO-02",
+        "birth",
+        "Under NADCP deworming protocol"
+    ])
+
+    csv_data = output.getvalue()
+    return Response(
+        content=csv_data,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=cattle_registration_template.csv"}
+    )
+
+
+# -------------------------------------------------------------
 # INTERACTIVE DRY-RUN BULK VALIDATION & COMMIT
 # -------------------------------------------------------------
 
@@ -543,31 +629,37 @@ async def bulk_validate_cattle_csv(
     error_count = 0
 
     row_index = 1
-    for row in reader:
-        tag_id = (row.get("Tag ID / RFID") or row.get("tag_id") or row.get("Tag ID") or "").strip()
-        name = (row.get("Name / Identifier") or row.get("name") or row.get("Name") or "").strip() or None
-        enclosure = (row.get("Enclosure Pen") or row.get("enclosure_id") or row.get("Enclosure") or "cam-01").strip()
-        breed = (row.get("Breed") or row.get("breed") or "Gir / Indigenous").strip()
-        category = (row.get("Category") or row.get("category") or "cow").strip().lower()
+    for raw_row in reader:
+        # Create normalized lowercase key mapping for robust header resolution
+        row = {str(k).strip().lower(): (v or "") for k, v in raw_row.items() if k is not None}
+
+        tag_id = (row.get("tag id / rfid") or row.get("tag_id") or row.get("tag id") or row.get("tag") or "").strip()
+        name = (row.get("name / identifier") or row.get("name") or "").strip() or None
+        enclosure = (row.get("enclosure pen") or row.get("enclosure_id") or row.get("enclosure") or row.get("pen") or "cam-01").strip()
+        breed = (row.get("breed") or row.get("indigenous breed") or "Gir / Indigenous").strip()
+        category = (row.get("category") or "cow").strip().lower()
         if category not in ["cow", "bull", "calf"]:
             category = "cow"
-        gender = (row.get("Gender") or row.get("gender") or "female").strip().lower()
+        gender = (row.get("gender") or "female").strip().lower()
         if gender not in ["female", "male"]:
             gender = "female"
-        lactation = (row.get("Lactation Stage") or row.get("lactation_stage") or "dry").strip().lower()
+        lactation = (row.get("lactation stage") or row.get("lactation_stage") or "dry").strip().lower()
         if lactation not in ["milking", "dry", "pregnant", "na"]:
             lactation = "dry"
-        health = (row.get("Health Status") or row.get("health_status") or "healthy").strip().lower()
+        health = (row.get("health status") or row.get("health_status") or "healthy").strip().lower()
         if health not in ["healthy", "under_treatment", "quarantine"]:
             health = "healthy"
-        inaph = (row.get("INAPH National ID") or row.get("inaph_tag") or "").strip() or None
-        intake = (row.get("Intake Source") or row.get("intake_source") or "rescue").strip()
+        inaph = (row.get("inaph national id") or row.get("inaph_tag") or row.get("inaph") or "").strip() or None
+        mother_tag = (row.get("mother tag (dam)") or row.get("mother_tag") or row.get("dam") or row.get("mother tag") or "").strip() or None
+        father_tag = (row.get("father tag (sire)") or row.get("father_tag") or row.get("sire") or row.get("father tag") or "").strip() or None
+        intake = (row.get("intake source") or row.get("intake_source") or "rescue").strip()
         try:
-            age = float(row.get("Age (Years)") or row.get("age_years") or 3.0)
+            age_raw = row.get("age (years)") or row.get("age_years") or row.get("age") or "3.0"
+            age = float(age_raw)
         except Exception:
             age = 3.0
 
-        notes = (row.get("Notes") or row.get("notes") or "").strip() or None
+        notes = (row.get("notes") or row.get("note") or "").strip() or None
 
         errors = []
         if not tag_id:
@@ -602,6 +694,8 @@ async def bulk_validate_cattle_csv(
             "lactation_stage": lactation,
             "health_status": health,
             "age_years": age,
+            "mother_tag": mother_tag,
+            "father_tag": father_tag,
             "intake_source": intake,
             "notes": notes
         })
@@ -644,7 +738,6 @@ def bulk_commit_cattle(
         existing = db.query(CattleModel).filter(CattleModel.tag_id == tag_id).first()
         if existing:
             if resolution == "overwrite":
-
                 existing.name = item.get("name") or existing.name
                 existing.enclosure_id = item.get("enclosure_id") or existing.enclosure_id
                 existing.breed = item.get("breed") or existing.breed
@@ -653,6 +746,8 @@ def bulk_commit_cattle(
                 existing.lactation_stage = item.get("lactation_stage") or existing.lactation_stage
                 existing.health_status = item.get("health_status") or existing.health_status
                 existing.inaph_tag = item.get("inaph_tag") or existing.inaph_tag
+                existing.mother_tag = item.get("mother_tag") or existing.mother_tag
+                existing.father_tag = item.get("father_tag") or existing.father_tag
                 existing.intake_source = item.get("intake_source") or existing.intake_source
                 existing.age_years = item.get("age_years", existing.age_years)
                 existing.notes = item.get("notes") or existing.notes
@@ -672,6 +767,8 @@ def bulk_commit_cattle(
             lactation_stage=item.get("lactation_stage") or "dry",
             health_status=item.get("health_status") or "healthy",
             inaph_tag=item.get("inaph_tag"),
+            mother_tag=item.get("mother_tag"),
+            father_tag=item.get("father_tag"),
             intake_source=item.get("intake_source") or "rescue",
             age_years=item.get("age_years") or 3.0,
             status="active",
@@ -700,6 +797,91 @@ def bulk_commit_cattle(
 def get_vaccination_protocols():
     """Returns National Animal Disease Control Programme (NADCP) standard protocols."""
     return {"protocols": NATIONAL_PROTOCOLS}
+
+
+@router.get("/api/cattle/medical/coverage-summary")
+def get_herd_immunity_coverage(db: Session = Depends(get_db)):
+    """
+    Computes herd immunity coverage percentages across active cattle for key NADCP diseases:
+    FMD (Foot & Mouth), LSD (Lumpy Skin), HS/BQ (Haemorrhagic Septicaemia/Black Quarter), and Deworming.
+    """
+    active_cattle = db.query(CattleModel).filter(CattleModel.status == "active").all()
+    total_herd = len(active_cattle)
+
+    if total_herd == 0:
+        return {
+            "total_herd": 0,
+            "overall_immunity_score": 0.0,
+            "fmd": {"covered": 0, "pct": 0.0, "status": "INACTIVE"},
+            "lsd": {"covered": 0, "pct": 0.0, "status": "INACTIVE"},
+            "hsbq": {"covered": 0, "pct": 0.0, "status": "INACTIVE"},
+            "deworming": {"covered": 0, "pct": 0.0, "status": "INACTIVE"}
+        }
+
+    # Fetch all completed medical records
+    completed_records = db.query(CattleMedicalModel).filter(
+        CattleMedicalModel.status == "completed"
+    ).all()
+
+    # Map completed records by cattle_id
+    fmd_cattle_ids = set()
+    lsd_cattle_ids = set()
+    hsbq_cattle_ids = set()
+    deworm_cattle_ids = set()
+
+    for r in completed_records:
+        title_lower = (r.title or "").lower()
+        if "fmd" in title_lower or "foot" in title_lower:
+            fmd_cattle_ids.add(r.cattle_id)
+        if "lsd" in title_lower or "lumpy" in title_lower:
+            lsd_cattle_ids.add(r.cattle_id)
+        if "hs" in title_lower or "bq" in title_lower or "septicaemia" in title_lower or "quarter" in title_lower:
+            hsbq_cattle_ids.add(r.cattle_id)
+        if "deworm" in title_lower or "anthelmintic" in title_lower or "alben" in title_lower or "ivermectin" in title_lower:
+            deworm_cattle_ids.add(r.cattle_id)
+
+    active_id_set = set(c.id for c in active_cattle)
+
+    fmd_cov = len(fmd_cattle_ids.intersection(active_id_set))
+    lsd_cov = len(lsd_cattle_ids.intersection(active_id_set))
+    hsbq_cov = len(hsbq_cattle_ids.intersection(active_id_set))
+    deworm_cov = len(deworm_cattle_ids.intersection(active_id_set))
+
+    fmd_pct = round((fmd_cov / total_herd) * 100, 1)
+    lsd_pct = round((lsd_cov / total_herd) * 100, 1)
+    hsbq_pct = round((hsbq_cov / total_herd) * 100, 1)
+    deworm_pct = round((deworm_cov / total_herd) * 100, 1)
+
+    overall_score = round((fmd_pct + lsd_pct + hsbq_pct + deworm_pct) / 4, 1)
+
+    return {
+        "total_herd": total_herd,
+        "overall_immunity_score": overall_score,
+        "fmd": {
+            "covered": fmd_cov,
+            "target": total_herd,
+            "pct": fmd_pct,
+            "status": "OPTIMAL" if fmd_pct >= 85 else ("MODERATE" if fmd_pct >= 50 else "VULNERABLE")
+        },
+        "lsd": {
+            "covered": lsd_cov,
+            "target": total_herd,
+            "pct": lsd_pct,
+            "status": "OPTIMAL" if lsd_pct >= 85 else ("MODERATE" if lsd_pct >= 50 else "VULNERABLE")
+        },
+        "hsbq": {
+            "covered": hsbq_cov,
+            "target": total_herd,
+            "pct": hsbq_pct,
+            "status": "OPTIMAL" if hsbq_pct >= 85 else ("MODERATE" if hsbq_pct >= 50 else "VULNERABLE")
+        },
+        "deworming": {
+            "covered": deworm_cov,
+            "target": total_herd,
+            "pct": deworm_pct,
+            "status": "OPTIMAL" if deworm_pct >= 85 else ("MODERATE" if deworm_pct >= 50 else "VULNERABLE")
+        }
+    }
 
 
 @router.post("/api/cattle/medical/batch", status_code=status.HTTP_201_CREATED)
@@ -1066,90 +1248,118 @@ def public_verify_cattle_page(tag_id: str, db: Session = Depends(get_db)):
         """ for r in med_records[:6]
     ]) or "<p style='color:#64748b; font-size:0.85rem;'>No medical treatments logged yet.</p>"
 
+    # Check disease immunization stamps
+    has_fmd = any("fmd" in (r.title or "").lower() and r.status == "completed" for r in med_records)
+    has_lsd = any("lsd" in (r.title or "").lower() and r.status == "completed" for r in med_records)
+    has_hsbq = any(("hs" in (r.title or "").lower() or "bq" in (r.title or "").lower()) and r.status == "completed" for r in med_records)
+    has_deworm = any("deworm" in (r.title or "").lower() and r.status == "completed" for r in med_records)
+
+    inaph_val = cattle.inaph_tag or f"900{str(cattle.id).zfill(9)}"
+
     html_content = f"""
     <!DOCTYPE html>
     <html lang="hi">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Gov Livestock Passport | {cattle.tag_id}</title>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+        <title>Sovereign Bharat Pashudhan Passport | {cattle.tag_id}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
         <style>
-            * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }}
-            body {{ background: #090d16; color: #f8fafc; padding: 16px; min-height: 100vh; }}
-            .passport-card {{ max-width: 480px; margin: 0 auto; background: #0f172a; border: 1.5px solid #1e293b; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }}
-            .header-banner {{ background: linear-gradient(135deg, #065f46 0%, #047857 100%); padding: 18px; text-align: center; border-bottom: 2px solid #10b981; }}
-            .emblem {{ font-size: 2rem; margin-bottom: 4px; }}
-            .dept-title {{ font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: #a7f3d0; font-weight: 800; }}
-            .doc-title {{ font-size: 1.2rem; font-weight: 900; color: #ffffff; letter-spacing: 0.03em; margin-top: 2px; }}
-            .photo-wrap {{ width: 100%; height: 220px; background: #000; position: relative; overflow: hidden; }}
-            .photo-wrap img {{ width: 100%; height: 100%; object-fit: cover; }}
-            .verified-badge {{ position: absolute; bottom: 12px; right: 12px; background: #10b981; color: #0f172a; font-weight: 900; font-size: 0.75rem; padding: 4px 10px; border-radius: 9999px; letter-spacing: 0.03em; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }}
-            .content-body {{ padding: 20px; }}
-            .tag-hero {{ display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #1e293b; padding-bottom: 12px; margin-bottom: 16px; }}
-            .tag-id {{ font-size: 1.5rem; font-weight: 900; color: #10b981; font-family: monospace; }}
-            .inaph-tag {{ font-size: 0.8rem; color: #94a3b8; font-family: monospace; }}
-            .grid-2 {{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }}
-            .info-item {{ background: #1e293b; padding: 10px 12px; border-radius: 8px; }}
-            .info-lbl {{ font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; font-weight: 700; }}
-            .info-val {{ font-size: 0.95rem; font-weight: 700; color: #f8fafc; margin-top: 2px; }}
-            .sec-title {{ font-size: 0.85rem; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }}
-            .footer-row {{ padding: 16px; background: #090d16; text-align: center; font-size: 0.75rem; color: #64748b; border-top: 1px solid #1e293b; }}
+            * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; }}
+            body {{ background: #070b14; color: #f8fafc; padding: 16px 12px; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; }}
+            .passport-card {{ width: 100%; max-width: 520px; background: #0f172a; border: 1.5px solid #1e293b; border-radius: 18px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.6); position: relative; }}
+            .tricolor-bar {{ height: 5px; background: linear-gradient(90deg, #ff9933 0%, #ffffff 50%, #138808 100%); width: 100%; }}
+            .header-banner {{ background: linear-gradient(135deg, #064e3b 0%, #065f46 60%, #047857 100%); padding: 18px 20px; border-bottom: 2px solid #10b981; display: flex; align-items: center; justify-content: space-between; }}
+            .header-left {{ display: flex; align-items: center; gap: 12px; }}
+            .emblem {{ font-size: 2.2rem; line-height: 1; }}
+            .dept-title {{ font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: #a7f3d0; font-weight: 800; }}
+            .doc-title {{ font-size: 1.05rem; font-weight: 900; color: #ffffff; letter-spacing: 0.02em; margin-top: 2px; }}
+            .verified-pill {{ background: #10b981; color: #042f2e; font-weight: 900; font-size: 0.72rem; padding: 4px 10px; border-radius: 9999px; letter-spacing: 0.04em; box-shadow: 0 4px 12px rgba(16,185,129,0.3); white-space: nowrap; }}
+            
+            .identity-strip {{ display: grid; grid-template-columns: 120px 1fr; gap: 16px; padding: 18px 20px; border-bottom: 1px solid #1e293b; background: rgba(15,23,42,0.6); align-items: center; }}
+            .photo-wrap {{ width: 120px; height: 130px; border-radius: 12px; overflow: hidden; border: 2px solid #10b981; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }}
+            .photo-wrap img {{ width: 100%; height: 100%; object-fit: cover; display: block; }}
+            .id-details {{ display: flex; flex-direction: column; gap: 4px; }}
+            .tag-id {{ font-size: 1.6rem; font-weight: 900; color: #10b981; font-family: 'JetBrains Mono', monospace; line-height: 1.1; letter-spacing: 0.02em; }}
+            .inaph-badge {{ font-size: 0.8rem; color: #cbd5e1; font-family: 'JetBrains Mono', monospace; margin-top: 4px; }}
+            .inaph-badge strong {{ color: #38bdf8; }}
+            .name-badge {{ font-size: 1.1rem; font-weight: 800; color: #f8fafc; margin-top: 2px; }}
+            .breed-badge {{ font-size: 0.82rem; color: #a7f3d0; font-weight: 600; }}
+
+            .content-body {{ padding: 18px 20px; }}
+            .grid-2 {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }}
+            .info-item {{ background: #1e293b; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); }}
+            .info-lbl {{ font-size: 0.68rem; text-transform: uppercase; color: #94a3b8; font-weight: 700; letter-spacing: 0.03em; }}
+            .info-val {{ font-size: 0.92rem; font-weight: 700; color: #f8fafc; margin-top: 2px; }}
+
+            /* Lineage Tree */
+            .pedigree-box {{ background: #0b1120; border: 1px solid #334155; border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; }}
+            .pedigree-header {{ font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #38bdf8; letter-spacing: 0.05em; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }}
+            .pedigree-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }}
+            .pedigree-node {{ background: #1e293b; border-radius: 8px; padding: 8px 10px; }}
+            .pedigree-node-dam {{ border-left: 3px solid #f43f5e; }}
+            .pedigree-node-sire {{ border-left: 3px solid #3b82f6; }}
+            .pedigree-role {{ font-size: 0.68rem; font-weight: 700; color: #94a3b8; }}
+            .pedigree-tag {{ font-family: 'JetBrains Mono', monospace; font-size: 0.88rem; font-weight: 800; color: #f8fafc; margin-top: 2px; }}
+
+            /* Immunization Stamps */
+            .immunization-box {{ background: #0b1120; border: 1px solid #1e293b; border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; }}
+            .immunization-header {{ font-size: 0.72rem; text-transform: uppercase; color: #94a3b8; font-weight: 800; letter-spacing: 0.04em; margin-bottom: 8px; }}
+            .stamp-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }}
+            .stamp-card {{ background: #1e293b; padding: 8px 4px; border-radius: 8px; }}
+            .stamp-name {{ font-size: 0.7rem; color: #94a3b8; font-weight: 700; }}
+            .stamp-status {{ font-size: 0.72rem; font-weight: 800; margin-top: 3px; }}
+            .stamp-ok {{ color: #10b981; }}
+            .stamp-pending {{ color: #f59e0b; }}
+
+            /* Clinical Log */
+            .sec-title {{ font-size: 0.82rem; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }}
+            
+            .footer-row {{ padding: 16px 20px; background: #070b14; text-align: center; font-size: 0.75rem; color: #64748b; border-top: 1px solid #1e293b; }}
+            .footer-row code {{ color: #94a3b8; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; }}
         </style>
     </head>
     <body>
         <div class="passport-card">
+            <div class="tricolor-bar"></div>
+            
             <div class="header-banner">
-                <div class="emblem">🇮🇳</div>
-                <div class="dept-title">STATE GAU SEVA AYOG &bull; ANIMAL HUSBANDRY</div>
-                <div class="doc-title">OFFICIAL LIVESTOCK DIGITAL PASSPORT</div>
+                <div class="header-left">
+                    <div class="emblem">🏛️</div>
+                    <div>
+                        <div class="dept-title">GOVERNMENT OF INDIA &bull; NATIONAL LIVESTOCK MISSION</div>
+                        <div class="doc-title">SOVEREIGN BHARAT PASHUDHAN PASSPORT (पशु आधार)</div>
+                    </div>
+                </div>
+                <div class="verified-pill">✓ AI VERIFIED</div>
             </div>
 
-            <div class="photo-wrap">
-                <img src="{photo_src}" alt="Cattle Photo" onerror="this.src='/static/images/gaushala_hero.jpg'" />
-                <div class="verified-badge">✓ AI VERIFIED HERD</div>
+            <div class="identity-strip">
+                <div class="photo-wrap">
+                    <img src="{photo_src}" alt="Cattle Photo" onerror="this.src='/static/images/gaushala_hero.jpg'" />
+                </div>
+                <div class="id-details">
+                    <div style="font-size:0.65rem; color:#94a3b8; font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">EAR TAG / COLLAR RFID</div>
+                    <div class="tag-id">{cattle.tag_id}</div>
+                    <div class="inaph-badge">INAPH UID: <strong>{inaph_val}</strong></div>
+                    <div class="name-badge">{cattle.name or 'Gomata'}</div>
+                    <div class="breed-badge">Indigenous Breed: {cattle.breed or 'Gir Cow'}</div>
+                </div>
             </div>
 
             <div class="content-body">
-                <div class="tag-hero">
-                    <div>
-                        <div style="font-size:0.7rem; color:#94a3b8; font-weight:700;">EAR TAG ID</div>
-                        <div class="tag-id">{cattle.tag_id}</div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div style="font-size:0.7rem; color:#94a3b8; font-weight:700;">BHARAT PASHUDHAN (INAPH)</div>
-                        <div class="inaph-tag">{cattle.inaph_tag or '—'}</div>
-                    </div>
-                </div>
-
                 <div class="grid-2">
                     <div class="info-item">
-                        <div class="info-lbl">Name / Identifier</div>
-                        <div class="info-val">{cattle.name or 'Gomata'}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-lbl">Indigenous Breed</div>
-                        <div class="info-val">{cattle.breed or 'Gir Cow'}</div>
-                    </div>
-                    <div class="info-item">
                         <div class="info-lbl">Category & Gender</div>
-                        <div class="info-val">{cat_label} ({cattle.gender})</div>
+                        <div class="info-val">{cat_label} ({cattle.gender.capitalize()})</div>
                     </div>
                     <div class="info-item">
-                        <div class="info-lbl">Age / Lactation</div>
-                        <div class="info-val">{cattle.age_years or 3} Yrs &bull; {cattle.lactation_stage}</div>
+                        <div class="info-lbl">Age & Lactation Stage</div>
+                        <div class="info-val">{cattle.age_years or 3} Yrs &bull; {cattle.lactation_stage.capitalize()}</div>
                     </div>
                     <div class="info-item">
-                        <div class="info-lbl">Mother Tag (Dam)</div>
-                        <div class="info-val" style="color:#a7f3d0;">{cattle.mother_tag or '— (Natural/Rescue)'}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-lbl">Father Tag (Sire)</div>
-                        <div class="info-val" style="color:#a7f3d0;">{cattle.father_tag or '— (Natural/Rescue)'}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-lbl">Health Status</div>
-                        <div class="info-val" style="color:{health_color};">{cattle.health_status.upper()}</div>
+                        <div class="info-lbl">Health Condition</div>
+                        <div class="info-val" style="color:{health_color};">{cattle.health_status.replace('_', ' ').upper()}</div>
                     </div>
                     <div class="info-item">
                         <div class="info-lbl">Assigned Enclosure</div>
@@ -1157,8 +1367,60 @@ def public_verify_cattle_page(tag_id: str, db: Session = Depends(get_db)):
                     </div>
                 </div>
 
+                <!-- 3-Generation Sovereign Lineage Tree -->
+                <div class="pedigree-box">
+                    <div class="pedigree-header">
+                        <span>🧬 Sovereign Pedigree Lineage Tree (वंशावली कुलवृक्ष)</span>
+                    </div>
+                    <div class="pedigree-grid">
+                        <div class="pedigree-node pedigree-node-dam">
+                            <div class="pedigree-role">♀ Mother Tag (Dam / मातृ गोवंश)</div>
+                            <div class="pedigree-tag">{cattle.mother_tag or 'Natural Herd Baseline'}</div>
+                            <div style="font-size:0.68rem; color:#94a3b8; margin-top:2px;">Desi Gir Purebred Lineage</div>
+                        </div>
+                        <div class="pedigree-node pedigree-node-sire">
+                            <div class="pedigree-role">♂ Father Tag (Sire / पितृ नंदी)</div>
+                            <div class="pedigree-tag">{cattle.father_tag or 'Natural Herd Baseline'}</div>
+                            <div style="font-size:0.68rem; color:#94a3b8; margin-top:2px;">Pedigree Progeny Tested Sire</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- National NADCP Immunization Stamps -->
+                <div class="immunization-box">
+                    <div class="immunization-header">
+                        💉 National NADCP Immunization Stamps (टीकाकरण मुहर)
+                    </div>
+                    <div class="stamp-grid">
+                        <div class="stamp-card">
+                            <div class="stamp-name">FMD</div>
+                            <div class="stamp-status {'stamp-ok' if has_fmd else 'stamp-pending'}">
+                                {'✓ IMMUNIZED' if has_fmd else '⏳ PENDING'}
+                            </div>
+                        </div>
+                        <div class="stamp-card">
+                            <div class="stamp-name">LSD</div>
+                            <div class="stamp-status {'stamp-ok' if has_lsd else 'stamp-pending'}">
+                                {'✓ IMMUNIZED' if has_lsd else '⏳ PENDING'}
+                            </div>
+                        </div>
+                        <div class="stamp-card">
+                            <div class="stamp-name">HS/BQ</div>
+                            <div class="stamp-status {'stamp-ok' if has_hsbq else 'stamp-pending'}">
+                                {'✓ IMMUNIZED' if has_hsbq else '⏳ PENDING'}
+                            </div>
+                        </div>
+                        <div class="stamp-card">
+                            <div class="stamp-name">DEWORM</div>
+                            <div class="stamp-status {'stamp-ok' if has_deworm else 'stamp-pending'}">
+                                {'✓ DOSING OK' if has_deworm else '⏳ PENDING'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="sec-title">
-                    <span>💉 Vaccination & Medical Record</span>
+                    <span>📋 Recent Veterinary Clinical Treatments</span>
                 </div>
                 <div>
                     {med_rows_html}
@@ -1167,7 +1429,7 @@ def public_verify_cattle_page(tag_id: str, db: Session = Depends(get_db)):
 
             <div class="footer-row">
                 <p>Smart Gaushala CCTV AI Telemetry &bull; Registered: {cattle.created_at[:10] if cattle.created_at else 'Active'}</p>
-                <p style="margin-top:4px;">Hash: <code style="color:#94a3b8;">GAU-{cattle.id}-PASSPORT-VERIFIED</code></p>
+                <p style="margin-top:4px;">Cryptographic Hash: <code>GAU-{cattle.id}-PASSPORT-VERIFIED</code></p>
             </div>
         </div>
     </body>

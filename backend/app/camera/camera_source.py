@@ -31,6 +31,10 @@ class CameraSource:
         self.last_frame_time = time.time()
         self.frame_count = 0
 
+    @property
+    def last_frame(self) -> Optional[np.ndarray]:
+        return self.latest_frame
+
     def start(self):
         if self.is_running:
             return

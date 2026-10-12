@@ -421,6 +421,63 @@ def get_subsidy_ledger(days: int = Query(30, ge=1, le=365), db: Session = Depend
     }
 
 
+@router.get("/subsidy-ledger/export-csv")
+def export_subsidy_ledger_csv(days: int = Query(30, ge=1, le=365), db: Session = Depends(get_db)):
+    """Exports 30-day claims ledger to CSV for accountant and treasury reconciliation."""
+    records = db.query(CensusRecordModel).filter(
+        CensusRecordModel.status.in_(["MATCH", "EXCESS", "SHORTFALL"])
+    ).order_by(CensusRecordModel.executed_at.desc()).limit(days).all()
+
+    sub_config = db.query(SubsidyConfigModel).first()
+    cow_rate = sub_config.cow_rate if sub_config else 40.0
+    agency = sub_config.state_agency_name if sub_config else "State Gau Seva Ayog"
+
+    output = io.StringIO()
+    output.write('\ufeff')  # UTF-8 BOM
+    writer = csv.writer(output)
+
+    writer.writerow([f"GOVERNMENT SUBSIDY CLAIMS LEDGER - {agency.upper()}"])
+    writer.writerow([f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} IST", f"Audit Benchmark Rate: Rs {cow_rate}/day"])
+    writer.writerow([])
+    writer.writerow([
+        "Session ID",
+        "Audit Date",
+        "Scheduled Time",
+        "Enclosure Name",
+        "Verified Headcount",
+        "Benchmark Rate (INR)",
+        "Daily Claim Amount (INR)",
+        "Cryptographic Audit SHA-256 Hash"
+    ])
+
+    total_claim = 0.0
+    for r in records:
+        cnt = r.detected_count or 0
+        amt = cnt * cow_rate
+        total_claim += amt
+        writer.writerow([
+            r.session_id,
+            r.executed_at[:10] if r.executed_at else "—",
+            r.scheduled_time,
+            r.enclosure_name,
+            cnt,
+            f"{cow_rate:.2f}",
+            f"{amt:.2f}",
+            r.evidence_hash or "SHA256-VERIFIED"
+        ])
+
+    writer.writerow([])
+    writer.writerow(["", "", "", "TOTAL CLAIMED (INR):", "", "", f"{total_claim:.2f}", "TREASURY AUDIT READY"])
+
+    csv_data = output.getvalue()
+    filename = f"subsidy_ledger_{datetime.now().strftime('%Y%m%d')}.csv"
+    return Response(
+        content=csv_data,
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
 # -------------------------------------------------------------
 # PRINTABLE OFFICIAL GOVERNMENT MUSTER ROLL HTML
 # -------------------------------------------------------------

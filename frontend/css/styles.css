@@ -3587,4 +3587,440 @@ body {
   }
 }
 
+/* ==========================================================================
+   ADVANCED CENSUS & REGISTRY SYSTEMATIC DESIGN SYSTEM
+   ========================================================================== */
+
+/* Systematic Toolbar Button Groups */
+.toolbar-actions-cluster {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-group-systematic {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);
+  padding: 3px;
+  gap: 3px;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-group-systematic .btn-tool,
+.btn-group-systematic .btn-primary {
+  margin: 0;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  padding: 6px 12px;
+}
+
+.btn-group-systematic .btn-tool {
+  border: none;
+  background: transparent;
+}
+.btn-group-systematic .btn-tool:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Subsidy Rate & Lineage Badges in Table */
+.badge-subsidy-rate {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  font-weight: 700;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+}
+
+.badge-lineage {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(99, 102, 241, 0.09);
+  color: #6366f1;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+}
+
+.cattle-photo-cell {
+  position: relative;
+  width: 62px;
+  height: 52px;
+}
+
+.cattle-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-medium);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.btn-quick-snap {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: var(--primary);
+  color: #ffffff;
+  border: 1.5px solid var(--bg-surface);
+  border-radius: 9999px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+.btn-quick-snap:hover {
+  transform: scale(1.18);
+  background: var(--primary-hover);
+}
+
+/* -------------------------------------------------------------
+   HERD IMMUNITY COVERAGE DASHBOARD RIBBON
+   ------------------------------------------------------------- */
+.herd-immunity-ribbon {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 1.25rem;
+}
+
+.immunity-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.immunity-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.immunity-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.immunity-disease-name {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.immunity-pct-val {
+  font-size: 1.25rem;
+  font-weight: 900;
+  font-family: var(--font-mono);
+}
+
+.immunity-progress-track {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-subtle);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.immunity-progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fill-emerald {
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+}
+.fill-amber {
+  background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+}
+.fill-rose {
+  background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+}
+
+.immunity-card-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.73rem;
+  color: var(--text-muted);
+}
+
+/* -------------------------------------------------------------
+   3-STEP BULK IMPORT WIZARD STYLES
+   ------------------------------------------------------------- */
+.wizard-steps-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  position: relative;
+}
+
+.wizard-steps-header::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: 40px;
+  right: 40px;
+  height: 2px;
+  background: var(--border-medium);
+  z-index: 1;
+}
+
+.wizard-step-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  z-index: 2;
+  background: var(--bg-surface);
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+.wizard-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--border-medium);
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.wizard-step-node.active .wizard-circle {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+}
+
+.wizard-step-node.completed .wizard-circle {
+  border-color: var(--emerald);
+  background: var(--emerald);
+  color: #ffffff;
+}
+
+.wizard-step-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.wizard-step-node.active .wizard-step-label {
+  color: var(--text-primary);
+  font-weight: 800;
+}
+
+/* Dropzone styling */
+.csv-dropzone {
+  border: 2px dashed var(--border-medium);
+  border-radius: var(--radius-lg);
+  padding: 2.2rem 1.5rem;
+  text-align: center;
+  background: var(--bg-subtle);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.csv-dropzone:hover, .csv-dropzone.dragover {
+  border-color: var(--primary);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+/* Filterable row tabs for Step 2 */
+.wizard-filter-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.wizard-filter-tab {
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.76rem;
+  font-weight: 700;
+  border: 1px solid var(--border-medium);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.wizard-filter-tab.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+/* -------------------------------------------------------------
+   LIVE SUBSIDY BUDGET SIMULATOR
+   ------------------------------------------------------------- */
+.subsidy-simulator-card {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(16, 185, 129, 0.06) 100%);
+  border: 1.5px solid rgba(245, 158, 11, 0.35);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  margin-top: 14px;
+}
+
+.simulator-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.simulator-calc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  text-align: center;
+}
+
+.simulator-stat-box {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+}
+
+.simulator-stat-lbl {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.simulator-stat-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
+
+/* -------------------------------------------------------------
+   SOVEREIGN PASSPORT & PEDIGREE LINEAGE STYLES
+   ------------------------------------------------------------- */
+.passport-sovereign-card {
+  background: #090d16;
+  border: 2px solid #1e293b;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+  color: #f8fafc;
+}
+
+.passport-tricolor-bar {
+  height: 5px;
+  background: linear-gradient(90deg, #ff9933 0%, #ff9933 33.3%, #ffffff 33.3%, #ffffff 66.6%, #138808 66.6%, #138808 100%);
+}
+
+.passport-top-crest {
+  background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #10b981;
+}
+
+.pedigree-tree-box {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  margin: 12px 0;
+}
+
+.pedigree-tree-header {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: #38bdf8;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pedigree-tree-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.pedigree-node {
+  background: #1e293b;
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  border-left: 3px solid #6366f1;
+}
+
+.pedigree-node-sire {
+  border-left-color: #38bdf8;
+}
+
+.pedigree-node-dam {
+  border-left-color: #ec4899;
+}
+
+.pedigree-role {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.pedigree-tag {
+  font-size: 0.9rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: #f8fafc;
+}
+
+
 

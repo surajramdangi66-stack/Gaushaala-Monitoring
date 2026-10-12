@@ -748,8 +748,8 @@
             <div class="census-subtab-panel active" id="subtab-registry">
               <div class="census-panel-header">
                 <div>
-                  <h3 class="panel-headline" data-i18n="reg_headline">Official Cattle Herd Registry</h3>
-                  <p class="panel-subtext" data-i18n="reg_subtext">Persistent database register with INAPH ear tags, breed classification, lactation, and health status</p>
+                  <h3 class="panel-headline" data-i18n="reg_headline">Official Cattle Herd Registry (गोवंश रजिस्टर)</h3>
+                  <p class="panel-subtext" data-i18n="reg_subtext">Persistent database register with INAPH ear tags, 3-generation pedigree lineage, daily government subsidy rates, and biometric CCTV snapshots</p>
                 </div>
                 <div class="header-actions-row">
                   <div class="summary-chips-group">
@@ -761,28 +761,39 @@
                       <span class="chip-label" data-i18n="lbl_active_herd">Active Herd</span>
                       <strong class="chip-val text-emerald" id="reg-active-cows">0</strong>
                     </div>
-                    <div class="summary-chip" id="chip-subsidy-daily" style="border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.06); cursor:pointer;" title="Click to view 30-day Subsidy Claims Ledger">
-                      <span class="chip-label" style="color:#f59e0b;">अनुदान (सरकारी दर) 💰</span>
+                    <div class="summary-chip" id="chip-subsidy-daily" style="border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.06); cursor:pointer;" title="Click to open 30-day Subsidy Claims Ledger">
+                      <span class="chip-label" style="color:#f59e0b;">अनुदान (दैनिक दर) 💰</span>
                       <strong class="chip-val" id="reg-subsidy-daily" style="color:#f59e0b;">₹0</strong>
                     </div>
                   </div>
-                  <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button class="btn-tool" id="btn-open-subsidy-config" title="Configure Government Subsidy Rates">
-                      <span>⚙️ Subsidy Rates</span>
-                    </button>
-                    <button class="btn-tool" id="btn-reconcile-census" title="Run instant AI Headcount Reconciliation">
-                      <span>⚖️ AI Reconcile</span>
-                    </button>
-                    <button class="btn-tool" id="btn-open-bulk-import" title="Upload multiple cattle from CSV">
-                      <span>📥 Import CSV</span>
-                    </button>
-                    <button class="btn-tool" id="btn-export-cattle-csv" title="Download official registry muster roll">
-                      <span>📊 Export CSV</span>
-                    </button>
-                    <button class="btn-primary" id="btn-open-add-cattle">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                      <span data-i18n="btn_register_cow">+ Register Cattle</span>
-                    </button>
+
+                  <div class="toolbar-actions-cluster">
+                    <!-- Data Management Button Group -->
+                    <div class="btn-group-systematic">
+                      <button class="btn-primary" id="btn-open-add-cattle" title="Register single cattle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px; height:14px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <span>+ Register</span>
+                      </button>
+                      <button class="btn-tool" id="btn-open-bulk-import" title="3-Step Guided CSV Import Wizard">
+                        <span>📥 Bulk Import</span>
+                      </button>
+                      <button class="btn-tool" id="btn-download-csv-template-direct" title="Download Standard Registration CSV Template">
+                        <span>📄 Template</span>
+                      </button>
+                      <button class="btn-tool" id="btn-export-cattle-csv" title="Download official registry muster roll">
+                        <span>📊 Export CSV</span>
+                      </button>
+                    </div>
+
+                    <!-- Fiscal & Audit Button Group -->
+                    <div class="btn-group-systematic">
+                      <button class="btn-tool" id="btn-open-subsidy-config" title="Configure Government Subsidy Rates & Simulator">
+                        <span>⚙️ Subsidy Rates</span>
+                      </button>
+                      <button class="btn-tool" id="btn-reconcile-census" title="Run instant AI Headcount Reconciliation">
+                        <span>⚖️ AI Reconcile</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -821,10 +832,10 @@
                     <tr>
                       <th style="width:70px;">Photo</th>
                       <th>टैग एवं INAPH UID</th>
-                      <th data-i18n="th_cow_name">Name / Identifier</th>
-                      <th data-i18n="th_cow_enclosure">Enclosure</th>
-                      <th>श्रेणी एवं नस्ल (Category)</th>
-                      <th>दुग्ध अवस्था (Lactation)</th>
+                      <th>नाम व नस्ल (Breed)</th>
+                      <th>वंशावली (Dam / Sire)</th>
+                      <th>बाड़ा (Enclosure)</th>
+                      <th>श्रेणी व दर (Subsidy Rate)</th>
                       <th>स्वास्थ्य (Health)</th>
                       <th data-i18n="th_cow_status">Status</th>
                       <th data-i18n="th_cow_actions">Actions</th>
@@ -1025,20 +1036,82 @@
                       <strong class="chip-val text-emerald" id="med-completed-count">0</strong>
                     </div>
                   </div>
-                  <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button class="btn-tool" id="btn-auto-schedule-protocols" title="Auto-Schedule 1-Year National Vaccination Calendar (NADCP)">
-                      <span>📅 Auto-Schedule Protocols</span>
-                    </button>
-                    <button class="btn-tool" id="btn-open-notifications" title="WhatsApp & SMS Vaccination Alerts Dispatcher">
-                      <span>📲 WhatsApp Alerts</span>
-                    </button>
-                    <button class="btn-tool" id="btn-open-batch-vaccine" title="Vaccinate entire pen / enclosure in 1 click">
-                      <span>💉 Pen Batch Vaccinate</span>
-                    </button>
-                    <button class="btn-primary" id="btn-open-add-medical">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                      <span>+ Log Medical / Vaccine</span>
-                    </button>
+                  <div class="toolbar-actions-cluster">
+                    <div class="btn-group-systematic">
+                      <button class="btn-primary" id="btn-open-add-medical">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px; height:14px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <span>+ Log Record</span>
+                      </button>
+                      <button class="btn-tool" id="btn-open-batch-vaccine" title="Vaccinate entire pen / enclosure in 1 click">
+                        <span>💉 Pen Batch</span>
+                      </button>
+                      <button class="btn-tool" id="btn-auto-schedule-protocols" title="Auto-Schedule 1-Year National Vaccination Calendar (NADCP)">
+                        <span>📅 NADCP Protocols</span>
+                      </button>
+                      <button class="btn-tool" id="btn-open-notifications" title="WhatsApp & SMS Vaccination Alerts Dispatcher">
+                        <span>📲 WhatsApp Alerts</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- National Herd Immunity Coverage KPI Ribbon -->
+              <div class="herd-immunity-ribbon" id="herd-immunity-ribbon">
+                <!-- Dynamically populated or default fallback structure -->
+                <div class="immunity-card" id="card-imm-fmd">
+                  <div class="immunity-card-header">
+                    <div class="immunity-disease-name">🦠 FMD (खुरपका)</div>
+                    <span class="immunity-pct-val text-emerald" id="pct-imm-fmd">0%</span>
+                  </div>
+                  <div class="immunity-progress-track">
+                    <div class="immunity-progress-fill fill-emerald" id="bar-imm-fmd" style="width: 0%;"></div>
+                  </div>
+                  <div class="immunity-card-meta">
+                    <span id="meta-imm-fmd">Covered: 0 / 0</span>
+                    <span class="status-pill pill-active" id="status-imm-fmd">Awaiting Scan</span>
+                  </div>
+                </div>
+
+                <div class="immunity-card" id="card-imm-lsd">
+                  <div class="immunity-card-header">
+                    <div class="immunity-disease-name">🛡️ LSD (लंपी स्किन)</div>
+                    <span class="immunity-pct-val text-emerald" id="pct-imm-lsd">0%</span>
+                  </div>
+                  <div class="immunity-progress-track">
+                    <div class="immunity-progress-fill fill-emerald" id="bar-imm-lsd" style="width: 0%;"></div>
+                  </div>
+                  <div class="immunity-card-meta">
+                    <span id="meta-imm-lsd">Covered: 0 / 0</span>
+                    <span class="status-pill pill-active" id="status-imm-lsd">Awaiting Scan</span>
+                  </div>
+                </div>
+
+                <div class="immunity-card" id="card-imm-hsbq">
+                  <div class="immunity-card-header">
+                    <div class="immunity-disease-name">💉 HS & BQ (गलघोंटू)</div>
+                    <span class="immunity-pct-val text-amber" id="pct-imm-hsbq">0%</span>
+                  </div>
+                  <div class="immunity-progress-track">
+                    <div class="immunity-progress-fill fill-amber" id="bar-imm-hsbq" style="width: 0%;"></div>
+                  </div>
+                  <div class="immunity-card-meta">
+                    <span id="meta-imm-hsbq">Covered: 0 / 0</span>
+                    <span class="status-pill pill-active" id="status-imm-hsbq">Awaiting Scan</span>
+                  </div>
+                </div>
+
+                <div class="immunity-card" id="card-imm-deworm">
+                  <div class="immunity-card-header">
+                    <div class="immunity-disease-name">💊 Deworming (कृमिनाशक)</div>
+                    <span class="immunity-pct-val text-emerald" id="pct-imm-deworm">0%</span>
+                  </div>
+                  <div class="immunity-progress-track">
+                    <div class="immunity-progress-fill fill-emerald" id="bar-imm-deworm" style="width: 0%;"></div>
+                  </div>
+                  <div class="immunity-card-meta">
+                    <span id="meta-imm-deworm">Covered: 0 / 0</span>
+                    <span class="status-pill pill-active" id="status-imm-deworm">Awaiting Scan</span>
                   </div>
                 </div>
               </div>
@@ -1497,17 +1570,17 @@
     </div>
   </div>
 
-  <!-- Bulk CSV Import Modal with Dry-Run Pre-Validation Preview -->
+  <!-- 3-Step Guided Dry-Run Bulk Cattle Import Wizard Modal -->
   <div class="modal-overlay" id="bulk-import-modal">
-    <div class="modal-card" style="max-width:820px;">
+    <div class="modal-card" style="max-width:860px;">
       <div class="modal-header">
         <div class="modal-title-group">
           <div class="modal-icon-badge icon-indigo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           </div>
           <div>
-            <h2 class="modal-title">Bulk Cattle CSV Import & Pre-Validation Preview</h2>
-            <p class="modal-subtitle">Dry-run validation, duplicate tag conflict resolution, and batch commit</p>
+            <h2 class="modal-title">Bulk Cattle Registration Wizard (3-Step Guided Import)</h2>
+            <p class="modal-subtitle">Template download, dry-run schema validation, conflict strategy, and database commit</p>
           </div>
         </div>
         <button class="btn-icon" id="close-bulk-import-modal-btn" title="Close">
@@ -1516,69 +1589,125 @@
       </div>
 
       <div class="modal-body">
-        <div style="background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.25); border-radius:10px; padding:12px 16px; margin-bottom:1.25rem;">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-            <div>
-              <strong style="color:var(--text-primary); font-size:0.9rem;">CSV Column Standard:</strong>
-              <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
-                <code>Tag ID, INAPH UID, Name, Enclosure, Breed, Category, Lactation Stage, Health Status, Notes</code>
-              </div>
-            </div>
-            <button type="button" class="btn-tool" id="btn-download-sample-csv" style="white-space:nowrap;">
-              📥 Sample CSV
-            </button>
+        <!-- Wizard Navigation Stepper -->
+        <div class="wizard-steps-header">
+          <div class="wizard-step-node active" id="wizard-node-1" data-step="1">
+            <div class="wizard-circle">1</div>
+            <div class="wizard-step-label">1. File & Template</div>
+          </div>
+          <div class="wizard-step-node" id="wizard-node-2" data-step="2">
+            <div class="wizard-circle">2</div>
+            <div class="wizard-step-label">2. Validate & Filter</div>
+          </div>
+          <div class="wizard-step-node" id="wizard-node-3" data-step="3">
+            <div class="wizard-circle">3</div>
+            <div class="wizard-step-label">3. Strategy & Commit</div>
           </div>
         </div>
 
         <form id="bulk-import-form">
-          <div class="form-row-2">
-            <div class="form-group">
-              <label for="bulk-csv-file" class="form-label">Select CSV File (*.csv):</label>
-              <input type="file" class="form-input" id="bulk-csv-file" accept=".csv" required style="padding:8px;" />
+          <!-- STEP 1 PANE: FILE UPLOAD & SAMPLE TEMPLATE -->
+          <div class="wizard-step-pane" id="wizard-pane-1">
+            <div style="background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.25); border-radius:10px; padding:12px 16px; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div>
+                <strong style="color:var(--text-primary); font-size:0.9rem;">Official CSV Column Standard:</strong>
+                <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
+                  <code>Tag ID, INAPH UID, Name, Enclosure, Breed, Category, Lactation Stage, Health, Dam, Sire</code>
+                </div>
+              </div>
+              <button type="button" class="btn-tool" id="btn-download-sample-csv" style="white-space:nowrap;">
+                📥 Download Sample CSV
+              </button>
             </div>
-            <div class="form-group">
-              <label for="bulk-conflict-mode" class="form-label">Conflict Resolution Strategy (डुप्लीकेट टैग नियम):</label>
-              <select class="form-select" id="bulk-conflict-mode">
-                <option value="skip" selected>Skip Existing Tags (मौजूदा टैग छोड़ें - सुरक्षित)</option>
-                <option value="overwrite">Overwrite / Update Records (मौजूदा डेटा अपडेट करें)</option>
-              </select>
+
+            <div class="csv-dropzone" id="csv-dropzone-area">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" style="width:40px; height:40px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div style="font-weight:700; color:var(--text-primary); font-size:1rem;">
+                Drag & Drop CSV Muster Roll here, or <span style="color:var(--primary); text-decoration:underline;">Browse</span>
+              </div>
+              <p style="font-size:0.78rem; color:var(--text-muted); margin:0;">Supports UTF-8 and ANSI formatted CSV files up to 10MB</p>
+              <input type="file" id="bulk-csv-file" accept=".csv" style="display:none;" />
+              <div id="dropzone-file-selected" style="display:none; font-size:0.85rem; font-weight:700; color:var(--emerald);"></div>
+            </div>
+
+            <div class="modal-footer-actions" style="margin-top:1.5rem;">
+              <button type="button" class="btn-tool" id="cancel-bulk-import-btn">Cancel</button>
+              <button type="button" class="btn-primary" id="btn-wizard-goto-step2">
+                <span>Next: Pre-Validate CSV &rarr;</span>
+              </button>
             </div>
           </div>
 
-          <div style="margin-top:10px;">
-            <button type="button" class="btn-tool" id="btn-dry-run-validate" style="width:100%; justify-content:center; padding:10px; font-weight:700;">
-              <span>🔍 Step 1: Pre-Validate & Preview Rows (सत्यापन जांचें)</span>
-            </button>
-          </div>
-
-          <!-- Dry-run validation results container -->
-          <div id="bulk-preview-wrap" style="display:none; margin-top:14px; border-top:1px solid var(--border-subtle); padding-top:14px;">
+          <!-- STEP 2 PANE: PRE-VALIDATION & FILTERABLE ROW PREVIEW -->
+          <div class="wizard-step-pane" id="wizard-pane-2" style="display:none;">
             <div id="bulk-preview-summary-chips" style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;"></div>
-            <div class="modern-table-wrap" style="max-height:220px; overflow-y:auto;">
+
+            <!-- Filterable Row Tabs -->
+            <div class="wizard-filter-tabs" id="wizard-filter-tabs">
+              <button type="button" class="wizard-filter-tab active" data-filter="all">All Rows (<span id="cnt-flt-all">0</span>)</button>
+              <button type="button" class="wizard-filter-tab" data-filter="VALID">✓ Valid (<span id="cnt-flt-valid">0</span>)</button>
+              <button type="button" class="wizard-filter-tab" data-filter="CONFLICT">⚠️ Conflicts (<span id="cnt-flt-conflict">0</span>)</button>
+              <button type="button" class="wizard-filter-tab" data-filter="ERROR">❌ Syntax Errors (<span id="cnt-flt-error">0</span>)</button>
+            </div>
+
+            <div class="modern-table-wrap" style="max-height:260px; overflow-y:auto;">
               <table class="modern-table" style="font-size:0.82rem;">
                 <thead>
                   <tr>
                     <th>Row #</th>
-                    <th>Status</th>
-                    <th>Tag ID</th>
+                    <th>Validation</th>
+                    <th>Ear Tag ID</th>
                     <th>Name</th>
                     <th>Category</th>
-                    <th>Pen</th>
-                    <th>Detail / Conflict</th>
+                    <th>Enclosure Pen</th>
+                    <th>Lineage (Dam / Sire)</th>
+                    <th>Diagnostics & Notes</th>
                   </tr>
                 </thead>
                 <tbody id="bulk-preview-tbody"></tbody>
               </table>
             </div>
+
+            <div class="modal-footer-actions" style="margin-top:1.5rem;">
+              <button type="button" class="btn-tool" id="btn-wizard-backto-step1">&larr; Back to File</button>
+              <button type="button" class="btn-primary" id="btn-wizard-goto-step3">
+                <span>Next: Choose Strategy & Commit &rarr;</span>
+              </button>
+            </div>
           </div>
 
-          <div id="bulk-import-feedback" style="display:none; padding:10px 14px; border-radius:8px; font-size:0.85rem; margin-top:12px;"></div>
+          <!-- STEP 3 PANE: CONFLICT RESOLUTION & FINAL COMMIT -->
+          <div class="wizard-step-pane" id="wizard-pane-3" style="display:none;">
+            <div style="background:var(--bg-subtle); border:1px solid var(--border-medium); border-radius:10px; padding:16px; margin-bottom:1.25rem;">
+              <h4 style="font-size:0.95rem; font-weight:800; color:var(--text-primary); margin-bottom:8px;">
+                Duplicate Tag Conflict Strategy (डुप्लीकेट टैग नियम):
+              </h4>
+              <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:12px;">
+                Select how the system should handle Ear Tags that already exist in the registered herd database:
+              </p>
+              
+              <div class="form-group">
+                <select class="form-select" id="bulk-conflict-mode" style="padding:10px; font-weight:600;">
+                  <option value="skip" selected>🛡️ Skip Existing Tags (Safest: Adds only new cattle, preserves existing records)</option>
+                  <option value="overwrite">🔄 Overwrite / Update (Updates existing cattle profiles with CSV attributes)</option>
+                </select>
+              </div>
+            </div>
 
-          <div class="modal-footer-actions" style="margin-top:1.25rem;">
-            <button type="button" class="btn-tool" id="cancel-bulk-import-btn">Cancel</button>
-            <button type="submit" class="btn-primary" id="btn-submit-bulk-upload">
-              <span>✓ Step 2: Confirm & Import Records</span>
-            </button>
+            <div id="bulk-commit-stats-summary" style="background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.25); border-radius:10px; padding:12px 16px; margin-bottom:1.25rem;">
+              <div style="font-size:0.85rem; color:var(--text-secondary);">
+                Ready to commit validated records to the official database muster roll.
+              </div>
+            </div>
+
+            <div id="bulk-import-feedback" style="display:none; padding:10px 14px; border-radius:8px; font-size:0.85rem; margin-top:12px;"></div>
+
+            <div class="modal-footer-actions" style="margin-top:1.5rem;">
+              <button type="button" class="btn-tool" id="btn-wizard-backto-step2">&larr; Back to Review</button>
+              <button type="submit" class="btn-primary" id="btn-submit-bulk-upload">
+                <span>✓ Commit Verified Records to Database</span>
+              </button>
+            </div>
           </div>
         </form>
       </div>
@@ -1637,7 +1766,34 @@
             <input type="text" class="form-input" id="sub-disbursing-dept" value="State Animal Husbandry Dept & District Gau Seva Ayog" />
           </div>
 
-          <div class="modal-footer-actions">
+          <!-- Dynamic Live Budget Simulator Card -->
+          <div class="subsidy-simulator-card" id="subsidy-live-simulator">
+            <div class="simulator-title-row">
+              <div style="font-size:0.85rem; font-weight:800; color:#b45309; display:flex; align-items:center; gap:6px;">
+                <span>📊 Live Budget Simulator (स्वचालित बजट अनुमान)</span>
+              </div>
+              <span class="status-pill pill-active" style="background:#10b981; color:#0f172a; font-weight:800; font-size:0.7rem;">LIVE RECOMPUTE</span>
+            </div>
+            <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:10px;">
+              Based on registered herd counts: <span id="sim-herd-counts-summary">Loading herd data...</span>
+            </div>
+            <div class="simulator-calc-grid">
+              <div class="simulator-stat-box">
+                <div class="simulator-stat-lbl">Daily Total</div>
+                <div class="simulator-stat-val text-amber" id="sim-val-daily">₹0</div>
+              </div>
+              <div class="simulator-stat-box">
+                <div class="simulator-stat-lbl">30-Day Month</div>
+                <div class="simulator-stat-val text-emerald" id="sim-val-monthly">₹0</div>
+              </div>
+              <div class="simulator-stat-box">
+                <div class="simulator-stat-lbl">Annual Allotment</div>
+                <div class="simulator-stat-val" style="color:#6366f1;" id="sim-val-annual">₹0</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer-actions" style="margin-top:1.25rem;">
             <button type="button" class="btn-tool" id="cancel-subsidy-modal-btn">Cancel</button>
             <button type="submit" class="btn-primary" id="save-subsidy-config-btn">
               <span>Save & Recompute Entitlement</span>
@@ -1650,7 +1806,7 @@
 
   <!-- 30-Day Treasury Subsidy Ledger Modal -->
   <div class="modal-overlay" id="subsidy-ledger-modal">
-    <div class="modal-card" style="max-width:880px;">
+    <div class="modal-card" style="max-width:920px;">
       <div class="modal-header">
         <div class="modal-title-group">
           <div class="modal-icon-badge icon-amber">
@@ -1661,9 +1817,14 @@
             <p class="modal-subtitle">Official verified daily claims history ready for submission to Gau Seva Ayog</p>
           </div>
         </div>
-        <button class="btn-icon" id="close-subsidy-ledger-modal-btn" title="Close">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="btn-tool" id="btn-export-subsidy-ledger-csv" title="Export Ledger to CSV" style="font-size:0.8rem; padding:5px 10px;">
+            📥 Download CSV
+          </button>
+          <button class="btn-icon" id="close-subsidy-ledger-modal-btn" title="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
       </div>
 
       <div class="modal-body" id="subsidy-ledger-modal-body">
@@ -1812,17 +1973,17 @@
     </div>
   </div>
 
-  <!-- Printable Cattle QR / ID Badge Modal -->
+  <!-- Sovereign Bharat Pashudhan Mobile Digital Passport & Lineage Modal -->
   <div class="modal-overlay" id="qr-id-modal">
-    <div class="modal-card" style="max-width:540px;">
+    <div class="modal-card" style="max-width:620px;">
       <div class="modal-header">
         <div class="modal-title-group">
           <div class="modal-icon-badge icon-emerald">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           </div>
           <div>
-            <h2 class="modal-title">Official Cattle ID Badge & QR Code</h2>
-            <p class="modal-subtitle">Printable identity credential for caretaker & veterinary mobile scan</p>
+            <h2 class="modal-title">Sovereign Bharat Pashudhan Digital Passport (पशु आधार)</h2>
+            <p class="modal-subtitle">Official INAPH identity credential, 3-generation lineage tree & QR verification</p>
           </div>
         </div>
         <button class="btn-icon" id="close-qr-modal-btn" title="Close">
@@ -1831,17 +1992,27 @@
       </div>
 
       <div class="modal-body">
-        <div id="cattle-id-card-print-area" style="background:#0f172a; border:2px solid #334155; border-radius:14px; padding:20px; color:#f8fafc; font-family:sans-serif;">
-          <!-- Dynamically populated ID card -->
+        <div id="cattle-id-card-print-area">
+          <!-- Dynamically populated Sovereign ID card -->
         </div>
 
-        <div class="modal-footer-actions" style="margin-top:1.25rem;">
-          <button type="button" class="btn-tool" id="btn-print-id-card" onclick="window.print()">
-            🖨️ Print Badge
-          </button>
-          <button type="button" class="btn-primary" id="close-qr-card-btn">
-            Done
-          </button>
+        <div class="modal-footer-actions" style="margin-top:1.25rem; display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn-tool" id="btn-snap-photo-from-passport" title="Take CCTV frame snapshot right now">
+              📷 Snap CCTV Frame
+            </button>
+            <button type="button" class="btn-tool" id="btn-open-public-passport-link" title="Open Public Verification Webpage">
+              🌐 Public Link
+            </button>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn-tool" id="btn-print-id-card" onclick="window.print()">
+              🖨️ Print Card
+            </button>
+            <button type="button" class="btn-primary" id="close-qr-card-btn">
+              Done
+            </button>
+          </div>
         </div>
       </div>
     </div>
