@@ -1,7 +1,14 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
+**/__pycache__/
 *.py[cod]
+*.[Cc][Aa][Cc][Hh][Ee]
+*.pyc
+*.pyo
+*.pyd
 *$py.class
+.pytest_cache/
+.ruff_cache/
 
 # YOLOv8 Training artifacts, runs and checkpoints
 runs/
