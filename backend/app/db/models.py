@@ -42,6 +42,9 @@ class CattleModel(Base):
     inaph_tag = Column(String(32), nullable=True, index=True)  # 12-digit Bharat Pashudhan (INAPH) tag
     intake_source = Column(String(64), nullable=False, default="rescue")  # "rescue", "donated", "born"
     age_years = Column(Float, nullable=True, default=3.0)
+    photo_url = Column(String(256), nullable=True)  # Profile image or CCTV snapshot
+    mother_tag = Column(String(64), nullable=True)  # Lineage Dam
+    father_tag = Column(String(64), nullable=True)  # Lineage Sire
     status = Column(String(32), nullable=False, default="active", index=True)  # "active" | "inactive"
     notes = Column(Text, nullable=True)
     created_at = Column(String(64), default=utc_now_iso, nullable=False)
@@ -61,6 +64,9 @@ class CattleModel(Base):
             "inaph_tag": self.inaph_tag,
             "intake_source": self.intake_source,
             "age_years": self.age_years,
+            "photo_url": self.photo_url,
+            "mother_tag": self.mother_tag,
+            "father_tag": self.father_tag,
             "status": self.status,
             "notes": self.notes,
             "created_at": self.created_at,
@@ -78,6 +84,9 @@ class CattleMedicalModel(Base):
     administered_date = Column(String(32), nullable=False)
     next_due_date = Column(String(32), nullable=True)
     doctor_name = Column(String(128), nullable=True)
+    batch_id = Column(String(64), nullable=True, index=True)  # Batch vaccination group ID
+    vial_batch_no = Column(String(64), nullable=True)  # Medicine/vaccine manufacturing batch
+    dosage = Column(String(64), nullable=True)  # e.g., "5ml SC", "100ml Oral"
     status = Column(String(32), default="completed", nullable=False)  # "completed", "due", "overdue"
     notes = Column(Text, nullable=True)
     created_at = Column(String(64), default=utc_now_iso, nullable=False)
@@ -92,6 +101,9 @@ class CattleMedicalModel(Base):
             "administered_date": self.administered_date,
             "next_due_date": self.next_due_date,
             "doctor_name": self.doctor_name,
+            "batch_id": self.batch_id,
+            "vial_batch_no": self.vial_batch_no,
+            "dosage": self.dosage,
             "status": self.status,
             "notes": self.notes,
             "created_at": self.created_at
@@ -114,6 +126,8 @@ class CensusRecordModel(Base):
     camera_online = Column(Boolean, default=True, nullable=False)
     frames_analyzed = Column(Integer, default=0, nullable=False)
     unique_tracks_count = Column(Integer, default=0, nullable=False)
+    evidence_snapshot_url = Column(String(256), nullable=True)  # Optical proof CCTV snapshot
+    evidence_hash = Column(String(128), nullable=True)  # Cryptographic SHA-256 integrity hash
     diagnostic_details = Column(Text, nullable=True)
 
     def to_dict(self):
@@ -138,7 +152,31 @@ class CensusRecordModel(Base):
             "camera_online": self.camera_online,
             "frames_analyzed": self.frames_analyzed,
             "unique_tracks_count": self.unique_tracks_count,
+            "evidence_snapshot_url": self.evidence_snapshot_url,
+            "evidence_hash": self.evidence_hash,
             "diagnostic_details": details
+        }
+
+class SubsidyConfigModel(Base):
+    __tablename__ = "subsidy_configs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    cow_rate = Column(Float, default=40.0, nullable=False)
+    bull_rate = Column(Float, default=35.0, nullable=False)
+    calf_rate = Column(Float, default=20.0, nullable=False)
+    sick_rate = Column(Float, default=50.0, nullable=False)
+    state_agency_name = Column(String(128), default="State Gau Seva Ayog / Animal Husbandry Dept", nullable=False)
+    updated_at = Column(String(64), default=utc_now_iso, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "cow_rate": self.cow_rate,
+            "bull_rate": self.bull_rate,
+            "calf_rate": self.calf_rate,
+            "sick_rate": self.sick_rate,
+            "state_agency_name": self.state_agency_name,
+            "updated_at": self.updated_at
         }
 
 class CensusSettingModel(Base):

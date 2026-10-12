@@ -8,6 +8,8 @@ const CensusModule = (() => {
   let activeTab = 'registry'; // 'registry' | 'audit' | 'medical' | 'feeding'
   let cachedCattleList = [];
   let cachedMedicalRecords = [];
+  let cachedValidatedRows = [];
+  let cachedSubsidyConfig = null;
 
   function init() {
     if (!initialized) {
@@ -60,15 +62,20 @@ const CensusModule = (() => {
       downloadSampleBtn.addEventListener('click', downloadSampleCsv);
     }
 
+    const dryRunValidateBtn = document.getElementById('btn-dry-run-validate');
+    if (dryRunValidateBtn) {
+      dryRunValidateBtn.addEventListener('click', handleDryRunValidation);
+    }
+
     const bulkImportForm = document.getElementById('bulk-import-form');
     if (bulkImportForm) {
       bulkImportForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        await handleBulkImportCsv();
+        await handleCommitBulkImport();
       });
     }
 
-    // 4. CSV Export Actions
+    // 4. CSV Export Actions & Print Muster Roll
     const exportCattleBtn = document.getElementById('btn-export-cattle-csv');
     if (exportCattleBtn) {
       exportCattleBtn.addEventListener('click', exportCattleCsv);
@@ -77,8 +84,37 @@ const CensusModule = (() => {
     if (exportAuditBtn) {
       exportAuditBtn.addEventListener('click', exportAuditReport);
     }
+    const printMusterRollBtn = document.getElementById('btn-print-muster-roll');
+    if (printMusterRollBtn) {
+      printMusterRollBtn.addEventListener('click', () => {
+        window.open('/api/census/export/audit-muster-roll-html', '_blank');
+      });
+    }
 
-    // 5. AI Reconcile Discrepancy & Subsidy Modal
+    // 5. Subsidy Rates Configuration & 30-Day Ledger
+    const openSubsidyBtn = document.getElementById('btn-open-subsidy-config');
+    if (openSubsidyBtn) openSubsidyBtn.addEventListener('click', openSubsidyConfigModal);
+    const closeSubsidyBtn = document.getElementById('close-subsidy-modal-btn');
+    const cancelSubsidyBtn = document.getElementById('cancel-subsidy-modal-btn');
+    if (closeSubsidyBtn) closeSubsidyBtn.addEventListener('click', closeSubsidyConfigModal);
+    if (cancelSubsidyBtn) cancelSubsidyBtn.addEventListener('click', closeSubsidyConfigModal);
+
+    const subsidyForm = document.getElementById('subsidy-config-form');
+    if (subsidyForm) {
+      subsidyForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await handleSaveSubsidyConfig();
+      });
+    }
+
+    const chipSubsidy = document.getElementById('chip-subsidy-daily');
+    if (chipSubsidy) chipSubsidy.addEventListener('click', openSubsidyLedgerModal);
+    const viewLedgerBtn = document.getElementById('btn-view-subsidy-ledger');
+    if (viewLedgerBtn) viewLedgerBtn.addEventListener('click', openSubsidyLedgerModal);
+    const closeLedgerBtn = document.getElementById('close-subsidy-ledger-modal-btn');
+    if (closeLedgerBtn) closeLedgerBtn.addEventListener('click', closeSubsidyLedgerModal);
+
+    // 6. AI Reconcile Discrepancy & Subsidy Modal
     const openReconcileBtn = document.getElementById('btn-reconcile-census');
     if (openReconcileBtn) {
       openReconcileBtn.addEventListener('click', openReconcileModal);
@@ -88,13 +124,13 @@ const CensusModule = (() => {
       closeReconcileBtn.addEventListener('click', closeReconcileModal);
     }
 
-    // 6. QR Badge Modal Closes
+    // 7. QR Badge Modal Closes
     const closeQrBtn = document.getElementById('close-qr-modal-btn');
     const closeQrCardBtn = document.getElementById('close-qr-card-btn');
     if (closeQrBtn) closeQrBtn.addEventListener('click', closeQrModal);
     if (closeQrCardBtn) closeQrCardBtn.addEventListener('click', closeQrModal);
 
-    // 7. Medical & Vaccination Modal & Actions
+    // 8. Medical & Vaccination Modal & Actions
     const openAddMedBtn = document.getElementById('btn-open-add-medical');
     if (openAddMedBtn) {
       openAddMedBtn.addEventListener('click', () => openMedicalModal());
@@ -112,6 +148,38 @@ const CensusModule = (() => {
       });
     }
 
+    // Batch Vaccination Modal & Actions
+    const openBatchMedBtn = document.getElementById('btn-open-batch-vaccine');
+    if (openBatchMedBtn) openBatchMedBtn.addEventListener('click', openBatchVaccinationModal);
+    const closeBatchMedBtn = document.getElementById('close-batch-medical-modal-btn');
+    const cancelBatchMedBtn = document.getElementById('cancel-batch-medical-btn');
+    if (closeBatchMedBtn) closeBatchMedBtn.addEventListener('click', closeBatchVaccinationModal);
+    if (cancelBatchMedBtn) cancelBatchMedBtn.addEventListener('click', closeBatchVaccinationModal);
+
+    const batchProtocolSelect = document.getElementById('batch-protocol-select');
+    if (batchProtocolSelect) {
+      batchProtocolSelect.addEventListener('change', handleBatchProtocolPresetChange);
+    }
+    const batchMedForm = document.getElementById('batch-medical-form');
+    if (batchMedForm) {
+      batchMedForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await handleBatchVaccinate();
+      });
+    }
+
+    // Auto Schedule NADCP Protocols
+    const autoScheduleBtn = document.getElementById('btn-auto-schedule-protocols');
+    if (autoScheduleBtn) {
+      autoScheduleBtn.addEventListener('click', handleAutoScheduleProtocols);
+    }
+
+    // WhatsApp / SMS Notification Dispatcher Modal
+    const openNotifBtn = document.getElementById('btn-open-notifications');
+    if (openNotifBtn) openNotifBtn.addEventListener('click', openNotificationModal);
+    const closeNotifBtn = document.getElementById('close-notification-modal-btn');
+    if (closeNotifBtn) closeNotifBtn.addEventListener('click', closeNotificationModal);
+
     const medSearchInput = document.getElementById('medical-search-input');
     if (medSearchInput) {
       medSearchInput.addEventListener('input', debounce(() => renderMedicalRecordsTable(), 300));
@@ -121,7 +189,7 @@ const CensusModule = (() => {
       medTypeFilter.addEventListener('change', () => renderMedicalRecordsTable());
     }
 
-    // 8. Cattle Registry Filter Controls
+    // 9. Cattle Registry Filter Controls
     const searchInput = document.getElementById('cattle-search-input');
     if (searchInput) {
       searchInput.addEventListener('input', debounce(() => loadCattleRegistry(), 300));
@@ -241,11 +309,33 @@ const CensusModule = (() => {
         // INAPH tag snippet
         const inaphSnippet = c.inaph_tag ? `<div style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono); margin-top:2px;">UID: ${escapeHtml(c.inaph_tag)}</div>` : '';
 
+        // Lineage snippet
+        const lineageSnippet = (c.mother_tag || c.father_tag) ? `
+          <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">
+            ${c.mother_tag ? `<span title="Dam/Mother">♀ ${escapeHtml(c.mother_tag)}</span>` : ''}
+            ${c.father_tag ? ` &bull; <span title="Sire/Father">♂ ${escapeHtml(c.father_tag)}</span>` : ''}
+          </div>
+        ` : '';
+
+        const photoUrl = c.photo_url || '/static/images/gaushala_hero.jpg';
+
         return `
           <tr>
+            <td style="width:70px; text-align:center;">
+              <div style="position:relative; width:48px; height:48px; margin:0 auto;">
+                <img src="${photoUrl}" alt="Cattle Photo" 
+                     onerror="this.src='/static/images/gaushala_hero.jpg'"
+                     style="width:48px; height:48px; border-radius:8px; object-fit:cover; border:1px solid var(--border-subtle); display:block;">
+                <button class="btn-micro-snap" title="1-Click Snap live CCTV frame as official photo" onclick="CensusModule.snapCctvPhoto(${c.id})"
+                        style="position:absolute; bottom:-4px; right:-4px; background:#10b981; color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.3);">
+                  📸
+                </button>
+              </div>
+            </td>
             <td>
               <strong style="color:var(--accent-emerald); font-family:var(--font-mono); font-size:0.92rem;">${escapeHtml(c.tag_id)}</strong>
               ${inaphSnippet}
+              ${lineageSnippet}
             </td>
             <td>
               <strong style="color:var(--text-primary); font-size:0.9rem;">${escapeHtml(c.name || '—')}</strong>
@@ -268,6 +358,9 @@ const CensusModule = (() => {
                 <button class="btn-sm btn-ghost" title="Printable ID Badge & QR Code" onclick="CensusModule.showQrBadge(${c.id})">
                   🪪 ID / QR
                 </button>
+                <button class="btn-sm btn-ghost" style="color:#38bdf8;" title="Open Scannable Public Livestock Digital Passport" onclick="window.open('/verify/' + encodeURIComponent('${escapeHtml(c.tag_id)}'), '_blank')">
+                  📱 Passport
+                </button>
                 <button class="btn-sm btn-ghost" title="Log Medical / Vaccine Record" onclick="CensusModule.openAddMedicalFor(${c.id})">
                   💉 Medical
                 </button>
@@ -285,7 +378,7 @@ const CensusModule = (() => {
 
     } catch (err) {
       console.error('Error loading cattle registry:', err);
-      listBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-rose">Failed to load registry: ${err.message}</td></tr>`;
+      listBody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-rose">Failed to load registry: ${err.message}</td></tr>`;
     }
   }
 
@@ -332,6 +425,10 @@ const CensusModule = (() => {
     const intake_source = document.getElementById('cow-intake').value;
     const ageVal = document.getElementById('cow-age').value;
     const age_years = parseFloat(ageVal) || 3.0;
+    const mother_tag = document.getElementById('cow-mother-tag')?.value.trim() || null;
+    const father_tag = document.getElementById('cow-father-tag')?.value.trim() || null;
+    const photo_url = document.getElementById('cow-photo-url')?.value.trim() || null;
+    const photoFileInput = document.getElementById('cow-photo-file');
     const notes = document.getElementById('cow-notes').value.trim() || null;
 
     if (!tag_id) {
@@ -342,7 +439,7 @@ const CensusModule = (() => {
     const gender = category === 'bull' ? 'male' : 'female';
 
     try {
-      await apiRequest('/api/cattle', {
+      const created = await apiRequest('/api/cattle', {
         method: 'POST',
         body: JSON.stringify({
           tag_id,
@@ -356,10 +453,33 @@ const CensusModule = (() => {
           breed,
           intake_source,
           age_years,
+          mother_tag,
+          father_tag,
+          photo_url,
           notes,
           status: 'active'
         })
       });
+
+      // If user provided a photo file, upload it immediately
+      if (photoFileInput && photoFileInput.files && photoFileInput.files.length > 0) {
+        try {
+          const photoFormData = new FormData();
+          photoFormData.append('file', photoFileInput.files[0]);
+          const token = (typeof AppState !== 'undefined' && AppState.token) || localStorage.getItem('gaushala_jwt_token') || localStorage.getItem('gaushala_token') || sessionStorage.getItem('gaushala_token');
+          const pHeaders = {};
+          if (token) pHeaders['Authorization'] = `Bearer ${token}`;
+
+
+          await fetch(`/api/cattle/${created.id}/photo`, {
+            method: 'POST',
+            headers: pHeaders,
+            body: photoFormData
+          });
+        } catch (photoErr) {
+          console.warn('Photo upload warning:', photoErr);
+        }
+      }
 
       showToast(
         AppState.lang === 'hi' 
@@ -441,13 +561,27 @@ const CensusModule = (() => {
     URL.revokeObjectURL(url);
   }
 
-  async function handleBulkImportCsv() {
+  async function snapCctvPhoto(cattleId) {
+    try {
+      showToast('Capturing live CCTV camera frame...', 'info');
+      const res = await apiRequest(`/api/cattle/${cattleId}/capture-cctv-photo`, { method: 'POST' });
+      showToast(AppState.lang === 'hi' ? 'CCTV फ्रेम प्रोफाइल फोटो के रूप में सहेजा गया!' : 'Live CCTV frame set as official profile photo!', 'info');
+      await loadCattleRegistry();
+    } catch (err) {
+      showToast(err.message, 'critical');
+    }
+  }
+
+  async function handleDryRunValidation() {
     const fileInput = document.getElementById('bulk-csv-file');
+    const previewWrap = document.getElementById('bulk-preview-wrap');
+    const summaryChips = document.getElementById('bulk-preview-summary-chips');
+    const tbody = document.getElementById('bulk-preview-tbody');
     const feedback = document.getElementById('bulk-import-feedback');
-    const uploadBtn = document.getElementById('btn-submit-bulk-upload');
+    const btn = document.getElementById('btn-dry-run-validate');
 
     if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-      showToast('Please select a CSV file to upload', 'warning');
+      showToast('Please select a CSV file first', 'warning');
       return;
     }
 
@@ -455,17 +589,18 @@ const CensusModule = (() => {
     const formData = new FormData();
     formData.append('file', file);
 
-    if (uploadBtn) {
-      uploadBtn.disabled = true;
-      uploadBtn.innerHTML = '<span class="spinner-inline"></span> Importing CSV...';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner-inline"></span> Pre-Validating CSV Muster Roll...`;
     }
 
     try {
-      const token = localStorage.getItem('gaushala_token') || sessionStorage.getItem('gaushala_token');
+      const token = (typeof AppState !== 'undefined' && AppState.token) || localStorage.getItem('gaushala_jwt_token') || localStorage.getItem('gaushala_token') || sessionStorage.getItem('gaushala_token');
       const headers = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch('/api/cattle/bulk-import/csv', {
+
+      const res = await fetch('/api/cattle/bulk-validate', {
         method: 'POST',
         headers,
         body: formData
@@ -473,19 +608,113 @@ const CensusModule = (() => {
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.detail || `Upload failed with status ${res.status}`);
+        throw new Error(errJson.detail || `Validation failed (${res.status})`);
       }
 
-      const result = await res.json();
+      const data = await res.json();
+      cachedValidatedRows = data.rows || [];
+
+      if (previewWrap) previewWrap.style.display = 'block';
+      if (summaryChips) {
+        summaryChips.innerHTML = `
+          <div class="summary-chip">
+            <span class="chip-label">Total CSV Rows</span>
+            <strong class="chip-val">${data.total_rows}</strong>
+          </div>
+          <div class="summary-chip chip-emerald">
+            <span class="chip-label">Valid Entries</span>
+            <strong class="chip-val text-emerald">${data.valid_rows}</strong>
+          </div>
+          <div class="summary-chip" style="border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.06);">
+            <span class="chip-label" style="color:#f59e0b;">Duplicate Tag Conflicts</span>
+            <strong class="chip-val" style="color:#f59e0b;">${data.conflict_rows}</strong>
+          </div>
+          <div class="summary-chip" style="border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.06);">
+            <span class="chip-label" style="color:#ef4444;">Syntax / Parse Errors</span>
+            <strong class="chip-val text-rose">${data.error_rows}</strong>
+          </div>
+        `;
+      }
+
+      if (tbody) {
+        tbody.innerHTML = (data.rows || []).slice(0, 30).map(r => {
+          let badge = `<span style="background:#10b981; color:#0f172a; padding:2px 8px; border-radius:4px; font-weight:700; font-size:0.75rem;">VALID</span>`;
+          if (r.validation_status === 'CONFLICT') {
+            badge = `<span style="background:#f59e0b; color:#0f172a; padding:2px 8px; border-radius:4px; font-weight:700; font-size:0.75rem;">CONFLICT</span>`;
+          } else if (r.validation_status === 'ERROR') {
+            badge = `<span style="background:#ef4444; color:#fff; padding:2px 8px; border-radius:4px; font-weight:700; font-size:0.75rem;">ERROR</span>`;
+          }
+
+          return `
+            <tr>
+              <td><strong>#${r.row_num}</strong></td>
+              <td>${badge}</td>
+              <td style="font-family:var(--font-mono); font-weight:700; color:var(--text-primary);">${escapeHtml(r.tag_id || '—')}</td>
+              <td>${escapeHtml(r.name || '—')}</td>
+              <td>${escapeHtml(r.category || 'cow')}</td>
+              <td>${escapeHtml(r.enclosure_id || 'cam-01')}</td>
+              <td style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(r.detail || 'Ready to import')}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      showToast(`Pre-Validation: ${data.valid_rows} Valid, ${data.conflict_rows} Conflicts found`, 'info');
+    } catch (err) {
+      if (feedback) {
+        feedback.style.display = 'block';
+        feedback.style.background = 'rgba(239,68,68,0.1)';
+        feedback.style.border = '1px solid rgba(239,68,68,0.3)';
+        feedback.style.color = '#ef4444';
+        feedback.textContent = `Pre-Validation Error: ${err.message}`;
+      }
+      showToast(err.message, 'critical');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<span>🔍 Step 1: Pre-Validate & Preview Rows (सत्यापन जांचें)</span>`;
+      }
+    }
+  }
+
+  async function handleCommitBulkImport() {
+    const feedback = document.getElementById('bulk-import-feedback');
+    const uploadBtn = document.getElementById('btn-submit-bulk-upload');
+    const conflictModeSelect = document.getElementById('bulk-conflict-mode');
+    const conflict_mode = conflictModeSelect ? conflictModeSelect.value : 'skip';
+
+    if (!cachedValidatedRows || cachedValidatedRows.length === 0) {
+      // If user hasn't clicked preview yet, run preview first
+      await handleDryRunValidation();
+      if (!cachedValidatedRows || cachedValidatedRows.length === 0) return;
+    }
+
+    if (uploadBtn) {
+      uploadBtn.disabled = true;
+      uploadBtn.innerHTML = '<span class="spinner-inline"></span> Committing Records to Database...';
+    }
+
+    try {
+      const res = await apiRequest('/api/cattle/bulk-commit', {
+        method: 'POST',
+        body: JSON.stringify({
+          rows: cachedValidatedRows,
+          items: cachedValidatedRows,
+          conflict_resolution: conflict_mode,
+          conflict_mode: conflict_mode
+        })
+
+      });
+
       if (feedback) {
         feedback.style.display = 'block';
         feedback.style.background = 'rgba(16,185,129,0.1)';
         feedback.style.border = '1px solid rgba(16,185,129,0.3)';
         feedback.style.color = '#047857';
-        feedback.innerHTML = `✓ <strong>Bulk Import Successful!</strong><br>Imported: <strong>${result.imported}</strong> cattle | Skipped/Duplicate: <strong>${result.skipped}</strong>`;
+        feedback.innerHTML = `✓ <strong>Bulk Import Committed!</strong><br>Newly Added: <strong>${res.imported}</strong> | Updated: <strong>${res.updated}</strong> | Skipped: <strong>${res.skipped}</strong>`;
       }
 
-      showToast(`Bulk Import Complete: ${result.imported} added, ${result.skipped} skipped`, 'info');
+      showToast(`Bulk Import Complete: ${res.imported} added, ${res.updated} updated, ${res.skipped} skipped`, 'info');
       await loadCattleRegistry();
       await loadCensusAudit();
     } catch (err) {
@@ -494,13 +723,13 @@ const CensusModule = (() => {
         feedback.style.background = 'rgba(239,68,68,0.1)';
         feedback.style.border = '1px solid rgba(239,68,68,0.3)';
         feedback.style.color = '#b91c1c';
-        feedback.textContent = `Import Error: ${err.message}`;
+        feedback.textContent = `Commit Error: ${err.message}`;
       }
       showToast(err.message, 'critical');
     } finally {
       if (uploadBtn) {
         uploadBtn.disabled = false;
-        uploadBtn.innerHTML = '<span>Upload & Import Records</span>';
+        uploadBtn.innerHTML = '<span>✓ Step 2: Confirm & Import Records</span>';
       }
     }
   }
@@ -513,6 +742,147 @@ const CensusModule = (() => {
   function exportAuditReport() {
     showToast('Downloading official Government Census Audit Report...', 'info');
     window.location.href = '/api/census/export/audit-report';
+  }
+
+  // -------------------------------------------------------------
+  // SUBSIDY RATES CONFIGURATION & 30-DAY TREASURY CLAIMS LEDGER
+  // -------------------------------------------------------------
+  async function openSubsidyConfigModal() {
+    const modal = document.getElementById('subsidy-config-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+
+    try {
+      const config = await apiRequest('/api/cattle/subsidy-config');
+      cachedSubsidyConfig = config;
+      if (document.getElementById('sub-cow-rate')) document.getElementById('sub-cow-rate').value = config.cow_rate;
+      if (document.getElementById('sub-bull-rate')) document.getElementById('sub-bull-rate').value = config.bull_rate;
+      if (document.getElementById('sub-calf-rate')) document.getElementById('sub-calf-rate').value = config.calf_rate;
+      if (document.getElementById('sub-sick-rate')) document.getElementById('sub-sick-rate').value = config.sick_rate;
+      if (document.getElementById('sub-scheme-title')) document.getElementById('sub-scheme-title').value = config.scheme_title;
+      if (document.getElementById('sub-disbursing-dept')) document.getElementById('sub-disbursing-dept').value = config.disbursing_dept;
+    } catch (err) {
+      console.warn('Failed to load subsidy config:', err);
+    }
+  }
+
+  function closeSubsidyConfigModal() {
+    const modal = document.getElementById('subsidy-config-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  async function handleSaveSubsidyConfig() {
+    const cow_rate = parseFloat(document.getElementById('sub-cow-rate').value) || 40.0;
+    const bull_rate = parseFloat(document.getElementById('sub-bull-rate').value) || 35.0;
+    const calf_rate = parseFloat(document.getElementById('sub-calf-rate').value) || 20.0;
+    const sick_rate = parseFloat(document.getElementById('sub-sick-rate').value) || 50.0;
+    const scheme_title = document.getElementById('sub-scheme-title').value.trim();
+    const disbursing_dept = document.getElementById('sub-disbursing-dept').value.trim();
+
+    try {
+      const updated = await apiRequest('/api/cattle/subsidy-config', {
+        method: 'PUT',
+        body: JSON.stringify({
+          cow_rate, bull_rate, calf_rate, sick_rate, scheme_title, disbursing_dept
+        })
+      });
+      cachedSubsidyConfig = updated;
+      showToast(AppState.lang === 'hi' ? 'सरकारी अनुदान दरें सफलतापूर्वक अपडेट की गईं!' : 'Subsidy rates updated and recomputed!', 'info');
+      closeSubsidyConfigModal();
+      await loadCattleRegistry();
+    } catch (err) {
+      showToast(err.message, 'critical');
+    }
+  }
+
+  async function openSubsidyLedgerModal() {
+    const modal = document.getElementById('subsidy-ledger-modal');
+    const body = document.getElementById('subsidy-ledger-modal-body');
+    if (!modal || !body) return;
+    modal.style.display = 'flex';
+
+    body.innerHTML = `<div style="text-align:center; padding:3rem;"><div class="spinner-inline"></div> Fetching 30-day verified treasury claims ledger...</div>`;
+
+    try {
+      const data = await apiRequest('/api/census/subsidy-ledger?days=30');
+      
+      const rowsHtml = (data.ledger_records || []).map(r => `
+        <tr>
+          <td><strong>${r.date}</strong></td>
+          <td><span class="badge-enclosure">${r.session_time} IST</span></td>
+          <td><strong>${r.registered_active_herd}</strong></td>
+          <td><strong style="color:var(--accent-primary);">${r.verified_live_detected}</strong></td>
+          <td style="font-size:0.78rem; color:var(--text-muted);">
+            Cows: ${r.breakdown.cows} | Bulls: ${r.breakdown.bulls} | Calves: ${r.breakdown.calves}
+          </td>
+          <td>
+            <strong style="color:var(--accent-emerald); font-size:1.05rem;">
+              ₹${(r.daily_entitlement_inr || 0).toLocaleString('en-IN')}
+            </strong>
+          </td>
+          <td>
+            <span class="status-pill ${r.status === 'MATCH' ? 'pill-active' : 'pill-inactive'}">
+              ${r.status}
+            </span>
+          </td>
+          <td>
+            <code style="font-size:0.7rem; color:var(--text-muted);">${(r.integrity_hash || '').slice(0, 10)}...</code>
+          </td>
+        </tr>
+      `).join('');
+
+      body.innerHTML = `
+        <div style="background:linear-gradient(135deg, rgba(245,158,11,0.1), rgba(16,185,129,0.08)); border:1px solid rgba(245,158,11,0.3); border-radius:12px; padding:16px; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div>
+            <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:#f59e0b; font-weight:800;">
+              ${escapeHtml(data.state_scheme || 'Mukhyamantri Gaushala Sahayata Yojana')}
+            </div>
+            <h3 style="font-size:1.15rem; font-weight:800; color:var(--text-primary); margin-top:2px;">
+              ${escapeHtml(data.gaushala_name || 'Gaushala Monitoring Sanctuary')}
+            </h3>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
+              30-Day Optical Audit Verified Ledger &bull; Ready for Treasury Disbursal
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.75rem; color:var(--text-muted);">Total 30-Day Projected Subsidy</div>
+            <div style="font-size:1.6rem; font-weight:900; color:var(--accent-emerald);">
+              ₹${(data.total_projected_subsidy_inr || 0).toLocaleString('en-IN')}
+            </div>
+            <button class="btn-tool" style="margin-top:6px;" onclick="window.open('/api/census/export/audit-muster-roll-html', '_blank')">
+              📜 Print Signed Muster Roll
+            </button>
+          </div>
+        </div>
+
+        <div class="modern-table-wrap" style="max-height:360px; overflow-y:auto;">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>Audit Date</th>
+                <th>Shift</th>
+                <th>Registered Herd</th>
+                <th>Verified Detected</th>
+                <th>Category Count</th>
+                <th>Claim Amount (INR)</th>
+                <th>Audit Result</th>
+                <th>SHA-256 Hash</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </div>
+      `;
+    } catch (err) {
+      body.innerHTML = `<div class="p-4 text-center text-rose">Failed to load subsidy ledger: ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  function closeSubsidyLedgerModal() {
+    const modal = document.getElementById('subsidy-ledger-modal');
+    if (modal) modal.style.display = 'none';
   }
 
   // -------------------------------------------------------------
@@ -603,11 +973,16 @@ const CensusModule = (() => {
       <div class="subsidy-highlight-card">
         <div>
           <div class="subsidy-title">
-            <span>🏛️ GOV FEED SUBSIDY ENTITLEMENT (₹40 / CATTLE / DAY)</span>
+            <span>🏛️ GOV FEED SUBSIDY ENTITLEMENT (₹${subsidy.tiered_rates?.cow_rate || 40} / CATTLE / DAY)</span>
           </div>
           <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:3px;">
             Verified CCTV Headcount: <strong>${data.total_live_detected}</strong> | Registered Muster: <strong>${data.total_registered_herd}</strong>
           </div>
+          ${data.evidence_hash ? `
+            <div style="font-size:0.72rem; color:#94a3b8; font-family:var(--font-mono); margin-top:4px;">
+              🔒 SHA-256 Audit Integrity Hash: <code>${escapeHtml(data.evidence_hash)}</code>
+            </div>
+          ` : ''}
         </div>
         <div style="text-align:right;">
           <div class="subsidy-amount">₹${verDaily.toLocaleString('en-IN')} / Day</div>
@@ -657,13 +1032,16 @@ const CensusModule = (() => {
         </table>
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-subtle); padding-top:1rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-subtle); padding-top:1rem; flex-wrap:wrap; gap:8px;">
         <span style="font-size:0.75rem; color:var(--text-muted);">
           Reconciliation Run: ${formatDate(data.timestamp)}
         </span>
-        <div style="display:flex; gap:8px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn-tool" onclick="window.open('/api/census/export/audit-muster-roll-html', '_blank')">
+            📜 Print Official Muster Roll
+          </button>
           <button class="btn-tool" onclick="CensusModule.exportAuditReport()">
-            📥 Export Audit Roll
+            📥 Export CSV
           </button>
           <button class="btn-primary" onclick="CensusModule.openReconcileModal()">
             ⚡ Re-Scan Now
@@ -687,12 +1065,14 @@ const CensusModule = (() => {
     try {
       const c = await apiRequest(`/api/cattle/${cattleId}`);
       
-      const qrPayload = `TAG:${c.tag_id}|INAPH:${c.inaph_tag || 'NA'}|BREED:${c.breed || 'Desi'}|PEN:${c.enclosure_id}|GAUSHALA:GOV_AI`;
-      const qrSvg = generateQrSvg(qrPayload, 140);
+      // Scannable live passport URL for mobile phone cameras!
+      const passportUrl = `${window.location.origin}/verify/${encodeURIComponent(c.tag_id)}`;
+      const qrSvg = generateQrSvg(passportUrl, 140);
 
       const catLabel = c.category === 'bull' ? 'नंदी / बैल (Bull)' : c.category === 'calf' ? 'बछड़ा / बछिया (Calf)' : 'गाय (Cow)';
       const lactLabel = c.lactation_stage === 'milking' ? 'दुधारू (Milking)' : c.lactation_stage === 'pregnant' ? 'गर्भवती (Pregnant)' : 'सूखी (Dry)';
       const healthLabel = c.health_status === 'healthy' ? 'स्वस्थ (Healthy)' : c.health_status === 'under_treatment' ? 'उपचाराधीन' : 'क्वारंटाइन';
+      const photoSrc = c.photo_url || '/static/images/gaushala_hero.jpg';
 
       printArea.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #334155; padding-bottom:12px; margin-bottom:14px;">
@@ -716,12 +1096,16 @@ const CensusModule = (() => {
 
         <div style="display:grid; grid-template-columns:1fr 140px; gap:16px; align-items:center;">
           <div>
-            <div style="margin-bottom:10px;">
-              <div style="font-size:0.7rem; text-transform:uppercase; color:#94a3b8; font-weight:700;">Ear Tag / Collar RFID</div>
-              <div style="font-size:1.4rem; font-weight:900; font-family:var(--font-mono); color:#10b981;">
-                ${escapeHtml(c.tag_id)}
+            <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;">
+              <img src="${photoSrc}" alt="Cattle Photo" onerror="this.src='/static/images/gaushala_hero.jpg'"
+                   style="width:58px; height:58px; border-radius:10px; object-fit:cover; border:2px solid #10b981;">
+              <div>
+                <div style="font-size:0.7rem; text-transform:uppercase; color:#94a3b8; font-weight:700;">Ear Tag / Collar RFID</div>
+                <div style="font-size:1.3rem; font-weight:900; font-family:var(--font-mono); color:#10b981;">
+                  ${escapeHtml(c.tag_id)}
+                </div>
+                ${c.inaph_tag ? `<div style="font-size:0.78rem; font-family:var(--font-mono); color:#cbd5e1; margin-top:1px;">INAPH UID: <strong>${escapeHtml(c.inaph_tag)}</strong></div>` : ''}
               </div>
-              ${c.inaph_tag ? `<div style="font-size:0.8rem; font-family:var(--font-mono); color:#cbd5e1; margin-top:2px;">INAPH UID: <strong>${escapeHtml(c.inaph_tag)}</strong></div>` : ''}
             </div>
 
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:0.82rem; margin-bottom:8px;">
@@ -742,8 +1126,8 @@ const CensusModule = (() => {
                 <div style="font-weight:700; color:#38bdf8;">${escapeHtml(c.enclosure_id)}</div>
               </div>
               <div>
-                <span style="color:#94a3b8; font-size:0.72rem;">Lactation Stage:</span>
-                <div style="font-weight:600; color:#f8fafc;">${lactLabel}</div>
+                <span style="color:#94a3b8; font-size:0.72rem;">Lineage (Dam / Sire):</span>
+                <div style="font-weight:600; color:#cbd5e1;">${escapeHtml(c.mother_tag || '—')} / ${escapeHtml(c.father_tag || '—')}</div>
               </div>
               <div>
                 <span style="color:#94a3b8; font-size:0.72rem;">Health Status:</span>
@@ -757,7 +1141,7 @@ const CensusModule = (() => {
               ${qrSvg}
             </div>
             <div style="font-size:0.65rem; color:#94a3b8; margin-top:6px; font-weight:600;">
-              Mobile Quick-Scan
+              Mobile Scan for Digital Passport
             </div>
           </div>
         </div>
@@ -1198,6 +1582,314 @@ const CensusModule = (() => {
   }
 
   // -------------------------------------------------------------
+  // BATCH VACCINATION, NADCP PROTOCOLS & NOTIFICATION DISPATCHER
+  // -------------------------------------------------------------
+  let cachedProtocols = [];
+
+  async function openBatchVaccinationModal() {
+    const modal = document.getElementById('batch-medical-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+
+    // Pre-fill today's date
+    const adminInput = document.getElementById('batch-admin-date');
+    if (adminInput && !adminInput.value) {
+      adminInput.value = new Date().toISOString().slice(0, 10);
+    }
+
+    // Set 6-month due date default
+    const dueInput = document.getElementById('batch-due-date');
+    if (dueInput && !dueInput.value) {
+      const d = new Date();
+      d.setMonth(d.getMonth() + 6);
+      dueInput.value = d.toISOString().slice(0, 10);
+    }
+
+    // Generate random lot number preset if empty
+    const lotInput = document.getElementById('batch-vial-lot');
+    if (lotInput && !lotInput.value) {
+      const yr = new Date().getFullYear();
+      const randHex = Math.floor(1000 + Math.random() * 9000);
+      lotInput.value = `NADCP-${yr}-${randHex}`;
+    }
+
+    try {
+      if (cachedProtocols.length === 0) {
+        cachedProtocols = await apiRequest('/api/cattle/medical/protocols').catch(() => []);
+      }
+    } catch (e) {
+      console.warn('Protocols fetch failed:', e);
+    }
+  }
+
+  function closeBatchVaccinationModal() {
+    const modal = document.getElementById('batch-medical-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function handleBatchProtocolPresetChange(e) {
+    const protocolId = e.target.value;
+    const titleInput = document.getElementById('batch-title');
+    const dosageInput = document.getElementById('batch-dosage');
+    const dueInput = document.getElementById('batch-due-date');
+    const notesInput = document.getElementById('batch-notes');
+
+    const pMap = {
+      'FMD': {
+        title: 'Foot-and-Mouth Disease (FMD खुरपका-मुंहपका) Bi-annual Booster',
+        dosage: '3ml SC (Subcutaneous)',
+        months: 6,
+        notes: 'Indian Immunologicals Raksha-Ovac • Bi-annual herd immunization'
+      },
+      'LSD': {
+        title: 'Lumpy Skin Disease (लंपी त्वचा रोग) Annual Prophylactic',
+        dosage: '3ml SC (Goat Pox Vaccine)',
+        months: 12,
+        notes: 'Pre-monsoon annual vaccination against capripoxvirus'
+      },
+      'HS_BQ': {
+        title: 'HS & BQ (गलघोंटू एवं लंगड़ा बुखार) Dual Vaccine',
+        dosage: '5ml SC',
+        months: 12,
+        notes: 'Pre-monsoon dual prophylactic against Haemorrhagic Septicaemia & Black Quarter'
+      },
+      'DEWORM': {
+        title: 'Broad-Spectrum Deworming (कृमिनाशक Albendazole/Fenbendazole)',
+        dosage: '100ml Oral Drench',
+        months: 3,
+        notes: 'Rotational oral deworming against gastrointestinal nematodes and flukes'
+      },
+      'BRUCELLA': {
+        title: 'Brucellosis S19 Calfhood Vaccine',
+        dosage: '2ml SC',
+        months: 0,
+        notes: 'One-time lifetime vaccination for female calves aged 4-8 months'
+      },
+      'CUSTOM': {
+        title: 'Veterinary Clinical Health Intervention',
+        dosage: 'As prescribed',
+        months: 3,
+        notes: ''
+      }
+    };
+
+    const sel = pMap[protocolId] || pMap['CUSTOM'];
+    if (titleInput) titleInput.value = sel.title;
+    if (dosageInput) dosageInput.value = sel.dosage;
+    if (notesInput) notesInput.value = sel.notes;
+
+    if (dueInput && sel.months > 0) {
+      const d = new Date();
+      d.setMonth(d.getMonth() + sel.months);
+      dueInput.value = d.toISOString().slice(0, 10);
+    }
+  }
+
+  async function handleBatchVaccinate() {
+    const enclosure_id = document.getElementById('batch-enclosure-select').value;
+    const title = document.getElementById('batch-title').value.trim();
+    const administered_date = document.getElementById('batch-admin-date').value;
+    const next_due_date = document.getElementById('batch-due-date').value || null;
+    const vial_batch_no = document.getElementById('batch-vial-lot').value.trim();
+    const dosage = document.getElementById('batch-dosage').value.trim();
+    const doctor_name = document.getElementById('batch-doctor').value.trim() || null;
+    const notes = document.getElementById('batch-notes').value.trim() || null;
+    const btn = document.getElementById('btn-submit-batch-vaccine');
+
+    if (!title || !administered_date || !vial_batch_no) {
+      showToast('Title, Administered Date, and Lot Number are required', 'warning');
+      return;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner-inline"></span> Inoculating Herd...`;
+    }
+
+    try {
+      const payload = {
+        title,
+        administered_date,
+        next_due_date,
+        vial_batch_no,
+        dosage,
+        doctor_name,
+        notes,
+        status: 'completed',
+        record_type: 'vaccination'
+      };
+
+      if (enclosure_id && enclosure_id !== 'ALL') {
+        payload.enclosure_id = enclosure_id;
+      }
+
+      const res = await apiRequest('/api/cattle/medical/batch', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      showToast(
+        AppState.lang === 'hi'
+          ? `सामूहिक टीकाकरण पूर्ण: ${res.vaccinated_cattle_count} गोवंशों को टीका लगाया गया!`
+          : `Batch vaccination complete: ${res.vaccinated_cattle_count} cattle immunized!`,
+        'info'
+      );
+
+      closeBatchVaccinationModal();
+      await loadMedicalRegister();
+      await loadCattleRegistry();
+    } catch (err) {
+      showToast(err.message, 'critical');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<span>💉 Execute Batch Vaccination</span>`;
+      }
+    }
+  }
+
+  async function handleAutoScheduleProtocols() {
+    const confirmMsg = AppState.lang === 'hi' 
+      ? 'क्या आप राष्ट्रीय पशु रोग नियंत्रण कार्यक्रम (NADCP) के तहत सभी सक्रिय गोवंशों के लिए 1-वर्षीय टीकाकरण कैलेंडर स्वचालित रूप से तैयार करना चाहते हैं?'
+      : 'Auto-generate 1-year National Animal Disease Control Programme (NADCP) vaccination calendar for all active cattle?';
+    
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      showToast('Generating national protocol immunization schedule...', 'info');
+      const res = await apiRequest('/api/cattle/medical/auto-schedule', { method: 'POST' });
+      showToast(
+        AppState.lang === 'hi'
+          ? `सफलता: ${res.unique_cattle_scheduled} गोवंशों के लिए ${res.records_created} टीकाकरण प्रविष्टियां निर्धारित की गईं!`
+          : `Success: ${res.records_created} protocol records scheduled across ${res.unique_cattle_scheduled} cattle!`,
+        'info'
+      );
+      await loadMedicalRegister();
+    } catch (err) {
+      showToast(err.message, 'critical');
+    }
+  }
+
+  async function openNotificationModal() {
+    const modal = document.getElementById('notification-modal');
+    const body = document.getElementById('notification-modal-body');
+    if (!modal || !body) return;
+    modal.style.display = 'flex';
+
+    body.innerHTML = `<div style="text-align:center; padding:3rem;"><div class="spinner-inline"></div> Scanning medical register for overdue & upcoming alerts...</div>`;
+
+    try {
+      const data = await apiRequest('/api/cattle/medical/notifications');
+      const overdueList = data.overdue_alerts || [];
+      const dueSoonList = data.due_soon_alerts || [];
+      const totalAlerts = overdueList.length + dueSoonList.length;
+
+      let overdueCards = overdueList.map(a => `
+        <div style="background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:10px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <strong style="color:var(--accent-rose); font-family:var(--font-mono); font-size:0.95rem;">${escapeHtml(a.tag_id)}</strong>
+              <span style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(a.name || 'Gomata')} &bull; ${escapeHtml(a.enclosure_id)}</span>
+            </div>
+            <div style="font-size:0.85rem; font-weight:700; color:var(--text-primary); margin-top:2px;">${escapeHtml(a.title)}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.75rem; color:#ef4444; font-weight:700;">OVERDUE (${a.days_overdue} days)</div>
+            <div style="font-size:0.72rem; color:var(--text-muted);">Due: ${a.due_date}</div>
+          </div>
+        </div>
+      `).join('');
+
+      let dueSoonCards = dueSoonList.map(a => `
+        <div style="background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.3); border-radius:8px; padding:10px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <strong style="color:#f59e0b; font-family:var(--font-mono); font-size:0.95rem;">${escapeHtml(a.tag_id)}</strong>
+              <span style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(a.name || 'Gomata')} &bull; ${escapeHtml(a.enclosure_id)}</span>
+            </div>
+            <div style="font-size:0.85rem; font-weight:700; color:var(--text-primary); margin-top:2px;">${escapeHtml(a.title)}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.75rem; color:#f59e0b; font-weight:700;">DUE in ${a.days_remaining} days</div>
+            <div style="font-size:0.72rem; color:var(--text-muted);">Due: ${a.due_date}</div>
+          </div>
+        </div>
+      `).join('');
+
+      // WhatsApp formatted message template
+      const waMsgLines = [
+        `📢 *राष्ट्रीय गोवंश स्वास्थ्य एवं टीकाकरण अलर्ट (Gaushala Health Alert)*`,
+        `परिसर: श्री कामधेनु गोशाला | कुल अलर्ट: ${totalAlerts}`,
+        ``,
+        `⚠️ *लंबित / नियत टीके (Overdue & Due Vaccines):*`
+      ];
+
+      overdueList.slice(0, 5).forEach(a => {
+        waMsgLines.push(`• 🔴 ${a.tag_id} (${a.name || 'Cow'} - ${a.enclosure_id}): ${a.title} [विलंब: ${a.days_overdue} दिन]`);
+      });
+
+      dueSoonList.slice(0, 5).forEach(a => {
+        waMsgLines.push(`• 🟡 ${a.tag_id} (${a.name || 'Cow'} - ${a.enclosure_id}): ${a.title} [नियत: ${a.due_date}]`);
+      });
+
+      waMsgLines.push(``);
+      waMsgLines.push(`कृपया पशु चिकित्सक एवं मुख्य केयरटेकर आवश्यक टीकाकरण सुनिश्चित करें।`);
+      waMsgLines.push(`स्मार्ट गोशाला AI निगरानी पोर्टल`);
+
+      const waMsgEncoded = encodeURIComponent(waMsgLines.join('\n'));
+
+      body.innerHTML = `
+        <div style="display:flex; gap:12px; margin-bottom:1.25rem;">
+          <div class="summary-chip" style="flex:1; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.06);">
+            <span class="chip-label" style="color:#ef4444;">Overdue Vaccines</span>
+            <strong class="chip-val text-rose">${overdueList.length}</strong>
+          </div>
+          <div class="summary-chip" style="flex:1; border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.06);">
+            <span class="chip-label" style="color:#f59e0b;">Due in 14 Days</span>
+            <strong class="chip-val" style="color:#f59e0b;">${dueSoonList.length}</strong>
+          </div>
+        </div>
+
+        <div style="max-height:220px; overflow-y:auto; margin-bottom:1.25rem;">
+          ${overdueCards || ''}
+          ${dueSoonCards || ''}
+          ${totalAlerts === 0 ? '<div class="text-center py-4 text-emerald">✓ All herd vaccines are up to date! No pending alerts.</div>' : ''}
+        </div>
+
+        <div style="background:var(--bg-elevated); border:1px solid var(--border-subtle); border-radius:10px; padding:14px; margin-bottom:1rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="font-size:0.85rem; color:var(--text-primary);">📱 WhatsApp Message Dispatch Preview:</strong>
+            <button class="btn-sm btn-ghost" onclick="navigator.clipboard.writeText(decodeURIComponent('${waMsgEncoded}')); showToast('Message copied to clipboard!', 'info');">
+              📋 Copy Text
+            </button>
+          </div>
+          <pre style="white-space:pre-wrap; font-size:0.75rem; color:var(--text-muted); background:var(--bg-card); padding:10px; border-radius:6px; max-height:120px; overflow-y:auto; font-family:var(--font-mono);">${escapeHtml(waMsgLines.join('\n'))}</pre>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:0.75rem; color:var(--text-muted);">
+            Broadcasts to designated veterinary doctors & Gaushala supervisors
+          </span>
+          <div style="display:flex; gap:8px;">
+            <a href="https://wa.me/?text=${waMsgEncoded}" target="_blank" class="btn-primary" style="background:#25D366; border-color:#25D366; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+              <span>💬 Open WhatsApp Web</span>
+            </a>
+            <button type="button" class="btn-tool" onclick="CensusModule.closeNotificationModal()">Done</button>
+          </div>
+        </div>
+      `;
+
+    } catch (err) {
+      body.innerHTML = `<div class="p-4 text-center text-rose">Failed to load alerts: ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  function closeNotificationModal() {
+    const modal = document.getElementById('notification-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  // -------------------------------------------------------------
   // 6. HERD CENSUS AUDIT (05:00 & 17:00 IST)
   // -------------------------------------------------------------
   async function loadCensusAudit() {
@@ -1498,6 +2190,14 @@ const CensusModule = (() => {
     };
   }
 
+  function showToast(msg, type = 'info') {
+    if (typeof window.showToast === 'function') {
+      window.showToast(msg, type);
+    } else {
+      console.log(`[Toast ${type}]`, msg);
+    }
+  }
+
   return {
     init,
     refreshAll,
@@ -1505,12 +2205,25 @@ const CensusModule = (() => {
     toggleStatus,
     deleteRecord,
     showQrBadge,
+    snapCctvPhoto,
     openAddMedicalFor,
     deleteMedicalRecord,
     runFeedingCheckFor,
     openReconcileModal,
     openBulkImportModal,
     exportCattleCsv,
-    exportAuditReport
+    exportAuditReport,
+    openSubsidyConfigModal,
+    closeSubsidyConfigModal,
+    openSubsidyLedgerModal,
+    closeSubsidyLedgerModal,
+    handleDryRunValidation,
+    handleCommitBulkImport,
+    openBatchVaccinationModal,
+    closeBatchVaccinationModal,
+    handleAutoScheduleProtocols,
+    openNotificationModal,
+    closeNotificationModal,
+    showToast
   };
 })();

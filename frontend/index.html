@@ -761,12 +761,15 @@
                       <span class="chip-label" data-i18n="lbl_active_herd">Active Herd</span>
                       <strong class="chip-val text-emerald" id="reg-active-cows">0</strong>
                     </div>
-                    <div class="summary-chip" style="border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.06);">
-                      <span class="chip-label" style="color:#f59e0b;">अनुदान (₹40/गाय/दिन)</span>
+                    <div class="summary-chip" id="chip-subsidy-daily" style="border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.06); cursor:pointer;" title="Click to view 30-day Subsidy Claims Ledger">
+                      <span class="chip-label" style="color:#f59e0b;">अनुदान (सरकारी दर) 💰</span>
                       <strong class="chip-val" id="reg-subsidy-daily" style="color:#f59e0b;">₹0</strong>
                     </div>
                   </div>
                   <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="btn-tool" id="btn-open-subsidy-config" title="Configure Government Subsidy Rates">
+                      <span>⚙️ Subsidy Rates</span>
+                    </button>
                     <button class="btn-tool" id="btn-reconcile-census" title="Run instant AI Headcount Reconciliation">
                       <span>⚖️ AI Reconcile</span>
                     </button>
@@ -816,6 +819,7 @@
                 <table class="modern-table">
                   <thead>
                     <tr>
+                      <th style="width:70px;">Photo</th>
                       <th>टैग एवं INAPH UID</th>
                       <th data-i18n="th_cow_name">Name / Identifier</th>
                       <th data-i18n="th_cow_enclosure">Enclosure</th>
@@ -849,8 +853,14 @@
                     <button class="btn-primary" id="btn-run-census-diagnostic">
                       <span data-i18n="btn_run_diag_census">⚡ Run Diagnostic Census</span>
                     </button>
-                    <button class="btn-tool" id="btn-export-audit-report" style="margin-top:6px;" title="Download Official Government Muster Roll">
-                      <span>📜 Export Audit Report (CSV)</span>
+                    <button class="btn-tool" id="btn-print-muster-roll" style="margin-top:6px;" title="Print Official Signed Muster Roll with SHA-256 Hash">
+                      <span>📜 Print Official Muster Roll</span>
+                    </button>
+                    <button class="btn-tool" id="btn-export-audit-report" style="margin-top:6px;" title="Download Official Government Muster Roll (CSV)">
+                      <span>📊 Export Audit CSV</span>
+                    </button>
+                    <button class="btn-tool" id="btn-view-subsidy-ledger" style="margin-top:6px;" title="View 30-Day Treasury Claims Ledger">
+                      <span>💰 30-Day Subsidy Ledger</span>
                     </button>
                     <span class="next-run-text"><span data-i18n="lbl_next_run">Next Scheduled:</span> <strong id="census-next-scheduled-time">05:00 / 17:00 IST</strong></span>
                   </div>
@@ -1015,10 +1025,21 @@
                       <strong class="chip-val text-emerald" id="med-completed-count">0</strong>
                     </div>
                   </div>
-                  <button class="btn-primary" id="btn-open-add-medical">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    <span>+ Log Medical / Vaccine</span>
-                  </button>
+                  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="btn-tool" id="btn-auto-schedule-protocols" title="Auto-Schedule 1-Year National Vaccination Calendar (NADCP)">
+                      <span>📅 Auto-Schedule Protocols</span>
+                    </button>
+                    <button class="btn-tool" id="btn-open-notifications" title="WhatsApp & SMS Vaccination Alerts Dispatcher">
+                      <span>📲 WhatsApp Alerts</span>
+                    </button>
+                    <button class="btn-tool" id="btn-open-batch-vaccine" title="Vaccinate entire pen / enclosure in 1 click">
+                      <span>💉 Pen Batch Vaccinate</span>
+                    </button>
+                    <button class="btn-primary" id="btn-open-add-medical">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      <span>+ Log Medical / Vaccine</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1438,6 +1459,28 @@
             </div>
           </div>
 
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="cow-mother-tag" class="form-label">Mother Tag (Dam UID - माता टैग)</label>
+              <input type="text" class="form-input font-mono" id="cow-mother-tag" placeholder="e.g. DL-GAU-0012" />
+            </div>
+            <div class="form-group">
+              <label for="cow-father-tag" class="form-label">Father Tag (Sire UID - पिता टैग)</label>
+              <input type="text" class="form-input font-mono" id="cow-father-tag" placeholder="e.g. DL-GAU-0005" />
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="cow-photo-url" class="form-label">Profile Photo URL (वैकल्पिक)</label>
+              <input type="text" class="form-input" id="cow-photo-url" placeholder="https://... or /static/photos/cow1.jpg" />
+            </div>
+            <div class="form-group">
+              <label for="cow-photo-file" class="form-label">Upload Animal Photo (फोटो अपलोड करें)</label>
+              <input type="file" class="form-input" id="cow-photo-file" accept="image/*" style="padding:6px;" />
+            </div>
+          </div>
+
           <div class="form-group">
             <label for="cow-notes" class="form-label" data-i18n="lbl_cow_notes">Distinctive Markings & Medical Notes</label>
             <textarea class="form-textarea" id="cow-notes" rows="2" placeholder="Distinctive coat color, horn shape, ear cuts, previous treatments..."></textarea>
@@ -1454,17 +1497,17 @@
     </div>
   </div>
 
-  <!-- Bulk CSV Import Modal -->
+  <!-- Bulk CSV Import Modal with Dry-Run Pre-Validation Preview -->
   <div class="modal-overlay" id="bulk-import-modal">
-    <div class="modal-card">
+    <div class="modal-card" style="max-width:820px;">
       <div class="modal-header">
         <div class="modal-title-group">
           <div class="modal-icon-badge icon-indigo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           </div>
           <div>
-            <h2 class="modal-title">Bulk Cattle CSV Import (एक साथ कई गोवंश जोड़ें)</h2>
-            <p class="modal-subtitle">Upload CSV muster roll with 50-200 cattle in a single click</p>
+            <h2 class="modal-title">Bulk Cattle CSV Import & Pre-Validation Preview</h2>
+            <p class="modal-subtitle">Dry-run validation, duplicate tag conflict resolution, and batch commit</p>
           </div>
         </div>
         <button class="btn-icon" id="close-bulk-import-modal-btn" title="Close">
@@ -1474,7 +1517,7 @@
 
       <div class="modal-body">
         <div style="background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.25); border-radius:10px; padding:12px 16px; margin-bottom:1.25rem;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
             <div>
               <strong style="color:var(--text-primary); font-size:0.9rem;">CSV Column Standard:</strong>
               <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
@@ -1488,20 +1531,259 @@
         </div>
 
         <form id="bulk-import-form">
-          <div class="form-group">
-            <label for="bulk-csv-file" class="form-label">Select CSV File (*.csv):</label>
-            <input type="file" class="form-input" id="bulk-csv-file" accept=".csv" required style="padding:8px;" />
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="bulk-csv-file" class="form-label">Select CSV File (*.csv):</label>
+              <input type="file" class="form-input" id="bulk-csv-file" accept=".csv" required style="padding:8px;" />
+            </div>
+            <div class="form-group">
+              <label for="bulk-conflict-mode" class="form-label">Conflict Resolution Strategy (डुप्लीकेट टैग नियम):</label>
+              <select class="form-select" id="bulk-conflict-mode">
+                <option value="skip" selected>Skip Existing Tags (मौजूदा टैग छोड़ें - सुरक्षित)</option>
+                <option value="overwrite">Overwrite / Update Records (मौजूदा डेटा अपडेट करें)</option>
+              </select>
+            </div>
           </div>
 
-          <div id="bulk-import-feedback" style="display:none; padding:10px 14px; border-radius:8px; font-size:0.85rem; margin-top:10px;"></div>
+          <div style="margin-top:10px;">
+            <button type="button" class="btn-tool" id="btn-dry-run-validate" style="width:100%; justify-content:center; padding:10px; font-weight:700;">
+              <span>🔍 Step 1: Pre-Validate & Preview Rows (सत्यापन जांचें)</span>
+            </button>
+          </div>
+
+          <!-- Dry-run validation results container -->
+          <div id="bulk-preview-wrap" style="display:none; margin-top:14px; border-top:1px solid var(--border-subtle); padding-top:14px;">
+            <div id="bulk-preview-summary-chips" style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;"></div>
+            <div class="modern-table-wrap" style="max-height:220px; overflow-y:auto;">
+              <table class="modern-table" style="font-size:0.82rem;">
+                <thead>
+                  <tr>
+                    <th>Row #</th>
+                    <th>Status</th>
+                    <th>Tag ID</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Pen</th>
+                    <th>Detail / Conflict</th>
+                  </tr>
+                </thead>
+                <tbody id="bulk-preview-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="bulk-import-feedback" style="display:none; padding:10px 14px; border-radius:8px; font-size:0.85rem; margin-top:12px;"></div>
 
           <div class="modal-footer-actions" style="margin-top:1.25rem;">
             <button type="button" class="btn-tool" id="cancel-bulk-import-btn">Cancel</button>
             <button type="submit" class="btn-primary" id="btn-submit-bulk-upload">
-              <span>Upload & Import Records</span>
+              <span>✓ Step 2: Confirm & Import Records</span>
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Government Subsidy Configuration Modal -->
+  <div class="modal-overlay" id="subsidy-config-modal">
+    <div class="modal-card" style="max-width:580px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge icon-amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 6v12"/></svg>
+          </div>
+          <div>
+            <h2 class="modal-title">Government Subsidy Rate Configuration</h2>
+            <p class="modal-subtitle">State Cow Welfare Subsidy rates & treasury allotment rules</p>
+          </div>
+        </div>
+        <button class="btn-icon" id="close-subsidy-modal-btn" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form id="subsidy-config-form">
+        <div class="modal-body">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="sub-cow-rate" class="form-label">Adult Cow Rate (₹ / Day) *</label>
+              <input type="number" class="form-input" id="sub-cow-rate" step="0.5" min="0" value="40" required />
+            </div>
+            <div class="form-group">
+              <label for="sub-bull-rate" class="form-label">Bull / Ox Rate (₹ / Day) *</label>
+              <input type="number" class="form-input" id="sub-bull-rate" step="0.5" min="0" value="35" required />
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="sub-calf-rate" class="form-label">Calf Rate (₹ / Day) *</label>
+              <input type="number" class="form-input" id="sub-calf-rate" step="0.5" min="0" value="20" required />
+            </div>
+            <div class="form-group">
+              <label for="sub-sick-rate" class="form-label">Sick / Infirm Medical Diet (₹ / Day) *</label>
+              <input type="number" class="form-input" id="sub-sick-rate" step="0.5" min="0" value="50" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="sub-scheme-title" class="form-label">Government Welfare Scheme Name</label>
+            <input type="text" class="form-input" id="sub-scheme-title" value="Mukhyamantri Gaushala Sahayata Yojana (मुख्यमंत्री गौशाला स्वावलंबन योजना)" />
+          </div>
+
+          <div class="form-group">
+            <label for="sub-disbursing-dept" class="form-label">Disbursing Authority / Department</label>
+            <input type="text" class="form-input" id="sub-disbursing-dept" value="State Animal Husbandry Dept & District Gau Seva Ayog" />
+          </div>
+
+          <div class="modal-footer-actions">
+            <button type="button" class="btn-tool" id="cancel-subsidy-modal-btn">Cancel</button>
+            <button type="submit" class="btn-primary" id="save-subsidy-config-btn">
+              <span>Save & Recompute Entitlement</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 30-Day Treasury Subsidy Ledger Modal -->
+  <div class="modal-overlay" id="subsidy-ledger-modal">
+    <div class="modal-card" style="max-width:880px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge icon-amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div>
+            <h2 class="modal-title">30-Day Treasury Subsidy Claims Ledger (राजकोषीय बहीखाता)</h2>
+            <p class="modal-subtitle">Official verified daily claims history ready for submission to Gau Seva Ayog</p>
+          </div>
+        </div>
+        <button class="btn-icon" id="close-subsidy-ledger-modal-btn" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body" id="subsidy-ledger-modal-body">
+        <div style="text-align:center; padding:2rem;"><div class="spinner-inline"></div> Loading 30-day claims ledger...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1-Click Pen Batch Vaccination Modal -->
+  <div class="modal-overlay" id="batch-medical-modal">
+    <div class="modal-card" style="max-width:640px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge icon-rose">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <div>
+            <h2 class="modal-title">Pen-Wide Batch Vaccination (सामूहिक टीकाकरण)</h2>
+            <p class="modal-subtitle">Immunize all cattle in an enclosure or whole herd in 1 click</p>
+          </div>
+        </div>
+        <button class="btn-icon" id="close-batch-medical-modal-btn" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form id="batch-medical-form">
+        <div class="modal-body">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="batch-enclosure-select" class="form-label">Target Pen / Enclosure *</label>
+              <select class="form-select" id="batch-enclosure-select">
+                <option value="ALL">All Enclosures (सम्पूर्ण गौशाला - All Cattle)</option>
+                <option value="cam-01">Main Enclosure - North Pen (cam-01)</option>
+                <option value="cam-02">Shed B - Feeder Bay (cam-02)</option>
+                <option value="cam-03">Open Paddock / Yard (cam-03)</option>
+                <option value="cam-04">Calving & Medical Bay (cam-04)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="batch-protocol-select" class="form-label">National Protocol (NADCP) Preset</label>
+              <select class="form-select" id="batch-protocol-select">
+                <option value="FMD">FMD (खुरपका-मुंहपका) Bi-annual</option>
+                <option value="LSD">Lumpy Skin Disease (लंपी त्वचा रोग) Annual</option>
+                <option value="HS_BQ">HS & BQ (गलघोंटू एवं लंगड़ा बुखार)</option>
+                <option value="DEWORM">Broad-Spectrum Deworming (कृमिनाशक Albendazole)</option>
+                <option value="BRUCELLA">Brucellosis S19 (Female Calves)</option>
+                <option value="CUSTOM">Custom Medical Treatment</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="batch-title" class="form-label">Vaccine Title / Treatment *</label>
+            <input type="text" class="form-input" id="batch-title" value="Foot-and-Mouth Disease (FMD) Bi-annual Vaccine" required />
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="batch-vial-lot" class="form-label">Vial / Batch Lot Number *</label>
+              <input type="text" class="form-input font-mono" id="batch-vial-lot" placeholder="e.g. BIO-FMD-2026-X8" required />
+            </div>
+            <div class="form-group">
+              <label for="batch-dosage" class="form-label">Dosage & Route</label>
+              <input type="text" class="form-input" id="batch-dosage" value="3ml SC (Subcutaneous)" />
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="batch-admin-date" class="form-label">Administered Date *</label>
+              <input type="date" class="form-input" id="batch-admin-date" required />
+            </div>
+            <div class="form-group">
+              <label for="batch-due-date" class="form-label">Next Due Date (अगली तारीख)</label>
+              <input type="date" class="form-input" id="batch-due-date" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="batch-doctor" class="form-label">Veterinarian / Paravet Name</label>
+            <input type="text" class="form-input" id="batch-doctor" placeholder="e.g. Dr. Rajesh Sharma, MVSc" />
+          </div>
+
+          <div class="form-group">
+            <label for="batch-notes" class="form-label">Clinical Batch Notes</label>
+            <textarea class="form-textarea" id="batch-notes" rows="2" placeholder="Cold-chain verified, manufactured by Indian Immunologicals Ltd..."></textarea>
+          </div>
+
+          <div class="modal-footer-actions">
+            <button type="button" class="btn-tool" id="cancel-batch-medical-btn">Cancel</button>
+            <button type="submit" class="btn-primary" id="btn-submit-batch-vaccine">
+              <span>💉 Execute Batch Vaccination</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- WhatsApp & SMS Notification Dispatcher Modal -->
+  <div class="modal-overlay" id="notification-modal">
+    <div class="modal-card" style="max-width:680px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge icon-emerald">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div>
+            <h2 class="modal-title">Vaccination Alert Dispatcher (WhatsApp / SMS)</h2>
+            <p class="modal-subtitle">Automated reminder alerts for overdue & upcoming scheduled herd vaccines</p>
+          </div>
+        </div>
+        <button class="btn-icon" id="close-notification-modal-btn" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body" id="notification-modal-body">
+        <div style="text-align:center; padding:2rem;"><div class="spinner-inline"></div> Scanning herd medical schedule for alert dispatch...</div>
       </div>
     </div>
   </div>

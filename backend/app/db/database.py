@@ -10,7 +10,8 @@ from backend.app.db.models import (
     CattleModel,
     CattleMedicalModel,
     CensusSettingModel,
-    FeedingScheduleModel
+    FeedingScheduleModel,
+    SubsidyConfigModel
 )
 
 logger = logging.getLogger("gaushala.db")
@@ -85,11 +86,26 @@ def init_db():
             ))
             db.commit()
 
-        # 4. Migrate missing columns on existing cattle_registry table if needed
+        # 4. Seed default Subsidy Configuration if empty
+        if db.query(SubsidyConfigModel).count() == 0:
+            logger.info("Seeding default tiered subsidy configuration...")
+            db.add(SubsidyConfigModel(
+                cow_rate=40.0,
+                bull_rate=35.0,
+                calf_rate=20.0,
+                sick_rate=50.0,
+                state_agency_name="State Gau Seva Ayog / Animal Husbandry Dept"
+            ))
+            db.commit()
+
+        # 5. Migrate missing columns on existing tables if needed
         try:
             from sqlalchemy import inspect, text
             inspector = inspect(engine)
-            if "cattle_registry" in inspector.get_table_names():
+            table_names = inspector.get_table_names()
+
+            # A. cattle_registry migrations
+            if "cattle_registry" in table_names:
                 cols = [c["name"] for c in inspector.get_columns("cattle_registry")]
                 with engine.connect() as conn:
                     if "category" not in cols:
@@ -106,7 +122,36 @@ def init_db():
                         conn.execute(text("ALTER TABLE cattle_registry ADD COLUMN intake_source VARCHAR(64) DEFAULT 'rescue'"))
                     if "age_years" not in cols:
                         conn.execute(text("ALTER TABLE cattle_registry ADD COLUMN age_years FLOAT DEFAULT 3.0"))
+                    if "photo_url" not in cols:
+                        conn.execute(text("ALTER TABLE cattle_registry ADD COLUMN photo_url VARCHAR(256)"))
+                    if "mother_tag" not in cols:
+                        conn.execute(text("ALTER TABLE cattle_registry ADD COLUMN mother_tag VARCHAR(64)"))
+                    if "father_tag" not in cols:
+                        conn.execute(text("ALTER TABLE cattle_registry ADD COLUMN father_tag VARCHAR(64)"))
                     conn.commit()
+
+            # B. cattle_medical_records migrations
+            if "cattle_medical_records" in table_names:
+                mcols = [c["name"] for c in inspector.get_columns("cattle_medical_records")]
+                with engine.connect() as conn:
+                    if "batch_id" not in mcols:
+                        conn.execute(text("ALTER TABLE cattle_medical_records ADD COLUMN batch_id VARCHAR(64)"))
+                    if "vial_batch_no" not in mcols:
+                        conn.execute(text("ALTER TABLE cattle_medical_records ADD COLUMN vial_batch_no VARCHAR(64)"))
+                    if "dosage" not in mcols:
+                        conn.execute(text("ALTER TABLE cattle_medical_records ADD COLUMN dosage VARCHAR(64)"))
+                    conn.commit()
+
+            # C. census_records migrations
+            if "census_records" in table_names:
+                ccols = [c["name"] for c in inspector.get_columns("census_records")]
+                with engine.connect() as conn:
+                    if "evidence_snapshot_url" not in ccols:
+                        conn.execute(text("ALTER TABLE census_records ADD COLUMN evidence_snapshot_url VARCHAR(256)"))
+                    if "evidence_hash" not in ccols:
+                        conn.execute(text("ALTER TABLE census_records ADD COLUMN evidence_hash VARCHAR(128)"))
+                    conn.commit()
+
         except Exception as mig_err:
             logger.debug(f"SQLite column migration check: {mig_err}")
 
