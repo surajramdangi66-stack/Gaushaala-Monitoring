@@ -143,6 +143,118 @@ const ZoneEditorModule = {
 
     const btnRefreshSnap = document.getElementById('btn-zone-refresh-snap');
     if (btnRefreshSnap) btnRefreshSnap.addEventListener('click', () => this.fetchCameraSnapshot());
+
+    // 1-Click Smart Gaushala Presets
+    const btnPresetStd = document.getElementById('btn-preset-standard-layout');
+    if (btnPresetStd) btnPresetStd.addEventListener('click', () => this.applyStandardLayout());
+
+    const btnPresetFeeder = document.getElementById('btn-preset-feeder-trough');
+    if (btnPresetFeeder) btnPresetFeeder.addEventListener('click', () => this.applyFeederPreset());
+
+    const btnPresetPerimeter = document.getElementById('btn-preset-perimeter-fence');
+    if (btnPresetPerimeter) btnPresetPerimeter.addEventListener('click', () => this.applyPerimeterPreset());
+
+    // Toggle Sidebar Nav Tab Visibility
+    const btnToggleSidebar = document.getElementById('btn-toggle-zones-sidebar');
+    if (btnToggleSidebar) {
+      btnToggleSidebar.addEventListener('click', () => this.toggleSidebarNav());
+      this.syncSidebarNavToggleLabel();
+    }
+  },
+
+  toggleSidebarNav() {
+    const navBtn = document.getElementById('tab-zones-btn');
+    const toggleLabel = document.getElementById('zones-sidebar-toggle-text');
+    if (!navBtn) return;
+
+    const isHidden = navBtn.style.display === 'none';
+    if (isHidden) {
+      navBtn.style.display = 'flex';
+      localStorage.setItem('gaushala_hide_zones_nav', 'false');
+      if (toggleLabel) toggleLabel.textContent = '👁️ साइडबार से छिपाएं';
+      showToast(AppState.lang === 'hi' ? 'ज़ोन टैब साइडबार नेविगेशन में दिखाई देगा' : 'Zones tab shown in sidebar', 'info');
+    } else {
+      navBtn.style.display = 'none';
+      localStorage.setItem('gaushala_hide_zones_nav', 'true');
+      if (toggleLabel) toggleLabel.textContent = '👁️ साइडबार में दिखाएं';
+      showToast(AppState.lang === 'hi' ? 'ज़ोन टैब साइडबार से छिपा दिया गया' : 'Zones tab hidden from sidebar', 'info');
+    }
+  },
+
+  syncSidebarNavToggleLabel() {
+    const navBtn = document.getElementById('tab-zones-btn');
+    const toggleLabel = document.getElementById('zones-sidebar-toggle-text');
+    const shouldHide = localStorage.getItem('gaushala_hide_zones_nav') === 'true';
+    if (navBtn && shouldHide) {
+      navBtn.style.display = 'none';
+    }
+    if (toggleLabel) {
+      toggleLabel.textContent = (navBtn && navBtn.style.display === 'none') ? '👁️ साइडबार में दिखाएं' : '👁️ साइडबार से छिपाएं';
+    }
+  },
+
+  applyStandardLayout() {
+    this.currentZones = {
+      feeder: {
+        name: 'Safe Feeding Zone (चारा चरणी)',
+        name_hi: 'चारा चरणी क्षेत्र',
+        polygon: [[100, 330], [540, 330], [540, 440], [100, 440]],
+        max_capacity: 4,
+        color: '#10b981'
+      },
+      resting: {
+        name: 'Resting Bay (विश्राम क्षेत्र)',
+        name_hi: 'विश्राम एवं जुगाली शेड',
+        polygon: [[50, 90], [360, 90], [360, 300], [50, 300]],
+        max_capacity: 10,
+        color: '#3b82f6'
+      },
+      quarantine: {
+        name: 'Quarantine Ward (चिकित्सा वार्ड)',
+        name_hi: 'पृथक / चिकित्सा वार्ड',
+        polygon: [[400, 70], [590, 70], [590, 230], [400, 230]],
+        max_capacity: 2,
+        color: '#f59e0b'
+      },
+      boundary: {
+        name: 'Pen Perimeter (बाड़ा सुरक्षा बाउंड्री)',
+        name_hi: 'बाड़ा सुरक्षा सीमा',
+        polygon: [[30, 40], [610, 40], [610, 460], [30, 460]],
+        color: '#ef4444'
+      }
+    };
+    this.workingPolygon = [];
+    this.renderCanvas();
+    this.updatePointsList();
+    this.renderZoneSummary();
+    showToast(AppState.lang === 'hi' ? 'मानक गौशाला शेड लेआउट लागू हुआ! लाइव लागू करने के लिए "Save & Apply Live" दबाएं' : 'Standard Gaushala shed layout applied! Click "Save & Apply Live" to commit.', 'info');
+  },
+
+  applyFeederPreset() {
+    this.currentZones['feeder'] = {
+      name: 'Safe Feeding Zone (चारा चरणी)',
+      name_hi: 'चारा चरणी क्षेत्र',
+      polygon: [[120, 340], [520, 340], [520, 440], [120, 440]],
+      max_capacity: 4,
+      color: '#10b981'
+    };
+    this.renderCanvas();
+    this.updatePointsList();
+    this.renderZoneSummary();
+    showToast(AppState.lang === 'hi' ? 'चारा चरणी ज़ोन सेट हुआ! सहेजने के लिए Save दबाएं' : 'Feeder trough zone set! Click Save to apply.', 'info');
+  },
+
+  applyPerimeterPreset() {
+    this.currentZones['boundary'] = {
+      name: 'Pen Perimeter (बाड़ा सुरक्षा बाउंड्री)',
+      name_hi: 'बाड़ा सुरक्षा सीमा',
+      polygon: [[30, 45], [610, 45], [610, 455], [30, 455]],
+      color: '#ef4444'
+    };
+    this.renderCanvas();
+    this.updatePointsList();
+    this.renderZoneSummary();
+    showToast(AppState.lang === 'hi' ? 'बाड़ा सुरक्षा बाउंड्री सेट हुई! सहेजने के लिए Save दबाएं' : 'Pen perimeter boundary set! Click Save to apply.', 'info');
   },
 
   setActiveZoneType(type) {
@@ -171,10 +283,16 @@ const ZoneEditorModule = {
       const select = document.getElementById('zone-cam-select');
       if (select) {
         select.innerHTML = '';
+        const shedNames = {
+          'cam-01': 'बाड़ा 1: मुख्य गौशाला (उत्तर शेड)',
+          'cam-02': 'बाड़ा 2: दुधारू गोवंश एवं चरणी शेड',
+          'cam-03': 'बाड़ा 3: खुला विचरण प्रांगण (Paddock)',
+          'cam-04': 'बाड़ा 4: प्रसूति एवं चिकित्सा वार्ड'
+        };
         this.cameras.forEach(c => {
           const opt = document.createElement('option');
           opt.value = c.id;
-          opt.textContent = `${c.name} (${c.id})`;
+          opt.textContent = `${shedNames[c.id] || c.name} (${c.id})`;
           if (c.id === this.activeCameraId) opt.selected = true;
           select.appendChild(opt);
         });
@@ -208,9 +326,17 @@ const ZoneEditorModule = {
       this.renderCanvas();
     };
     img.onerror = () => {
-      // Create fallback CCTV test grid
-      this.backgroundImage = null;
-      this.renderCanvas();
+      // Use authentic Gaushala sanctuary fallback photo
+      const fallbackImg = new Image();
+      fallbackImg.src = '/static/images/gaushala_hero.jpg';
+      fallbackImg.onload = () => {
+        this.backgroundImage = fallbackImg;
+        this.renderCanvas();
+      };
+      fallbackImg.onerror = () => {
+        this.backgroundImage = null;
+        this.renderCanvas();
+      };
     };
   },
 

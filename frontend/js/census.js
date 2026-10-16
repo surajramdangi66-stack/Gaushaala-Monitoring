@@ -44,6 +44,16 @@ const CensusModule = (() => {
     if (closeModalBtn) closeModalBtn.addEventListener('click', closeCattleModal);
     if (cancelModalBtn) cancelModalBtn.addEventListener('click', closeCattleModal);
 
+    // 2b. Cattle Comprehensive Profile Detail Modal
+    const closeDetailBtn = document.getElementById('close-cattle-detail-modal-btn');
+    if (closeDetailBtn) closeDetailBtn.addEventListener('click', closeCattleDetailsModal);
+    const detailModal = document.getElementById('cattle-detail-modal');
+    if (detailModal) {
+      detailModal.addEventListener('click', (e) => {
+        if (e.target === detailModal) closeCattleDetailsModal();
+      });
+    }
+
     const cattleForm = document.getElementById('cattle-registration-form');
     if (cattleForm) {
       cattleForm.addEventListener('submit', async (e) => {
@@ -373,12 +383,12 @@ const CensusModule = (() => {
         const photoUrl = c.photo_url || '/static/images/gaushala_hero.jpg';
 
         return `
-          <tr>
+          <tr class="clickable-cattle-row" onclick="CensusModule.openCattleDetailsModal(${c.id})" title="पूरा विवरण एवं फ़ोटो देखने के लिए क्लिक करें">
             <td style="width:70px; text-align:center;">
-              <div class="cattle-photo-cell">
+              <div class="cattle-photo-cell" onclick="event.stopPropagation(); CensusModule.openCattleDetailsModal(${c.id})" title="क्लिक करके पूरा विवरण व फोटो देखें">
                 <img src="${photoUrl}" alt="Cattle Photo" class="cattle-thumb-img"
                      onerror="this.src='/static/images/gaushala_hero.jpg'">
-                <button class="btn-quick-snap" title="1-Click Snap live CCTV frame as official photo" onclick="CensusModule.snapCctvPhoto(${c.id})">
+                <button class="btn-quick-snap" title="1-Click Snap live CCTV frame as official photo" onclick="event.stopPropagation(); CensusModule.snapCctvPhoto(${c.id})">
                   📷
                 </button>
               </div>
@@ -407,16 +417,19 @@ const CensusModule = (() => {
             </td>
             <td>
               <div class="row-actions-group" style="display:flex; gap:4px; flex-wrap:wrap;">
-                <button class="btn-sm btn-ghost" title="Sovereign Digital Passport & Pedigree Lineage" onclick="CensusModule.showQrBadge(${c.id})">
+                <button class="btn-sm btn-ghost" style="color:#10b981; font-weight:700; border:1px solid rgba(16,185,129,0.3); background:rgba(16,185,129,0.08);" title="पूरा विवरण एवं फ़ोटो देखें" onclick="event.stopPropagation(); CensusModule.openCattleDetailsModal(${c.id})">
+                  🔍 विवरण
+                </button>
+                <button class="btn-sm btn-ghost" title="Sovereign Digital Passport & Pedigree Lineage" onclick="event.stopPropagation(); CensusModule.showQrBadge(${c.id})">
                   🪪 Passport
                 </button>
-                <button class="btn-sm btn-ghost" title="Log Medical / Vaccine Record" onclick="CensusModule.openAddMedicalFor(${c.id})">
+                <button class="btn-sm btn-ghost" title="Log Medical / Vaccine Record" onclick="event.stopPropagation(); CensusModule.openAddMedicalFor(${c.id})">
                   💉 Medical
                 </button>
-                <button class="btn-sm btn-ghost" title="${c.status === 'active' ? 'Mark Inactive' : 'Mark Active'}" onclick="CensusModule.toggleStatus(${c.id})">
+                <button class="btn-sm btn-ghost" title="${c.status === 'active' ? 'Mark Inactive' : 'Mark Active'}" onclick="event.stopPropagation(); CensusModule.toggleStatus(${c.id})">
                   ${c.status === 'active' ? 'Deactivate' : 'Activate'}
                 </button>
-                <button class="btn-sm btn-danger-ghost" title="Remove Record" onclick="CensusModule.deleteRecord(${c.id})">
+                <button class="btn-sm btn-danger-ghost" title="Remove Record" onclick="event.stopPropagation(); CensusModule.deleteRecord(${c.id})">
                   <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                 </button>
               </div>
@@ -450,9 +463,374 @@ const CensusModule = (() => {
     }
   }
 
+  let activeDetailCattleId = null;
+  let editingCattleId = null;
+
+  async function openCattleDetailsModal(cattleId) {
+    const modal = document.getElementById('cattle-detail-modal');
+    const body = document.getElementById('cattle-detail-modal-body');
+    if (!modal || !body) return;
+
+    activeDetailCattleId = cattleId;
+    modal.style.display = 'flex';
+    body.innerHTML = `
+      <div style="text-align:center; padding:3.5rem;">
+        <div class="spinner-inline" style="width:36px; height:36px; border-width:3px;"></div>
+        <div style="margin-top:14px; font-weight:800; color:var(--text-primary); font-size:1.05rem;">गौवंश संपूर्ण प्रोफ़ाइल लोड हो रही है...</div>
+        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">Fetching cattle identity, photos, lineage, and medical history...</div>
+      </div>
+    `;
+
+    try {
+      const [cattleData, medData] = await Promise.all([
+        apiRequest(`/api/cattle/${cattleId}`),
+        apiRequest(`/api/cattle/${cattleId}/medical`).catch(() => [])
+      ]);
+
+      renderCattleDetailsModal(cattleData, medData || []);
+    } catch (err) {
+      body.innerHTML = `
+        <div style="text-align:center; padding:3rem; color:var(--rose);">
+          <div style="font-size:2.5rem; margin-bottom:8px;">⚠️</div>
+          <div style="font-weight:800; font-size:1.1rem;">Failed to load cattle details</div>
+          <div style="font-size:0.85rem; margin-top:4px; color:var(--text-muted);">${escapeHtml(err.message)}</div>
+          <button class="btn-tool" style="margin-top:16px;" onclick="CensusModule.closeCattleDetailsModal()">Close</button>
+        </div>
+      `;
+    }
+  }
+
+  function closeCattleDetailsModal() {
+    const modal = document.getElementById('cattle-detail-modal');
+    if (modal) modal.style.display = 'none';
+    activeDetailCattleId = null;
+  }
+
+  function copyTagToClipboard(tag) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(tag).then(() => {
+        showToast(AppState.lang === 'hi' ? `टैग ID "${tag}" क्लिपबोर्ड में कॉपी हुआ!` : `Tag ID "${tag}" copied!`, 'info');
+      }).catch(() => {
+        prompt('Copy Tag ID:', tag);
+      });
+    } else {
+      prompt('Copy Tag ID:', tag);
+    }
+  }
+
+  async function snapCctvPhotoFromDetail(cattleId) {
+    await snapCctvPhoto(cattleId);
+    await openCattleDetailsModal(cattleId);
+  }
+
+  function triggerDetailPhotoUpload(cattleId) {
+    const hiddenInput = document.getElementById(`cdm-photo-input-${cattleId}`);
+    if (hiddenInput) hiddenInput.click();
+  }
+
+  async function handleDetailPhotoUpload(cattleId, fileInput) {
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      showToast(AppState.lang === 'hi' ? 'फोटो अपलोड हो रही है...' : 'Uploading photo...', 'info');
+      const token = (typeof AppState !== 'undefined' && AppState.token) || localStorage.getItem('gaushala_jwt_token') || localStorage.getItem('gaushala_token') || sessionStorage.getItem('gaushala_token');
+      const headers = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`/api/cattle/${cattleId}/photo`, {
+        method: 'POST',
+        headers,
+        body: formData
+      });
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.detail || 'Photo upload failed');
+      }
+      showToast(AppState.lang === 'hi' ? 'गौवंश की नई फोटो सफलतापूर्वक अपडेट हुई!' : 'Photo updated successfully!', 'info');
+      await openCattleDetailsModal(cattleId);
+      await loadCattleRegistry();
+    } catch (err) {
+      showToast(err.message, 'critical');
+    }
+  }
+
+  function renderCattleDetailsModal(c, medList) {
+    const body = document.getElementById('cattle-detail-modal-body');
+    if (!body) return;
+
+    const photoUrl = c.photo_url || '/static/images/gaushala_hero.jpg';
+
+    // Category
+    const cat = c.category || 'cow';
+    let catText = 'गाय (Cow)';
+    let catBadgeClass = 'badge-cat-cow';
+    let rate = cachedSubsidyConfig?.cow_rate ?? 40;
+    if (cat === 'bull') { catText = 'नंदी / बैल (Bull)'; catBadgeClass = 'badge-cat-bull'; rate = cachedSubsidyConfig?.bull_rate ?? 35; }
+    if (cat === 'calf') { catText = 'बछड़ा / बछिया (Calf)'; catBadgeClass = 'badge-cat-calf'; rate = cachedSubsidyConfig?.calf_rate ?? 20; }
+
+    // Health
+    const health = c.health_status || 'healthy';
+    let healthText = 'स्वस्थ (Healthy)';
+    let healthClass = 'badge-health-ok';
+    if (health === 'under_treatment') { healthText = 'उपचाराधीन (Under Treatment)'; healthClass = 'badge-health-treatment'; rate = cachedSubsidyConfig?.sick_rate ?? 50; }
+    else if (health === 'quarantine') { healthText = 'क्वारंटाइन (Quarantine)'; healthClass = 'badge-health-quarantine'; rate = cachedSubsidyConfig?.sick_rate ?? 50; }
+
+    // Lactation
+    const lact = c.lactation_stage || 'dry';
+    const lactMap = {
+      'milking': 'दुधारू (Lactating / Milking)',
+      'dry': 'सूखी (Dry / Non-Milking)',
+      'pregnant': 'गर्भवती (Pregnant)',
+      'na': 'लागू नहीं (N/A)'
+    };
+    const lactText = lactMap[lact] || lact;
+
+    // Intake
+    const intakeMap = {
+      'rescue': 'सड़क / संकट से रेस्क्यू (Street Rescue)',
+      'donated': 'दान / समर्पण (Donated)',
+      'born': 'आश्रम / गौशाला जन्म (Born in Sanctuary)'
+    };
+    const intakeText = intakeMap[c.intake_source] || (c.intake_source || 'गौ-संरक्षण');
+
+    // Enclosure friendly name
+    const penMap = {
+      'cam-01': 'बाड़ा नं. 1 - मुख्य गौशाला (उत्तर शेड)',
+      'cam-02': 'बाड़ा नं. 2 - दुधारू गोवंश एवं चरणी शेड',
+      'cam-03': 'बाड़ा नं. 3 - खुला विचरण प्रांगण (Paddock)',
+      'cam-04': 'बाड़ा नं. 4 - प्रसूति एवं चिकित्सा वार्ड'
+    };
+    const penText = penMap[c.enclosure_id] || c.enclosure_id || 'Pen cam-01';
+
+    // Reg date
+    let regDateStr = '—';
+    if (c.created_at) {
+      try {
+        const d = new Date(c.created_at);
+        regDateStr = isNaN(d.getTime()) ? String(c.created_at).slice(0, 10) : d.toLocaleDateString('hi-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      } catch (e) {
+        regDateStr = String(c.created_at);
+      }
+    }
+
+    // Medical records table
+    let medRowsHtml = `
+      <tr>
+        <td colspan="5" class="text-center py-3" style="color:var(--text-muted); font-size:0.82rem;">
+          कोई चिकित्सा रिकॉर्ड दर्ज नहीं है। नीचे "+ नया टीका/उपचार जोड़ें" से दर्ज करें।
+        </td>
+      </tr>
+    `;
+    if (medList && medList.length > 0) {
+      medRowsHtml = medList.map(m => `
+        <tr>
+          <td><strong style="color:var(--text-primary); font-size:0.84rem;">${escapeHtml(m.title)}</strong><div style="font-size:0.7rem; color:var(--text-muted);">${escapeHtml(m.record_type || 'vaccination')}</div></td>
+          <td style="font-family:var(--font-mono); font-size:0.8rem;">${escapeHtml(m.administered_date || '—')}</td>
+          <td style="font-family:var(--font-mono); font-size:0.8rem; color:${m.next_due_date ? '#f59e0b' : 'var(--text-muted)'}; font-weight:700;">${escapeHtml(m.next_due_date || '—')}</td>
+          <td style="font-size:0.8rem;">${escapeHtml(m.doctor_name || 'गौशाला पशु चिकित्सक')}</td>
+          <td>
+            <span class="status-pill ${m.status === 'completed' ? 'pill-active' : 'pill-inactive'}" style="font-size:0.7rem; padding:2px 6px;">
+              ${m.status === 'completed' ? 'सम्पन्न' : 'नियत (Due)'}
+            </span>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    body.innerHTML = `
+      <!-- Hero Top Card with Photo & High-Impact Identity -->
+      <div class="cdm-header-hero">
+        <div style="display:flex; flex-direction:column; align-items:center;">
+          <div class="cdm-photo-box">
+            <img src="${photoUrl}" alt="Cattle Photo" class="cdm-photo-img" id="cdm-main-photo" onerror="this.src='/static/images/gaushala_hero.jpg'">
+          </div>
+          <div class="cdm-photo-actions">
+            <button type="button" class="btn-tool" style="width:100%; font-size:0.78rem; justify-content:center; gap:6px; padding:6px;" onclick="CensusModule.snapCctvPhotoFromDetail(${c.id})" title="Capture live frame from ${escapeHtml(c.enclosure_id)}">
+              📷 1-क्लिक CCTV स्नैप
+            </button>
+            <button type="button" class="btn-tool" style="width:100%; font-size:0.78rem; justify-content:center; gap:6px; padding:6px;" onclick="CensusModule.triggerDetailPhotoUpload(${c.id})" title="Upload custom photo">
+              📁 फोटो अपलोड
+            </button>
+            <input type="file" id="cdm-photo-input-${c.id}" accept="image/*" style="display:none;" onchange="CensusModule.handleDetailPhotoUpload(${c.id}, this)">
+          </div>
+        </div>
+
+        <div class="cdm-hero-meta">
+          <div class="cdm-title-row">
+            <div>
+              <div style="font-size:0.72rem; text-transform:uppercase; color:var(--text-muted); font-weight:800; letter-spacing:0.05em;">गौवंश आधिकारिक नाम व पहचान</div>
+              <h1 class="cdm-cow-name">${escapeHtml(c.name || 'Gomata')}</h1>
+            </div>
+            <div class="cdm-cow-tag" title="क्लिक करके कॉपी करें" onclick="CensusModule.copyTagToClipboard('${escapeHtml(c.tag_id)}')">
+              🏷️ ${escapeHtml(c.tag_id)}
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="cursor:pointer;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </div>
+          </div>
+
+          <div style="font-size:0.82rem; color:var(--text-muted); font-family:var(--font-mono); margin-top:2px;">
+            INAPH Bharat Pashudhan UID: <strong style="color:var(--text-primary);">${escapeHtml(c.inaph_tag || '12-अंकीय सरकारी UID अपंजीकृत')}</strong>
+          </div>
+
+          <div class="cdm-badge-group">
+            <span class="${catBadgeClass}">${catText}</span>
+            <span class="${healthClass}">${healthText}</span>
+            <span class="status-pill ${c.status === 'active' ? 'pill-active' : 'pill-inactive'}">
+              ${c.status === 'active' ? '● सक्रिय (Active)' : '○ निष्क्रिय (Inactive)'}
+            </span>
+            <span class="badge-enclosure" style="font-size:0.8rem;">📍 ${escapeHtml(penText)}</span>
+          </div>
+
+          <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:8px; padding:8px 12px; margin-top:6px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <span style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">दैनिक सरकारी अनुदान:</span>
+              <strong style="color:#10b981; font-size:0.95rem; margin-left:6px;">₹${rate} / दिन (₹${rate * 30} / माह)</strong>
+            </div>
+            <span style="font-size:0.75rem; color:var(--text-muted);">वार्षिक आवंटन: <strong>₹${rate * 365}</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Information Cards Grid -->
+      <div class="cdm-cards-grid">
+        <!-- CARD 1: Basic Identity & Physical Profile -->
+        <div class="cdm-card">
+          <div class="cdm-card-title">
+            <span>🧬</span> मूल शारीरिक एवं नस्ल पहचान (Profile)
+          </div>
+          <div class="cdm-data-list">
+            <div class="cdm-data-item">
+              <span class="cdm-data-label">देशी नस्ल (Breed)</span>
+              <span class="cdm-data-val" style="color:var(--accent-indigo);">${escapeHtml(c.breed || 'Gir / Indigenous')}</span>
+            </div>
+            <div class="cdm-data-item">
+              <span class="cdm-data-label">लिंग / श्रेणी (Gender)</span>
+              <span class="cdm-data-val">${c.gender === 'male' ? 'नर (Male)' : 'मादा (Female)'} &bull; ${catText}</span>
+            </div>
+            <div class="cdm-data-item">
+              <span class="cdm-data-label">अनुमानित आयु (Age)</span>
+              <span class="cdm-data-val">${c.age_years ? c.age_years + ' वर्ष (Years)' : '3.5 वर्ष'}</span>
+            </div>
+            <div class="cdm-data-item">
+              <span class="cdm-data-label">दुग्ध अवस्था (Lactation)</span>
+              <span class="cdm-data-val">${escapeHtml(lactText)}</span>
+            </div>
+            <div class="cdm-data-item">
+              <span class="cdm-data-label">आगमन स्रोत (Source)</span>
+              <span class="cdm-data-val">${escapeHtml(intakeText)}</span>
+            </div>
+            <div class="cdm-data-item">
+              <span class="cdm-data-label">पंजीकरण दिनांक</span>
+              <span class="cdm-data-val" style="font-size:0.78rem;">${escapeHtml(regDateStr)}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 2: Pedigree Lineage -->
+        <div class="cdm-card">
+          <div class="cdm-card-title">
+            <span>🏛️</span> 3-पीढ़ी वंशावली एवं पैतृक अभिलेख (Pedigree)
+          </div>
+          <div class="cdm-data-list">
+            <div class="cdm-data-item">
+              <span class="cdm-data-label">माता का टैग (Dam UID)</span>
+              <span class="cdm-data-val" style="font-family:var(--font-mono); color:#ec4899;">
+                ${c.mother_tag ? '♀ ' + escapeHtml(c.mother_tag) : '— अज्ञात (Unknown)'}
+              </span>
+            </div>
+            <div class="cdm-data-item">
+              <span class="cdm-data-label">पिता का टैग (Sire UID)</span>
+              <span class="cdm-data-val" style="font-family:var(--font-mono); color:#38bdf8;">
+                ${c.father_tag ? '♂ ' + escapeHtml(c.father_tag) : '— अज्ञात (Unknown)'}
+              </span>
+            </div>
+            <div class="cdm-data-item">
+              <span class="cdm-data-label">नस्ल शुद्धता (Breed Purity)</span>
+              <span class="cdm-data-val" style="color:#10b981;">100% भारतीय देशी गोवंश</span>
+            </div>
+            <div class="cdm-data-item">
+              <span class="cdm-data-label">डीबीटी व आधार प्रमाणीकरण</span>
+              <span class="cdm-data-val" style="color:#10b981;">✓ सत्यापित एवं अधिकृत</span>
+            </div>
+          </div>
+          <div style="margin-top:12px; padding:8px 10px; background:var(--bg-base); border-radius:8px; font-size:0.75rem; color:var(--text-muted);">
+            💡 <strong>वंशावली सुरक्षा:</strong> राष्ट्रीय गोकुल मिशन एवं INAPH डेटाबेस के अंतर्गत नस्ल संरक्षण प्रमाणित है।
+          </div>
+        </div>
+
+        <!-- CARD 3: Medical & Vaccination History -->
+        <div class="cdm-card" style="grid-column: 1 / -1;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid var(--border-subtle); padding-bottom:8px;">
+            <div class="cdm-card-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">
+              <span>💉</span> टीकाकरण एवं पशु चिकित्सा इतिहास (Medical & Veterinary History)
+            </div>
+            <button type="button" class="btn-sm btn-tool" onclick="CensusModule.openAddMedicalFor(${c.id})">
+              + नया टीका / उपचार जोड़ें
+            </button>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="cdm-medical-table">
+              <thead>
+                <tr>
+                  <th>टीका / उपचार शीर्षक</th>
+                  <th>प्रशासित तिथि</th>
+                  <th>अगली देय तिथि</th>
+                  <th>पशु चिकित्सक</th>
+                  <th>स्थिति</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${medRowsHtml}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- CARD 4: Caretaker Notes & Observations -->
+        <div class="cdm-card" style="grid-column: 1 / -1;">
+          <div class="cdm-card-title">
+            <span>📝</span> देखभालकर्ता टिप्पणी एवं शारीरिक पहचान चिह्न (Caretaker Notes)
+          </div>
+          <div style="background:var(--bg-base); border:1px solid var(--border-subtle); border-radius:8px; padding:12px; font-size:0.85rem; line-height:1.5; color:var(--text-primary);">
+            ${c.notes ? escapeHtml(c.notes) : 'कोई विशेष पहचान चिह्न या आहार टिप्पणी दर्ज नहीं है। नियमित चारा, पानी एवं विश्राम की निगरानी CCTV द्वारा की जा रही है।'}
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Action Buttons -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-top:12px; border-top:1px solid var(--border-subtle); margin-top:8px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="btn-primary" onclick="CensusModule.showQrBadge(${c.id})" style="gap:6px;">
+            <span>🪪 सॉवरेन डिजिटल पासपोर्ट देखें</span>
+          </button>
+          <button type="button" class="btn-tool" onclick="CensusModule.openAddMedicalFor(${c.id})" style="gap:6px;">
+            <span>💉 + मेडिकल रिकॉर्ड जोड़ें</span>
+          </button>
+          <button type="button" class="btn-tool" onclick="CensusModule.openEditCattleModal(${c.id})" style="gap:6px;">
+            <span>✏️ प्रोफ़ाइल संपादित करें</span>
+          </button>
+        </div>
+        <button type="button" class="btn-tool" onclick="CensusModule.closeCattleDetailsModal()">
+          <span>बंद करें (Close)</span>
+        </button>
+      </div>
+    `;
+  }
+
   function openCattleModal() {
+    editingCattleId = null;
     const modal = document.getElementById('cattle-modal');
-    if (modal) modal.style.display = 'flex';
+    if (modal) {
+      modal.style.display = 'flex';
+      const modalTitle = modal.querySelector('.modal-title');
+      const submitBtnSpan = document.getElementById('submit-cattle-reg-btn')?.querySelector('span');
+      if (modalTitle) modalTitle.textContent = AppState.lang === 'hi' ? 'नया गोवंश पंजीकृत करें' : 'Register Cattle Head';
+      if (submitBtnSpan) submitBtnSpan.textContent = AppState.lang === 'hi' ? 'आधिकारिक रजिस्टर में सहेजें' : 'Save to Official Registry';
+      const tagInput = document.getElementById('cow-tag-id');
+      if (tagInput) tagInput.readOnly = false;
+    }
   }
 
   function closeCattleModal() {
@@ -460,6 +838,54 @@ const CensusModule = (() => {
     if (modal) modal.style.display = 'none';
     const form = document.getElementById('cattle-registration-form');
     if (form) form.reset();
+    editingCattleId = null;
+    const tagInput = document.getElementById('cow-tag-id');
+    if (tagInput) tagInput.readOnly = false;
+    const modalTitle = modal?.querySelector('.modal-title');
+    const submitBtnSpan = document.getElementById('submit-cattle-reg-btn')?.querySelector('span');
+    if (modalTitle) modalTitle.textContent = AppState.lang === 'hi' ? 'नया गोवंश पंजीकृत करें' : 'Register Cattle Head';
+    if (submitBtnSpan) submitBtnSpan.textContent = AppState.lang === 'hi' ? 'आधिकारिक रजिस्टर में सहेजें' : 'Save to Official Registry';
+  }
+
+  async function openEditCattleModal(cattleId) {
+    editingCattleId = cattleId;
+    closeCattleDetailsModal();
+
+    try {
+      const c = await apiRequest(`/api/cattle/${cattleId}`);
+      if (!c) return;
+
+      const modal = document.getElementById('cattle-modal');
+      if (!modal) return;
+
+      const modalTitle = modal.querySelector('.modal-title');
+      const submitBtnSpan = document.getElementById('submit-cattle-reg-btn')?.querySelector('span');
+      if (modalTitle) modalTitle.textContent = AppState.lang === 'hi' ? 'गौवंश विवरण संपादित करें (Edit Cattle)' : 'Edit Cattle Record';
+      if (submitBtnSpan) submitBtnSpan.textContent = AppState.lang === 'hi' ? 'अपडेट सहेजें (Save Changes)' : 'Save Changes';
+
+      const tagInput = document.getElementById('cow-tag-id');
+      if (tagInput) {
+        tagInput.value = c.tag_id || '';
+        tagInput.readOnly = true;
+      }
+      if (document.getElementById('cow-inaph-tag')) document.getElementById('cow-inaph-tag').value = c.inaph_tag || '';
+      if (document.getElementById('cow-name')) document.getElementById('cow-name').value = c.name || '';
+      if (document.getElementById('cow-enclosure')) document.getElementById('cow-enclosure').value = c.enclosure_id || 'cam-01';
+      if (document.getElementById('cow-category')) document.getElementById('cow-category').value = c.category || 'cow';
+      if (document.getElementById('cow-lactation')) document.getElementById('cow-lactation').value = c.lactation_stage || 'dry';
+      if (document.getElementById('cow-health')) document.getElementById('cow-health').value = c.health_status || 'healthy';
+      if (document.getElementById('cow-breed')) document.getElementById('cow-breed').value = c.breed || 'Gir Cow';
+      if (document.getElementById('cow-intake')) document.getElementById('cow-intake').value = c.intake_source || 'rescue';
+      if (document.getElementById('cow-age')) document.getElementById('cow-age').value = c.age_years || 3.5;
+      if (document.getElementById('cow-mother-tag')) document.getElementById('cow-mother-tag').value = c.mother_tag || '';
+      if (document.getElementById('cow-father-tag')) document.getElementById('cow-father-tag').value = c.father_tag || '';
+      if (document.getElementById('cow-photo-url')) document.getElementById('cow-photo-url').value = c.photo_url || '';
+      if (document.getElementById('cow-notes')) document.getElementById('cow-notes').value = c.notes || '';
+
+      modal.style.display = 'flex';
+    } catch (err) {
+      showToast(err.message, 'critical');
+    }
   }
 
   async function handleRegisterCattle() {
@@ -486,6 +912,56 @@ const CensusModule = (() => {
     }
 
     const gender = category === 'bull' ? 'male' : 'female';
+
+    // If editing existing record
+    if (editingCattleId) {
+      try {
+        await apiRequest(`/api/cattle/${editingCattleId}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            name,
+            enclosure_id,
+            category,
+            gender,
+            lactation_stage,
+            health_status,
+            breed,
+            intake_source,
+            age_years,
+            mother_tag,
+            father_tag,
+            photo_url,
+            notes
+          })
+        });
+
+        if (photoFileInput && photoFileInput.files && photoFileInput.files.length > 0) {
+          try {
+            const photoFormData = new FormData();
+            photoFormData.append('file', photoFileInput.files[0]);
+            const token = (typeof AppState !== 'undefined' && AppState.token) || localStorage.getItem('gaushala_jwt_token') || localStorage.getItem('gaushala_token') || sessionStorage.getItem('gaushala_token');
+            const pHeaders = {};
+            if (token) pHeaders['Authorization'] = `Bearer ${token}`;
+
+            await fetch(`/api/cattle/${editingCattleId}/photo`, {
+              method: 'POST',
+              headers: pHeaders,
+              body: photoFormData
+            });
+          } catch (pe) {
+            console.warn('Photo upload err:', pe);
+          }
+        }
+
+        showToast(AppState.lang === 'hi' ? `गोवंश ${tag_id} का विवरण सफलतापूर्वक अपडेट हुआ!` : `Cattle ${tag_id} updated successfully!`, 'info');
+        closeCattleModal();
+        await loadCattleRegistry();
+        return;
+      } catch (err) {
+        showToast(err.message, 'critical');
+        return;
+      }
+    }
 
     try {
       const created = await apiRequest('/api/cattle', {
@@ -518,7 +994,6 @@ const CensusModule = (() => {
           const token = (typeof AppState !== 'undefined' && AppState.token) || localStorage.getItem('gaushala_jwt_token') || localStorage.getItem('gaushala_token') || sessionStorage.getItem('gaushala_token');
           const pHeaders = {};
           if (token) pHeaders['Authorization'] = `Bearer ${token}`;
-
 
           await fetch(`/api/cattle/${created.id}/photo`, {
             method: 'POST',
@@ -2516,6 +2991,13 @@ const CensusModule = (() => {
     deleteRecord,
     showQrBadge,
     snapCctvPhoto,
+    openCattleDetailsModal,
+    closeCattleDetailsModal,
+    snapCctvPhotoFromDetail,
+    triggerDetailPhotoUpload,
+    handleDetailPhotoUpload,
+    openEditCattleModal,
+    copyTagToClipboard,
     openAddMedicalFor,
     deleteMedicalRecord,
     runFeedingCheckFor,

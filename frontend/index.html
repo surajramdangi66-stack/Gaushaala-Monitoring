@@ -224,7 +224,7 @@
             <polyline points="2 17 12 22 22 17"/>
             <polyline points="2 12 12 17 22 12"/>
           </svg>
-          <span data-i18n="nav_zones">ROI Zone Editor</span>
+          <span data-i18n="nav_zones">बाड़ा एवं शेड AI ज़ोन</span>
         </button>
 
         <button class="nav-item-btn nav-item-ai" data-tab="ai" id="tab-ai-btn" role="tab" aria-selected="false">
@@ -1165,19 +1165,19 @@
         <section class="view-panel" id="zones-view" role="tabpanel" aria-labelledby="tab-zones-btn">
           <div class="zones-content">
             
-            <div class="section-header-row" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem;">
+            <div class="section-header-row" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; flex-wrap:wrap; gap:12px;">
               <div>
                 <h2 class="section-title" data-i18n="zone_editor_title" style="display:flex; align-items:center; gap:8px;">
-                  <span class="pulse-dot"></span> Interactive ROI Polygon Zone Editor
+                  <span class="pulse-dot"></span> <span id="zones-page-headline">बाड़ा एवं शेड AI निगरानी क्षेत्र (Enclosure AI Zones)</span>
                 </h2>
                 <p class="section-subtitle" data-i18n="zone_editor_desc">
-                  Draw and configure virtual Geofence Boundaries, Feeder Troughs, and Quarantine Wards directly on live camera feeds.
+                  गौशाला के प्रत्येक बाड़े में चारा चरणी, बाउंड्री सुरक्षा, और क्वारंटाइन शेड की AI निगरानी मैपिंग
                 </p>
               </div>
 
-              <div class="zone-cam-select-wrap" style="display:flex; align-items:center; gap:10px;">
-                <label for="zone-cam-select" style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">Target Camera:</label>
-                <select class="form-select" id="zone-cam-select" style="min-width:200px;">
+              <div class="zone-cam-select-wrap" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <label for="zone-cam-select" style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">बाड़ा / कैमरा:</label>
+                <select class="form-select" id="zone-cam-select" style="min-width:220px;">
                   <!-- Populated dynamically -->
                 </select>
                 <button type="button" class="btn-tool" id="btn-zone-refresh-snap" title="Refresh Live Snapshot">
@@ -1186,6 +1186,28 @@
                     <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
                   </svg>
                   <span>Refresh Feed</span>
+                </button>
+                <button type="button" class="btn-tool" id="btn-toggle-zones-sidebar" title="Toggle tab visibility in sidebar navigation" style="border-color:rgba(99,102,241,0.3); color:var(--text-muted);">
+                  <span id="zones-sidebar-toggle-text">👁️ साइडबार टॉगल</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Smart Gaushala Presets & Quick Mapping Strip -->
+            <div style="background:linear-gradient(135deg, rgba(16,185,129,0.06), rgba(99,102,241,0.05)); border:1px solid rgba(16,185,129,0.2); border-radius:12px; padding:10px 16px; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:0.82rem; font-weight:800; color:#10b981;">⚡ 1-क्लिक शेड प्रीसेट्स:</span>
+                <span style="font-size:0.75rem; color:var(--text-muted);">स्वचालित रूप से मानक गौशाला ज़ोन लागू करें</span>
+              </div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button type="button" class="zone-preset-btn" id="btn-preset-standard-layout" title="Apply Standard Gaushala Shed Layout">
+                  <span>📐 मानक शेड लेआउट लागू करें</span>
+                </button>
+                <button type="button" class="zone-preset-btn" id="btn-preset-feeder-trough" title="Auto-place Feeder Trough at front">
+                  <span>🌾 चारा चरणी सेट करें</span>
+                </button>
+                <button type="button" class="zone-preset-btn" id="btn-preset-perimeter-fence" title="Auto-fit Perimeter Fence">
+                  <span>🛡️ बाउंड्री सुरक्षा सेट करें</span>
                 </button>
               </div>
             </div>
@@ -1197,25 +1219,25 @@
               <div class="zone-type-pills" style="display:flex; gap:8px; flex-wrap:wrap;">
                 <button type="button" class="btn-zone-pill zone-type-btn active" data-zone-type="feeder" style="border:1.5px solid #10b981; padding:6px 12px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
                   <span style="width:10px; height:10px; border-radius:50%; background:#10b981; display:inline-block;"></span>
-                  <span>🟢 Feeder Zone (Trough)</span>
+                  <span>🟢 चारा चरणी (Feeder Trough)</span>
                 </button>
                 <button type="button" class="btn-zone-pill zone-type-btn" data-zone-type="boundary" style="border:1.5px solid #ef4444; padding:6px 12px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
                   <span style="width:10px; height:10px; border-radius:50%; background:#ef4444; display:inline-block;"></span>
-                  <span>🔴 Pen Geofence Perimeter</span>
+                  <span>🔴 बाड़ा सुरक्षा सीमा (Fence)</span>
                 </button>
                 <button type="button" class="btn-zone-pill zone-type-btn" data-zone-type="quarantine" style="border:1.5px solid #f59e0b; padding:6px 12px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
                   <span style="width:10px; height:10px; border-radius:50%; background:#f59e0b; display:inline-block;"></span>
-                  <span>🟡 Quarantine Ward</span>
+                  <span>🟡 क्वारंटाइन वार्ड (Isolation)</span>
                 </button>
                 <button type="button" class="btn-zone-pill zone-type-btn" data-zone-type="resting" style="border:1.5px solid #3b82f6; padding:6px 12px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
                   <span style="width:10px; height:10px; border-radius:50%; background:#3b82f6; display:inline-block;"></span>
-                  <span>🔵 Resting Bay</span>
+                  <span>🔵 विश्राम एवं जुगाली शेड</span>
                 </button>
               </div>
 
               <!-- Feeder Capacity Input (shown when feeder selected) -->
               <div class="zone-cap-group" style="display:flex; align-items:center; gap:8px;">
-                <label for="zone-capacity-input" style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Max Feeder Cap:</label>
+                <label for="zone-capacity-input" style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">चरणी क्षमता (Max Cows):</label>
                 <input type="number" id="zone-capacity-input" value="4" min="1" max="25" class="form-input" style="width:70px; padding:4px 8px; font-size:0.85rem;" />
               </div>
 
@@ -1426,6 +1448,36 @@
       </div>
       <div class="modal-body" id="diag-modal-body">
         <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Cattle Comprehensive Profile & Photo Detail Modal -->
+  <div class="modal-overlay" id="cattle-detail-modal">
+    <div class="modal-card cattle-detail-modal-card">
+      <div class="modal-header" style="background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(59,130,246,0.06)); border-bottom: 1px solid var(--border-subtle);">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge icon-emerald" style="background:rgba(16,185,129,0.15); color:#10b981;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="12" cy="8" r="5"/>
+              <path d="M20 21a8 8 0 1 0-16 0"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="modal-title" id="cdm-title">गौवंश संपूर्ण प्रोफ़ाइल (Cattle Profile Details)</h2>
+            <p class="modal-subtitle" id="cdm-subtitle">उच्च-रिज़ॉल्यूशन फ़ोटो, नस्ल, वंशावली, सरकारी अनुदान एवं संपूर्ण स्वास्थ्य इतिहास</p>
+          </div>
+        </div>
+        <button class="btn-icon" id="close-cattle-detail-modal-btn" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body" id="cattle-detail-modal-body" style="overflow-y: auto; max-height: 80vh; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
+        <!-- Populated dynamically by CensusModule.openCattleDetailsModal -->
       </div>
     </div>
   </div>

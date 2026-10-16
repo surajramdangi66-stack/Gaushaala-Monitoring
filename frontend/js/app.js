@@ -30,10 +30,10 @@ const TRANSLATIONS = {
     nav_cctv: "Live CCTV Feeds",
     nav_alerts: "AI Alerts",
     nav_census: "Herd Census & Registry",
-    nav_zones: "ROI Zone Editor",
+    nav_zones: "Shed & Enclosure AI Zones",
     nav_groq: "Groq AI Automation",
-    zone_editor_title: "Interactive ROI Polygon Zone Editor",
-    zone_editor_desc: "Draw and configure virtual Geofence Boundaries, Feeder Troughs, and Quarantine Wards directly on live camera feeds",
+    zone_editor_title: "Enclosure & Shed AI Surveillance Zones",
+    zone_editor_desc: "Configure virtual feeder troughs, perimeter boundaries, and quarantine bays directly for Gaushala sheds",
     role_supervisor: "Supervisor",
     
     // Census & Feeding
@@ -196,10 +196,10 @@ const TRANSLATIONS = {
     nav_cctv: "लाइव सीसीटीवी",
     nav_alerts: "ए.आई. अलर्ट",
     nav_census: "गोवंश जनगणना एवं रजिस्टर",
-    nav_zones: "ज़ोन संपादक (ROI)",
+    nav_zones: "बाड़ा एवं शेड AI ज़ोन",
     nav_groq: "ग्रोक ए.आई. स्वचालन",
-    zone_editor_title: "इंटरैक्टिव पॉलीगॉन ज़ोन संपादक (ROI)",
-    zone_editor_desc: "लाइव सीसीटीवी फीड पर सीधे बाड़ा सीमा, चारा चरणी और चिकित्सा वार्ड ड्रा करें",
+    zone_editor_title: "बाड़ा एवं शेड AI निगरानी क्षेत्र",
+    zone_editor_desc: "गौशाला के प्रत्येक बाड़े में चारा चरणी, बाउंड्री सुरक्षा एवं क्वारंटाइन शेड की AI निगरानी मैपिंग",
     role_supervisor: "पर्यवेक्षक",
     
     // Census & Feeding
@@ -563,8 +563,8 @@ function updateTopBarTitle(tabId) {
       hi: { title: "ए.आई. सतर्कता एवं संकट रजिस्टर", desc: "सक्रिय व्यवहारिक विसंगतियां एवं पशु चिकित्सा रिकॉर्ड" }
     },
     zones: {
-      en: { title: "ROI Polygon Zone Editor", desc: "Interactive canvas editor for virtual boundaries, feeder troughs, and quarantine wards" },
-      hi: { title: "पॉलीगॉन ज़ोन संपादक (ROI)", desc: "बाड़ा सीमा, चारा चरणी और पृथक वार्ड के लिए इंटरैक्टिव कैनवास संपादक" }
+      en: { title: "Enclosure & Shed AI Zones", desc: "Interactive mapping of virtual feeder troughs, perimeter boundaries, and quarantine bays" },
+      hi: { title: "बाड़ा एवं शेड AI निगरानी क्षेत्र", desc: "चारा चरणी, बाड़ा सुरक्षा बाउंड्री एवं क्वारंटाइन शेड की AI निगरानी मैपिंग" }
     },
     ai: {
       en: { title: "Groq AI Health Intelligence", desc: "Ultra-fast LLaMA-3.3 livestock clinical reasoning" },

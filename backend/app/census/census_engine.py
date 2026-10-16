@@ -283,6 +283,27 @@ class CensusEngine:
         finally:
             db.close()
 
+    async def execute_census(
+        self,
+        camera_id: Optional[str] = None,
+        census_type: str = "MANUAL_DIAGNOSTIC",
+        scheduled_time: str = "MANUAL",
+        capture_window_seconds: Optional[float] = None
+    ) -> CensusResult:
+        """Async compatibility wrapper for run_census."""
+        import asyncio
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(
+            None,
+            lambda: self.run_census(
+                camera_id=camera_id,
+                census_type=census_type,
+                scheduled_time=scheduled_time,
+                capture_window_seconds=capture_window_seconds
+            )
+        )
+
+
 _census_engine_instance: Optional[CensusEngine] = None
 
 def get_census_engine() -> CensusEngine:
