@@ -4318,6 +4318,148 @@ body {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
+/* =========================================================================
+   WORLD-CLASS GOVERNMENT-GRADE CCTV ZONE AI REDESIGN STYLES
+   ========================================================================= */
+
+/* 1. Live Non-Intrusive HUD */
+.zone-live-hud {
+  font-family: var(--font-sans);
+  letter-spacing: 0.2px;
+  animation: hudFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes hudFadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 2. Context-Aware Right-Click Menu */
+.zone-context-menu {
+  animation: ctxScaleIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+@keyframes ctxScaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.ctx-item {
+  transition: all 0.15s ease;
+}
+
+.ctx-item:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #38bdf8 !important;
+  padding-left: 18px !important;
+}
+
+.ctx-item.text-critical:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+}
+
+/* 3. Layered Zone Sidebar Items */
+.zone-layer-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--bg-base);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.2s ease;
+}
+
+.zone-layer-item:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.zone-layer-item.active-drawing {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.zone-eye-toggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  line-height: 1;
+}
+
+.zone-eye-toggle:hover {
+  transform: scale(1.15);
+}
+
+.zone-eye-toggle.hidden-layer {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+/* 4. AI Health Indicator Dots */
+.ai-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.ai-status-dot.status-normal {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+.ai-status-dot.status-attention {
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+  animation: attentionPulse 1.8s infinite;
+}
+
+.ai-status-dot.status-critical {
+  background: #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+  animation: criticalPulse 1s infinite;
+}
+
+@keyframes attentionPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+@keyframes criticalPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(1.35); }
+}
+
+/* 5. Magnet Snapping Guideline & Button State */
+#btn-zone-magnet-snap.active {
+  background: rgba(6, 182, 212, 0.15) !important;
+  border-color: #06b6d4 !important;
+  color: #06b6d4 !important;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+}
+
+#btn-zone-heatmap.active {
+  background: rgba(249, 115, 22, 0.18) !important;
+  border-color: #f97316 !important;
+  color: #f97316 !important;
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.35);
+}
+
+/* 6. Centroid Inside Polygon Label */
+.centroid-label-pill {
+  pointer-events: none;
+  user-select: none;
+}
+
+
 
 
 

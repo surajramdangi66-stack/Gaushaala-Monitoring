@@ -1210,72 +1210,94 @@
               </div>
             </div>
 
-            <!-- 2. Smart 1-Click Shed Layout Presets Bar -->
-            <div style="background:linear-gradient(135deg, rgba(16,185,129,0.08), rgba(99,102,241,0.06)); border:1px solid rgba(16,185,129,0.25); border-radius:12px; padding:10px 16px; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:0.85rem; font-weight:800; color:#10b981;">⚡ 1-क्लिक मानक शेड लेआउट प्रीसेट्स:</span>
-                <span style="font-size:0.78rem; color:var(--text-muted);">ऑटोमैटिक AI टेम्पलेट्स लागू करें बिना मैन्युअल ड्राइंग के</span>
+            <!-- 2. Smart 1-Click Shed Layout Presets Bar (Government Standard Dropdown) -->
+            <div class="zone-presets-bar" style="background:linear-gradient(135deg, rgba(16,185,129,0.06), rgba(59,130,246,0.05)); border:1px solid rgba(16,185,129,0.22); border-radius:12px; padding:10px 18px; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:1.1rem;">⚡</span>
+                <div>
+                  <div style="font-size:0.86rem; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
+                    <span>मानक शेड लेआउट प्रीसेट्स (1-Click Standard Shed Layouts)</span>
+                    <span class="tab-badge" style="background:rgba(16,185,129,0.15); color:#10b981; font-size:0.7rem; padding:2px 6px;">AI TEMPLATES</span>
+                  </div>
+                  <div style="font-size:0.75rem; color:var(--text-muted);">बिना मैन्युअल ड्राइंग के प्रमाणित गौशाला वास्तु एवं निगरानी लेआउट स्वतः लोड करें</div>
+                </div>
               </div>
-              <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <button type="button" class="zone-preset-btn" id="btn-preset-standard-layout" title="Apply Standard 4-Zone Gaushala Layout">
-                  <span>📐 मानक 4-ज़ोन शेड लेआउट</span>
-                </button>
-                <button type="button" class="zone-preset-btn" id="btn-preset-feeder-trough" title="Auto-place Feeder Trough at Front">
-                  <span>🌾 चारा चरणी सेट करें</span>
-                </button>
-                <button type="button" class="zone-preset-btn" id="btn-preset-quarantine-ward" title="Auto-place Quarantine Ward">
-                  <span>🟡 क्वारंटीन वार्ड सेट करें</span>
-                </button>
-                <button type="button" class="zone-preset-btn" id="btn-preset-perimeter-fence" title="Auto-fit Perimeter Fence">
-                  <span>🛡️ बाउंड्री सुरक्षा सीमा</span>
+
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <label for="preset-layout-dropdown" style="font-size:0.8rem; font-weight:700; color:var(--text-muted);">लेआउट चुनें:</label>
+                <select class="form-select" id="preset-layout-dropdown" style="min-width:250px; font-size:0.82rem; font-weight:600; padding:6px 12px; border-radius:8px; background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-subtle);">
+                  <option value="standard" selected>📐 मानक 4-ज़ोन शेड लेआउट (Standard Open Shed)</option>
+                  <option value="calf_nursery">🍼 बछड़ा शिशुशाला एवं नर्सरी (Calf Nursery Layout)</option>
+                  <option value="quarantine_isolation">🏥 पृथक / क्वारंटीन आइसोलेशन वार्ड (Isolation Ward)</option>
+                  <option value="milking_feeder">🥛 दुग्धशाला एवं दुधारू चरणी (Milking Feeder)</option>
+                  <option value="feeder">🌾 केवल चारा चरणी क्षेत्र (Feeder Trough Only)</option>
+                  <option value="quarantine">🟡 केवल क्वारंटीन वार्ड (Quarantine Only)</option>
+                  <option value="boundary">🛡️ केवल बाड़ा सुरक्षा सीमा (Perimeter Fence Only)</option>
+                </select>
+                <button type="button" class="btn-tool" id="btn-apply-selected-preset" style="font-weight:700; background:rgba(16,185,129,0.12); color:#10b981; border-color:rgba(16,185,129,0.3);">
+                  <span>⚡ लेआउट लागू करें</span>
                 </button>
               </div>
             </div>
 
-            <!-- 3. Zone Toolbar Row -->
-            <div class="zone-toolbar-card" style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:12px; padding:1rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <!-- 3. Zone Toolbar Row (Grouped, Clean Government Action Bar) -->
+            <div class="zone-toolbar-card" style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:12px; padding:1rem 1.25rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
               
-              <!-- 4 Zone Type Selector Pills -->
+              <!-- Zone Type Selector Pills (Pastel color accents) -->
               <div class="zone-type-pills" style="display:flex; gap:8px; flex-wrap:wrap;">
-                <button type="button" class="btn-zone-pill zone-type-btn active" data-zone-type="feeder" style="border:1.5px solid #10b981; padding:6px 12px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
+                <button type="button" class="btn-zone-pill zone-type-btn active" data-zone-type="feeder" style="border:1.5px solid #10b981; padding:6px 14px; border-radius:8px; background:rgba(16,185,129,0.08); cursor:pointer; font-weight:700; color:#10b981; display:flex; align-items:center; gap:6px;">
                   <span style="width:10px; height:10px; border-radius:50%; background:#10b981; display:inline-block;"></span>
-                  <span>🟢 चारा चरणी (Feeder Trough)</span>
+                  <span>🌾 चारा चरणी (Feeding Zone)</span>
                 </button>
-                <button type="button" class="btn-zone-pill zone-type-btn" data-zone-type="boundary" style="border:1.5px solid #ef4444; padding:6px 12px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
-                  <span style="width:10px; height:10px; border-radius:50%; background:#ef4444; display:inline-block;"></span>
-                  <span>🔴 बाड़ा सुरक्षा सीमा (Perimeter)</span>
-                </button>
-                <button type="button" class="btn-zone-pill zone-type-btn" data-zone-type="quarantine" style="border:1.5px solid #f59e0b; padding:6px 12px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
+                <button type="button" class="btn-zone-pill zone-type-btn" data-zone-type="quarantine" style="border:1.5px solid #f59e0b; padding:6px 14px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
                   <span style="width:10px; height:10px; border-radius:50%; background:#f59e0b; display:inline-block;"></span>
-                  <span>🟡 क्वारंटीन वार्ड (Isolation)</span>
+                  <span>🟡 क्वारंटीन वार्ड (Quarantine)</span>
                 </button>
-                <button type="button" class="btn-zone-pill zone-type-btn" data-zone-type="resting" style="border:1.5px solid #3b82f6; padding:6px 12px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
-                  <span style="width:10px; height:10px; border-radius:50%; background:#3b82f6; display:inline-block;"></span>
-                  <span>🔵 विश्राम एवं जुगाली शेड</span>
+                <button type="button" class="btn-zone-pill zone-type-btn" data-zone-type="resting" style="border:1.5px solid #38bdf8; padding:6px 14px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
+                  <span style="width:10px; height:10px; border-radius:50%; background:#38bdf8; display:inline-block;"></span>
+                  <span>🛌 विश्राम एवं जुगाली (Resting Bay)</span>
+                </button>
+                <button type="button" class="btn-zone-pill zone-type-btn" data-zone-type="boundary" style="border:1.5px solid #f43f5e; padding:6px 14px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
+                  <span style="width:10px; height:10px; border-radius:50%; background:#f43f5e; display:inline-block;"></span>
+                  <span>🛡️ सुरक्षा सीमा (Boundary Fence)</span>
                 </button>
               </div>
 
-              <!-- Zone Capacity -->
+              <!-- Zone Capacity Settings -->
               <div class="zone-cap-group" style="display:flex; align-items:center; gap:8px;">
-                <label for="zone-capacity-input" style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">चरणी / ज़ोन क्षमता (Max):</label>
-                <input type="number" id="zone-capacity-input" value="4" min="1" max="50" class="form-input" style="width:65px; padding:4px 8px; font-size:0.85rem;" />
+                <label for="zone-capacity-input" style="font-size:0.8rem; color:var(--text-muted); font-weight:700;">ज़ोन क्षमता (Max Cap):</label>
+                <input type="number" id="zone-capacity-input" value="4" min="1" max="50" class="form-input" style="width:65px; padding:4px 8px; font-size:0.85rem; text-align:center; font-weight:700;" />
               </div>
 
-              <!-- Action Buttons -->
-              <div class="zone-action-btns" style="display:flex; gap:8px;">
-                <button type="button" class="btn-tool" id="btn-zone-undo" title="Remove last clicked point">
-                  <span>↩ Undo</span>
-                </button>
-                <button type="button" class="btn-tool" id="btn-zone-close-poly" title="Close polygon loop" style="font-weight:600; color:var(--text-primary);">
-                  <span>✔ Close Loop</span>
-                </button>
-                <button type="button" class="btn-tool text-critical" id="btn-zone-clear" title="Clear current zone">
+              <!-- Clean Action Bar: Grouped Logically -->
+              <div class="zone-action-btns" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                
+                <!-- Group 1: Canvas Drawing & Geometry Assists -->
+                <div class="btn-group-segmented" style="display:flex; gap:4px; background:var(--bg-base); padding:3px; border-radius:8px; border:1px solid var(--border-subtle);">
+                  <button type="button" class="btn-tool" id="btn-zone-undo" title="Remove last clicked point" style="padding:4px 10px; font-size:0.78rem;">
+                    <span>↩ Undo</span>
+                  </button>
+                  <button type="button" class="btn-tool" id="btn-zone-close-poly" title="Close polygon loop" style="padding:4px 10px; font-size:0.78rem; font-weight:700; color:var(--text-primary);">
+                    <span>✔ Close Loop</span>
+                  </button>
+                  <button type="button" class="btn-tool active" id="btn-zone-magnet-snap" title="Magnet Snapping: Automatically align to axes & walls" style="padding:4px 10px; font-size:0.78rem; border-color:#06b6d4; color:#06b6d4; font-weight:700;">
+                    <span>🧲 Snap: ON</span>
+                  </button>
+                  <button type="button" class="btn-tool" id="btn-zone-heatmap" title="Toggle 24h Cattle Movement Density Heatmap" style="padding:4px 10px; font-size:0.78rem; border-color:#f97316; color:#f97316; font-weight:700;">
+                    <span>🔥 24h Heatmap</span>
+                  </button>
+                </div>
+
+                <!-- Group 2: Clear & Defaults -->
+                <button type="button" class="btn-tool text-critical" id="btn-zone-clear" title="Clear current zone" style="font-size:0.78rem;">
                   <span>🗑 Clear</span>
                 </button>
-                <button type="button" class="btn-tool" id="btn-zone-reset-default" title="Reset all to defaults">
+                <button type="button" class="btn-tool" id="btn-zone-reset-default" title="Reset all to defaults" style="font-size:0.78rem;">
                   <span>↺ Defaults</span>
                 </button>
-                <button type="button" class="btn-primary" id="btn-zone-save-all" style="padding:0.45rem 1rem;">
+
+                <!-- Group 3: Primary Save & Apply Live Button (Distinct High-End Blue) -->
+                <button type="button" class="btn-primary" id="btn-zone-save-all" style="background:#2563eb; border-color:#1d4ed8; padding:0.5rem 1.25rem; font-size:0.85rem; font-weight:800; box-shadow:0 4px 14px rgba(37,99,235,0.35); display:flex; align-items:center; gap:6px;">
                   <span>💾 Save & Apply Live</span>
                 </button>
               </div>
@@ -1283,24 +1305,47 @@
             </div>
 
             <!-- 4. Main Interactive Canvas & Live Feed Viewport -->
-            <div class="zone-editor-layout" style="display:grid; grid-template-columns:1fr 310px; gap:1.25rem; margin-bottom:1.5rem;">
+            <div class="zone-editor-layout" style="display:grid; grid-template-columns:1fr 330px; gap:1.25rem; margin-bottom:1.5rem;">
               
-              <!-- Left: Canvas / Live Stream Card -->
-              <div class="zone-canvas-card" style="background:#090d16; border:1px solid var(--border-subtle); border-radius:12px; overflow:hidden; position:relative;">
+              <!-- Left: Canvas / Live Stream Card with Live HUD & Heatmap -->
+              <div class="zone-canvas-card" style="background:#090d16; border:1px solid var(--border-subtle); border-radius:12px; overflow:hidden; position:relative; box-shadow:0 8px 24px rgba(0,0,0,0.35);">
                 
                 <!-- Screen Container -->
-                <div id="zone-viewport-container" style="position:relative; width:100%; aspect-ratio:4/3; max-height:520px; display:flex; align-items:center; justify-content:center; background:#000;">
+                <div id="zone-viewport-container" style="position:relative; width:100%; aspect-ratio:4/3; max-height:540px; display:flex; align-items:center; justify-content:center; background:#000;">
                   
                   <!-- Interactive Polygon Canvas (Used in Edit Mode) -->
                   <canvas id="zone-editor-canvas" width="640" height="480" style="width:100%; height:100%; object-fit:contain; cursor:crosshair; display:block;"></canvas>
                   
+                  <!-- Overlay 24h Movement Density Heatmap Canvas -->
+                  <canvas id="zone-heatmap-canvas" width="640" height="480" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:contain; pointer-events:none; display:none; mix-blend-mode:screen;"></canvas>
+
                   <!-- Live CCTV Stream Image (Used in Live Stream Mode) -->
                   <img id="zone-live-stream-img" src="" alt="Live CCTV Feed" style="width:100%; height:100%; object-fit:contain; display:none;" />
 
-                  <!-- Live Stream Status Overlay Badge -->
-                  <div style="position:absolute; top:12px; left:12px; background:rgba(0,0,0,0.75); backdrop-filter:blur(4px); padding:4px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.15); display:flex; align-items:center; gap:8px;">
-                    <span class="pulse-dot" style="background:#10b981; width:8px; height:8px;"></span>
-                    <span id="zone-live-badge-text" style="font-size:0.75rem; font-weight:700; color:#fff;">LIVE CCTV GEOFENCE ACTIVE</span>
+                  <!-- 1. Live HUD (Non-intrusive Heads-Up Display at top-left) -->
+                  <div id="zone-live-hud" style="position:absolute; top:12px; left:12px; z-index:10; background:rgba(15, 23, 42, 0.88); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.18); border-radius:8px; padding:6px 12px; display:flex; align-items:center; gap:10px; box-shadow:0 4px 16px rgba(0,0,0,0.4); font-size:0.75rem; color:#f8fafc; pointer-events:none;">
+                    <div style="display:flex; align-items:center; gap:6px; font-weight:800; color:#10b981;">
+                      <span class="pulse-dot" style="background:#10b981; width:8px; height:8px;"></span>
+                      <span id="zone-hud-live-tag">LIVE HUD</span>
+                    </div>
+                    <div style="width:1px; height:12px; background:rgba(255,255,255,0.2);"></div>
+                    <span id="hud-total-cattle">Total Cattle: <strong style="color:#fff;">18</strong></span>
+                    <div style="width:1px; height:12px; background:rgba(255,255,255,0.2);"></div>
+                    <span id="hud-feeder-cattle">Feeders: <strong style="color:#10b981;">3/4</strong></span>
+                    <div style="width:1px; height:12px; background:rgba(255,255,255,0.2);"></div>
+                    <span id="hud-quarantine-cattle">Quarantine: <strong style="color:#f59e0b;">2/3</strong></span>
+                    <div style="width:1px; height:12px; background:rgba(255,255,255,0.2);"></div>
+                    <span id="hud-rumination-score">Rumination: <strong style="color:#38bdf8;">88%</strong></span>
+                  </div>
+
+                  <!-- 2. Magnet Snapping Indicator Reticle Tooltip -->
+                  <div id="zone-snap-indicator" style="display:none; position:absolute; z-index:12; background:rgba(6,182,212,0.92); color:#fff; font-size:0.68rem; font-weight:700; padding:2px 6px; border-radius:4px; pointer-events:none; box-shadow:0 2px 8px rgba(0,0,0,0.4);">🧲 SNAP (90°)</div>
+
+                  <!-- 3. Heatmap Legend (shown when heatmap active) -->
+                  <div id="zone-heatmap-legend" style="display:none; position:absolute; bottom:14px; right:14px; z-index:10; background:rgba(15,23,42,0.9); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:6px 12px; font-size:0.72rem; color:#e2e8f0; display:flex; align-items:center; gap:8px; box-shadow:0 4px 12px rgba(0,0,0,0.4);">
+                    <span style="font-weight:700;">24h Density:</span>
+                    <div style="width:80px; height:8px; border-radius:4px; background:linear-gradient(to right, rgba(56,189,248,0.4), #10b981, #facc15, #ef4444);"></div>
+                    <span style="font-size:0.68rem; color:#94a3b8;">Cool ── Hot</span>
                   </div>
 
                   <!-- PTZ Preset Corner Badge -->
@@ -1315,37 +1360,44 @@
                     <span style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">सक्रिय ड्राइंग ज़ोन:</span>
                     <span class="tab-badge" id="active-zone-badge" style="background:#10b981; color:#fff; font-size:0.75rem; padding:2px 8px; border-radius:4px; font-weight:700;">चारा चरणी (Feeder Trough)</span>
                   </div>
-                  <div id="zone-points-list" style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:380px;">
-                    क्लिक करके वर्टेक्स बिंदु जोड़ें (3+ बिंदु आवश्यक)
+                  <div id="zone-points-list" style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:400px;">
+                    क्लिक करके वर्टेक्स बिंदु जोड़ें (3+ बिंदु आवश्यक) | राइट-क्लिक करें ज़ोन मेन्यू हेतु
                   </div>
                 </div>
               </div>
 
-              <!-- Right: Info & Status Drawer -->
+              <!-- Right: Layered Zone Management Panel (Sidebar) -->
               <div class="zone-sidebar-card" style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:12px; padding:1.25rem; display:flex; flex-direction:column; gap:1.25rem;">
                 
+                <!-- Layer List Header -->
                 <div>
-                  <h3 style="font-size:0.92rem; font-weight:700; margin-bottom:6px; color:var(--text-primary);">📐 ज़ोन मैपिंग दिशानिर्देश</h3>
-                  <ol style="font-size:0.78rem; color:var(--text-muted); padding-left:1.1rem; line-height:1.5;">
-                    <li>ड्राइंग हेतु ऊपर से ज़ोन चुनें (चारा चरणी, क्वारंटीन, विश्राम)।</li>
-                    <li>वीडियो फीड पर क्लिक करके सीमा बिंदु (Vertices) लगाएं।</li>
-                    <li>डबल-क्लिक या <strong>Close Loop</strong> दबाकर पॉलीगॉन पूरा करें।</li>
-                    <li><strong>Save & Apply Live</strong> दबाते ही लाइव YOLO AI पाइपलाइन अपडेट हो जाएगी।</li>
-                  </ol>
-                </div>
-
-                <div>
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <h3 style="font-size:0.92rem; font-weight:700; margin:0;">सक्रिय कॉन्फ़िगर किए गए ज़ोन</h3>
-                    <span class="tab-badge" id="configured-zones-count-badge" style="background:rgba(99,102,241,0.15); color:#6366f1; font-size:0.72rem; padding:2px 6px;">4 Active</span>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h3 style="font-size:0.95rem; font-weight:800; margin:0; display:flex; align-items:center; gap:6px;">
+                      <span>📑 ज़ोन लेयर प्रबंधन (Layers)</span>
+                    </h3>
+                    <span class="tab-badge" id="configured-zones-count-badge" style="background:rgba(99,102,241,0.15); color:#6366f1; font-size:0.72rem; padding:2px 6px; font-weight:700;">4 Active</span>
                   </div>
-                  <div id="zone-summary-list" style="display:flex; flex-direction:column; gap:6px;">
-                    <!-- Populated dynamically -->
+                  <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:10px;">👁️ आइकन से कैनवास दृश्यता चालू/बंद करें एवं AI स्वास्थ्य स्थिति (🟢/🟡/🔴) जांचें</p>
+
+                  <!-- Dynamic Layer Zone List Container -->
+                  <div id="zone-summary-list" style="display:flex; flex-direction:column; gap:8px;">
+                    <!-- Populated dynamically with eye toggle and AI health dots -->
                   </div>
                 </div>
 
-                <div style="background:var(--bg-base); border-radius:8px; padding:10px 12px; font-size:0.75rem; color:var(--text-muted); border-left:3px solid #10b981;">
-                  <strong style="color:var(--text-primary);">गवर्नेंस अनुपालन नोट:</strong> यह सिस्टम 100% ऑप्टिकल सीसीटीवी पर आधारित है (बिना किसी आईओटी कॉलर के)। यह स्वतः राष्ट्रीय पशुधन मिशन (NDLM) प्रारूप में डेटा मैप करता है।
+                <!-- Interactive Usage Tips -->
+                <div style="background:var(--bg-base); border-radius:8px; padding:10px 12px; font-size:0.75rem; color:var(--text-muted); border-left:3px solid #38bdf8;">
+                  <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">💡 प्रो टिप्स (Pro Operator Tips):</strong>
+                  <ul style="padding-left:1rem; margin:0; line-height:1.45;">
+                    <li><strong>क्लिक-एंड-ड्रैग:</strong> किसी भी वर्टेक्स बिंदु को पकड़कर तुरंत रीसाइज करें।</li>
+                    <li><strong>मैग्नेट स्नैप:</strong> 90°/45° अक्ष एवं दीवारों से रेखाएं स्वतः संरेखित होंगी।</li>
+                    <li><strong>राइट-क्लिक:</strong> किसी भी ज़ोन पर राइट-क्लिक कर 24h रिपोर्ट या सैनिटाइजेशन दर्ज करें।</li>
+                  </ul>
+                </div>
+
+                <!-- Governance Compliance Footnote -->
+                <div style="background:rgba(16,185,129,0.06); border-radius:8px; padding:8px 12px; font-size:0.72rem; color:var(--text-muted); border:1px solid rgba(16,185,129,0.2);">
+                  <strong style="color:#10b981;">🏛️ NDLM अनुपालन:</strong> 100% सीसीटीवी ऑप्टिकल विज़न (बिना किसी आईओटी कॉलर के)। वास्तविक चारा अनुदान व स्वास्थ्य ऑडिट हेतु मान्य।
                 </div>
 
               </div>
@@ -1669,6 +1721,114 @@
         </div>
 
       </form>
+
+    </div>
+  </div>
+
+  <!-- =======================================================================
+       CONTEXT-AWARE RIGHT-CLICK MENU (INTERACTIVE CANVAS POLYGONS)
+       ======================================================================= -->
+  <div id="zone-context-menu" class="zone-context-menu" style="display:none; position:fixed; z-index:9999; background:#0f172a; border:1px solid rgba(255,255,255,0.18); border-radius:10px; box-shadow:0 12px 32px rgba(0,0,0,0.65); min-width:240px; overflow:hidden; backdrop-filter:blur(12px);">
+    <div class="ctx-header" style="padding:8px 12px; background:rgba(255,255,255,0.06); border-bottom:1px solid rgba(255,255,255,0.1); font-size:0.75rem; font-weight:800; color:#94a3b8; display:flex; justify-content:space-between; align-items:center;">
+      <span id="ctx-zone-title">ZONE: FEEDER</span>
+      <span id="ctx-zone-type-badge" style="font-size:0.68rem; padding:1px 6px; border-radius:4px; background:#10b981; color:#fff; font-weight:700;">ACTIVE</span>
+    </div>
+    <div class="ctx-body" style="padding:4px 0; display:flex; flex-direction:column;">
+      <button type="button" class="ctx-item" id="ctx-btn-report" style="display:flex; align-items:center; gap:8px; width:100%; padding:8px 14px; background:none; border:none; color:#f8fafc; font-size:0.8rem; text-align:left; cursor:pointer;">
+        <span>📊</span> <span>24h गतिविधि रिपोर्ट (Activity Report)</span>
+      </button>
+      <button type="button" class="ctx-item" id="ctx-btn-clean" style="display:flex; align-items:center; gap:8px; width:100%; padding:8px 14px; background:none; border:none; color:#f8fafc; font-size:0.8rem; text-align:left; cursor:pointer;">
+        <span>🧹</span> <span>स्वच्छता सत्यापन (Mark as Cleaned)</span>
+      </button>
+      <button type="button" class="ctx-item" id="ctx-btn-alerts" style="display:flex; align-items:center; gap:8px; width:100%; padding:8px 14px; background:none; border:none; color:#f8fafc; font-size:0.8rem; text-align:left; cursor:pointer;">
+        <span>🔔</span> <span>पूर्व अलर्ट देखें (View Past Alerts)</span>
+      </button>
+      <button type="button" class="ctx-item" id="ctx-btn-filter-cattle" style="display:flex; align-items:center; gap:8px; width:100%; padding:8px 14px; background:none; border:none; color:#f8fafc; font-size:0.8rem; text-align:left; cursor:pointer;">
+        <span>🐮</span> <span>उपस्थित गोवंश सूची (Filter Cattle)</span>
+      </button>
+      <div style="height:1px; background:rgba(255,255,255,0.1); margin:4px 0;"></div>
+      <button type="button" class="ctx-item text-critical" id="ctx-btn-delete" style="display:flex; align-items:center; gap:8px; width:100%; padding:8px 14px; background:none; border:none; color:#ef4444; font-size:0.8rem; text-align:left; cursor:pointer;">
+        <span>🗑</span> <span>ज़ोन हटाएं (Delete / Clear Zone)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- =======================================================================
+       ZONE 24H ACTIVITY & AUDIT REPORT MODAL
+       ======================================================================= -->
+  <div class="modal-overlay" id="zone-activity-modal" style="display:none;">
+    <div class="modal-card" style="max-width:640px; width:92%; background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:14px; box-shadow:0 20px 45px rgba(0,0,0,0.5); overflow:hidden;">
+      
+      <div class="modal-header" style="background:linear-gradient(135deg, rgba(37,99,235,0.12), rgba(16,185,129,0.08)); border-bottom:1px solid var(--border-subtle); padding:1rem 1.25rem; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.4rem;">📊</span>
+          <div>
+            <h3 style="margin:0; font-size:1.05rem; font-weight:800; color:var(--text-primary);" id="act-modal-title">24h ज़ोन गतिविधि रिपोर्ट</h3>
+            <p style="margin:2px 0 0 0; font-size:0.75rem; color:var(--text-muted);" id="act-modal-subtitle">CCTV Vision Spatial Telemetry & Health Audit</p>
+          </div>
+        </div>
+        <button type="button" class="btn-icon" id="close-zone-activity-modal-btn" title="Close">✕</button>
+      </div>
+
+      <div style="padding:1.25rem; display:flex; flex-direction:column; gap:1rem;">
+        
+        <!-- Metrics Grid -->
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;">
+          <div style="background:var(--bg-base); padding:10px; border-radius:8px; text-align:center;">
+            <div style="font-size:0.72rem; color:var(--text-muted);">24 घंटे में कुल उपस्थिति</div>
+            <div style="font-size:1.3rem; font-weight:800; color:#10b981;" id="act-modal-visits">42 बार</div>
+          </div>
+          <div style="background:var(--bg-base); padding:10px; border-radius:8px; text-align:center;">
+            <div style="font-size:0.72rem; color:var(--text-muted);">औसत ठहराव (Dwell Time)</div>
+            <div style="font-size:1.3rem; font-weight:800; color:#38bdf8;" id="act-modal-dwell">28.5 मिनट</div>
+          </div>
+          <div style="background:var(--bg-base); padding:10px; border-radius:8px; text-align:center;">
+            <div style="font-size:0.72rem; color:var(--text-muted);">वर्तमान क्षमता उपयोग</div>
+            <div style="font-size:1.3rem; font-weight:800; color:#f59e0b;" id="act-modal-utilization">75% (3/4)</div>
+          </div>
+        </div>
+
+        <!-- Health and Cleanliness Status -->
+        <div style="background:var(--bg-base); padding:12px; border-radius:8px; display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; justify-content:space-between; font-size:0.8rem;">
+            <span style="color:var(--text-muted);">उच्चतम गतिविधि समय (Peak Window):</span>
+            <strong style="color:var(--text-primary);" id="act-modal-peak">07:00 AM - 09:30 AM</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.8rem;">
+            <span style="color:var(--text-muted);">एआई स्वास्थ्य सूचकांक (Health Index):</span>
+            <strong style="color:#10b981;" id="act-modal-health">94% (नियमित चारा भक्षण)</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.8rem;">
+            <span style="color:var(--text-muted);">स्वच्छता स्थिति (Sanitation):</span>
+            <strong style="color:#10b981;" id="act-modal-clean-status">सत्यापित (आज प्रातः 06:30 बजे)</strong>
+          </div>
+        </div>
+
+        <!-- Active Cattle Tags in this zone -->
+        <div>
+          <div style="font-size:0.78rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">वर्तमान में उपस्थित गोवंश (Tagged Inmates):</div>
+          <div id="act-modal-tags-container" style="display:flex; gap:6px; flex-wrap:wrap;">
+            <!-- Tag pills -->
+          </div>
+        </div>
+
+        <!-- Recent Zone Alerts -->
+        <div>
+          <div style="font-size:0.78rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">हालिया ज़ोन सुरक्षा एवं स्वास्थ्य लॉग:</div>
+          <div id="act-modal-alerts-list" style="max-height:110px; overflow-y:auto; border:1px solid var(--border-subtle); border-radius:6px; padding:6px; font-size:0.75rem; display:flex; flex-direction:column; gap:4px;">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; border-top:1px solid var(--border-subtle); padding-top:10px;">
+          <button type="button" class="btn-tool" onclick="window.print()">🖨️ रिपोर्ट प्रिंट करें</button>
+          <button type="button" class="btn-primary" id="btn-close-activity-modal" style="padding:0.45rem 1.25rem;">
+            <span>समझ गया (Close)</span>
+          </button>
+        </div>
+
+      </div>
 
     </div>
   </div>
