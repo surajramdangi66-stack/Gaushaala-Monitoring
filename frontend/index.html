@@ -1160,62 +1160,82 @@
         </section>
 
         <!-- =====================================================================
-             TAB 6: INTERACTIVE ROI POLYGON ZONE EDITOR
+             TAB 6: BAADA & SHED AI ZONE (ENCLOSURE & SHED AI MONITORING)
              ===================================================================== -->
         <section class="view-panel" id="zones-view" role="tabpanel" aria-labelledby="tab-zones-btn">
           <div class="zones-content">
             
-            <div class="section-header-row" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; flex-wrap:wrap; gap:12px;">
+            <!-- 1. Header Row & PTZ Controls -->
+            <div class="section-header-row" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; flex-wrap:wrap; gap:14px;">
               <div>
-                <h2 class="section-title" data-i18n="zone_editor_title" style="display:flex; align-items:center; gap:8px;">
-                  <span class="pulse-dot"></span> <span id="zones-page-headline">बाड़ा एवं शेड AI निगरानी क्षेत्र (Enclosure AI Zones)</span>
+                <h2 class="section-title" data-i18n="zone_editor_title" style="display:flex; align-items:center; gap:10px;">
+                  <span class="pulse-dot" style="background:#10b981;"></span>
+                  <span id="zones-page-headline">बाड़ा एवं शेड AI निगरानी ज़ोन (Enclosure & Shed AI Zone)</span>
+                  <span class="tab-badge" style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); font-size:0.75rem; padding:3px 8px; border-radius:6px; font-weight:700;">100% CCTV VISION</span>
                 </h2>
                 <p class="section-subtitle" data-i18n="zone_editor_desc">
-                  गौशाला के प्रत्येक बाड़े में चारा चरणी, बाउंड्री सुरक्षा, और क्वारंटाइन शेड की AI निगरानी मैपिंग
+                  स्थानिक जियोफेंसिंग, चारा चरणी मॉनिटरिंग, क्वारंटीन ट्रिपवायर, जुगाली गति विश्लेषण एवं सरकारी चारा अनुदान लेखापरीक्षा
                 </p>
               </div>
 
-              <div class="zone-cam-select-wrap" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                <label for="zone-cam-select" style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">बाड़ा / कैमरा:</label>
-                <select class="form-select" id="zone-cam-select" style="min-width:220px;">
+              <!-- Camera Switch, PTZ Selector & Mode Toggle -->
+              <div class="zone-cam-select-wrap" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <label for="zone-cam-select" style="font-size:0.82rem; font-weight:700; color:var(--text-muted);">बाड़ा / कैमरा:</label>
+                <select class="form-select" id="zone-cam-select" style="min-width:210px; font-size:0.85rem; font-weight:600;">
                   <!-- Populated dynamically -->
                 </select>
-                <button type="button" class="btn-tool" id="btn-zone-refresh-snap" title="Refresh Live Snapshot">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                    <polyline points="23 4 23 10 17 10"/>
-                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                  </svg>
-                  <span>Refresh Feed</span>
+
+                <!-- PTZ Camera Angle Quick Switches -->
+                <div class="ptz-quick-angles" style="display:flex; gap:4px; background:var(--bg-card); padding:2px; border-radius:8px; border:1px solid var(--border-subtle);">
+                  <button type="button" class="btn-tool ptz-angle-btn active" data-ptz="overview" title="Wide Shed Overview (विहंगम दृश्य)" style="padding:4px 8px; font-size:0.75rem;">🌐 विहंगम</button>
+                  <button type="button" class="btn-tool ptz-angle-btn" data-ptz="feeder" title="Feeder Trough Zoom (चारा चरणी ज़ूम)" style="padding:4px 8px; font-size:0.75rem;">🌾 चरणी</button>
+                  <button type="button" class="btn-tool ptz-angle-btn" data-ptz="quarantine" title="Quarantine Ward Zoom (क्वारंटीन आइसोलेशन)" style="padding:4px 8px; font-size:0.75rem;">🟡 क्वारंटीन</button>
+                  <button type="button" class="btn-tool ptz-angle-btn" data-ptz="resting" title="Resting Bay Zoom (विश्राम शेड)" style="padding:4px 8px; font-size:0.75rem;">🛌 विश्राम</button>
+                </div>
+
+                <!-- Stream / Edit Mode Switcher -->
+                <button type="button" class="btn-tool" id="btn-toggle-stream-mode" title="Toggle Live CCTV Stream vs Polygon Editor" style="border-color:#10b981; color:#10b981; font-weight:700;">
+                  <span id="stream-mode-label">📹 लाइव स्ट्रीम देखें</span>
                 </button>
-                <button type="button" class="btn-tool" id="btn-toggle-zones-sidebar" title="Toggle tab visibility in sidebar navigation" style="border-color:rgba(99,102,241,0.3); color:var(--text-muted);">
-                  <span id="zones-sidebar-toggle-text">👁️ साइडबार टॉगल</span>
+
+                <!-- Refresh Snapshot -->
+                <button type="button" class="btn-tool" id="btn-zone-refresh-snap" title="Refresh Feed Snapshot">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                </button>
+
+                <!-- Emergency CVO Outbreak Dispatch Trigger -->
+                <button type="button" class="btn-primary" id="btn-open-cvo-modal" style="background:#dc2626; border-color:#b91c1c; padding:0.45rem 0.9rem; font-size:0.82rem; font-weight:700; display:flex; align-items:center; gap:6px;">
+                  <span>🚨 CVO अलर्ट</span>
                 </button>
               </div>
             </div>
 
-            <!-- Smart Gaushala Presets & Quick Mapping Strip -->
-            <div style="background:linear-gradient(135deg, rgba(16,185,129,0.06), rgba(99,102,241,0.05)); border:1px solid rgba(16,185,129,0.2); border-radius:12px; padding:10px 16px; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <!-- 2. Smart 1-Click Shed Layout Presets Bar -->
+            <div style="background:linear-gradient(135deg, rgba(16,185,129,0.08), rgba(99,102,241,0.06)); border:1px solid rgba(16,185,129,0.25); border-radius:12px; padding:10px 16px; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
               <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:0.82rem; font-weight:800; color:#10b981;">⚡ 1-क्लिक शेड प्रीसेट्स:</span>
-                <span style="font-size:0.75rem; color:var(--text-muted);">स्वचालित रूप से मानक गौशाला ज़ोन लागू करें</span>
+                <span style="font-size:0.85rem; font-weight:800; color:#10b981;">⚡ 1-क्लिक मानक शेड लेआउट प्रीसेट्स:</span>
+                <span style="font-size:0.78rem; color:var(--text-muted);">ऑटोमैटिक AI टेम्पलेट्स लागू करें बिना मैन्युअल ड्राइंग के</span>
               </div>
               <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <button type="button" class="zone-preset-btn" id="btn-preset-standard-layout" title="Apply Standard Gaushala Shed Layout">
-                  <span>📐 मानक शेड लेआउट लागू करें</span>
+                <button type="button" class="zone-preset-btn" id="btn-preset-standard-layout" title="Apply Standard 4-Zone Gaushala Layout">
+                  <span>📐 मानक 4-ज़ोन शेड लेआउट</span>
                 </button>
-                <button type="button" class="zone-preset-btn" id="btn-preset-feeder-trough" title="Auto-place Feeder Trough at front">
+                <button type="button" class="zone-preset-btn" id="btn-preset-feeder-trough" title="Auto-place Feeder Trough at Front">
                   <span>🌾 चारा चरणी सेट करें</span>
                 </button>
+                <button type="button" class="zone-preset-btn" id="btn-preset-quarantine-ward" title="Auto-place Quarantine Ward">
+                  <span>🟡 क्वारंटीन वार्ड सेट करें</span>
+                </button>
                 <button type="button" class="zone-preset-btn" id="btn-preset-perimeter-fence" title="Auto-fit Perimeter Fence">
-                  <span>🛡️ बाउंड्री सुरक्षा सेट करें</span>
+                  <span>🛡️ बाउंड्री सुरक्षा सीमा</span>
                 </button>
               </div>
             </div>
 
-            <!-- Zone Selector Badges & Toolbar Row -->
+            <!-- 3. Zone Toolbar Row -->
             <div class="zone-toolbar-card" style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:12px; padding:1rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
               
-              <!-- Zone Type Selector Pills -->
+              <!-- 4 Zone Type Selector Pills -->
               <div class="zone-type-pills" style="display:flex; gap:8px; flex-wrap:wrap;">
                 <button type="button" class="btn-zone-pill zone-type-btn active" data-zone-type="feeder" style="border:1.5px solid #10b981; padding:6px 12px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
                   <span style="width:10px; height:10px; border-radius:50%; background:#10b981; display:inline-block;"></span>
@@ -1223,11 +1243,11 @@
                 </button>
                 <button type="button" class="btn-zone-pill zone-type-btn" data-zone-type="boundary" style="border:1.5px solid #ef4444; padding:6px 12px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
                   <span style="width:10px; height:10px; border-radius:50%; background:#ef4444; display:inline-block;"></span>
-                  <span>🔴 बाड़ा सुरक्षा सीमा (Fence)</span>
+                  <span>🔴 बाड़ा सुरक्षा सीमा (Perimeter)</span>
                 </button>
                 <button type="button" class="btn-zone-pill zone-type-btn" data-zone-type="quarantine" style="border:1.5px solid #f59e0b; padding:6px 12px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
                   <span style="width:10px; height:10px; border-radius:50%; background:#f59e0b; display:inline-block;"></span>
-                  <span>🟡 क्वारंटाइन वार्ड (Isolation)</span>
+                  <span>🟡 क्वारंटीन वार्ड (Isolation)</span>
                 </button>
                 <button type="button" class="btn-zone-pill zone-type-btn" data-zone-type="resting" style="border:1.5px solid #3b82f6; padding:6px 12px; border-radius:8px; background:var(--bg-card); cursor:pointer; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:6px;">
                   <span style="width:10px; height:10px; border-radius:50%; background:#3b82f6; display:inline-block;"></span>
@@ -1235,16 +1255,16 @@
                 </button>
               </div>
 
-              <!-- Feeder Capacity Input (shown when feeder selected) -->
+              <!-- Zone Capacity -->
               <div class="zone-cap-group" style="display:flex; align-items:center; gap:8px;">
-                <label for="zone-capacity-input" style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">चरणी क्षमता (Max Cows):</label>
-                <input type="number" id="zone-capacity-input" value="4" min="1" max="25" class="form-input" style="width:70px; padding:4px 8px; font-size:0.85rem;" />
+                <label for="zone-capacity-input" style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">चरणी / ज़ोन क्षमता (Max):</label>
+                <input type="number" id="zone-capacity-input" value="4" min="1" max="50" class="form-input" style="width:65px; padding:4px 8px; font-size:0.85rem;" />
               </div>
 
               <!-- Action Buttons -->
               <div class="zone-action-btns" style="display:flex; gap:8px;">
                 <button type="button" class="btn-tool" id="btn-zone-undo" title="Remove last clicked point">
-                  <span>↩ Undo Point</span>
+                  <span>↩ Undo</span>
                 </button>
                 <button type="button" class="btn-tool" id="btn-zone-close-poly" title="Close polygon loop" style="font-weight:600; color:var(--text-primary);">
                   <span>✔ Close Loop</span>
@@ -1262,21 +1282,41 @@
 
             </div>
 
-            <!-- Main Interactive Editor Canvas Layout -->
-            <div class="zone-editor-layout" style="display:grid; grid-template-columns:1fr 300px; gap:1.25rem;">
+            <!-- 4. Main Interactive Canvas & Live Feed Viewport -->
+            <div class="zone-editor-layout" style="display:grid; grid-template-columns:1fr 310px; gap:1.25rem; margin-bottom:1.5rem;">
               
-              <!-- Left: Canvas Area -->
+              <!-- Left: Canvas / Live Stream Card -->
               <div class="zone-canvas-card" style="background:#090d16; border:1px solid var(--border-subtle); border-radius:12px; overflow:hidden; position:relative;">
-                <div style="position:relative; width:100%; aspect-ratio:4/3; max-height:540px; display:flex; align-items:center; justify-content:center; background:#000;">
-                  <canvas id="zone-editor-canvas" width="640" height="480" style="width:100%; height:100%; object-fit:contain; cursor:crosshair;"></canvas>
-                </div>
-                <div style="padding:10px 16px; background:rgba(17,24,39,0.85); border-top:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Active Drawing:</span>
-                    <span class="tab-badge" id="active-zone-badge" style="background:#10b981; color:#fff; font-size:0.75rem; padding:2px 8px; border-radius:4px;">Safe Feeding Zone</span>
+                
+                <!-- Screen Container -->
+                <div id="zone-viewport-container" style="position:relative; width:100%; aspect-ratio:4/3; max-height:520px; display:flex; align-items:center; justify-content:center; background:#000;">
+                  
+                  <!-- Interactive Polygon Canvas (Used in Edit Mode) -->
+                  <canvas id="zone-editor-canvas" width="640" height="480" style="width:100%; height:100%; object-fit:contain; cursor:crosshair; display:block;"></canvas>
+                  
+                  <!-- Live CCTV Stream Image (Used in Live Stream Mode) -->
+                  <img id="zone-live-stream-img" src="" alt="Live CCTV Feed" style="width:100%; height:100%; object-fit:contain; display:none;" />
+
+                  <!-- Live Stream Status Overlay Badge -->
+                  <div style="position:absolute; top:12px; left:12px; background:rgba(0,0,0,0.75); backdrop-filter:blur(4px); padding:4px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.15); display:flex; align-items:center; gap:8px;">
+                    <span class="pulse-dot" style="background:#10b981; width:8px; height:8px;"></span>
+                    <span id="zone-live-badge-text" style="font-size:0.75rem; font-weight:700; color:#fff;">LIVE CCTV GEOFENCE ACTIVE</span>
                   </div>
-                  <div id="zone-points-list" style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:340px;">
-                    Click canvas to draw vertices (3+ required)
+
+                  <!-- PTZ Preset Corner Badge -->
+                  <div style="position:absolute; top:12px; right:12px; background:rgba(0,0,0,0.75); padding:4px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.15); font-size:0.75rem; font-weight:700; color:#93c5fd;" id="zone-ptz-indicator">
+                    PTZ: विहंगम दृश्य (Wide 1080p)
+                  </div>
+                </div>
+
+                <!-- Footer Bar below canvas -->
+                <div style="padding:10px 16px; background:rgba(17,24,39,0.92); border-top:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">सक्रिय ड्राइंग ज़ोन:</span>
+                    <span class="tab-badge" id="active-zone-badge" style="background:#10b981; color:#fff; font-size:0.75rem; padding:2px 8px; border-radius:4px; font-weight:700;">चारा चरणी (Feeder Trough)</span>
+                  </div>
+                  <div id="zone-points-list" style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:380px;">
+                    क्लिक करके वर्टेक्स बिंदु जोड़ें (3+ बिंदु आवश्यक)
                   </div>
                 </div>
               </div>
@@ -1285,33 +1325,354 @@
               <div class="zone-sidebar-card" style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:12px; padding:1.25rem; display:flex; flex-direction:column; gap:1.25rem;">
                 
                 <div>
-                  <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:6px;">Zone Instructions</h3>
-                  <ol style="font-size:0.8rem; color:var(--text-muted); padding-left:1.2rem; line-height:1.5;">
-                    <li>Select the target camera feed.</li>
-                    <li>Choose the zone type to draw.</li>
-                    <li>Click on the video feed to place boundary vertices.</li>
-                    <li>Double-click or click <strong>Close Loop</strong> when finished.</li>
-                    <li>Click <strong>Save & Apply Live</strong> to update YOLO vision pipelines immediately.</li>
+                  <h3 style="font-size:0.92rem; font-weight:700; margin-bottom:6px; color:var(--text-primary);">📐 ज़ोन मैपिंग दिशानिर्देश</h3>
+                  <ol style="font-size:0.78rem; color:var(--text-muted); padding-left:1.1rem; line-height:1.5;">
+                    <li>ड्राइंग हेतु ऊपर से ज़ोन चुनें (चारा चरणी, क्वारंटीन, विश्राम)।</li>
+                    <li>वीडियो फीड पर क्लिक करके सीमा बिंदु (Vertices) लगाएं।</li>
+                    <li>डबल-क्लिक या <strong>Close Loop</strong> दबाकर पॉलीगॉन पूरा करें।</li>
+                    <li><strong>Save & Apply Live</strong> दबाते ही लाइव YOLO AI पाइपलाइन अपडेट हो जाएगी।</li>
                   </ol>
                 </div>
 
                 <div>
-                  <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:8px;">Active Configured Zones</h3>
-                  <div id="zone-summary-list" style="display:flex; flex-direction:column; gap:4px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <h3 style="font-size:0.92rem; font-weight:700; margin:0;">सक्रिय कॉन्फ़िगर किए गए ज़ोन</h3>
+                    <span class="tab-badge" id="configured-zones-count-badge" style="background:rgba(99,102,241,0.15); color:#6366f1; font-size:0.72rem; padding:2px 6px;">4 Active</span>
+                  </div>
+                  <div id="zone-summary-list" style="display:flex; flex-direction:column; gap:6px;">
                     <!-- Populated dynamically -->
                   </div>
                 </div>
 
-                <div style="background:var(--bg-base); border-radius:8px; padding:10px; font-size:0.75rem; color:var(--text-muted); border-left:3px solid #10b981;">
-                  <strong>AI Note:</strong> Live YOLO detection automatically checks cattle centroids against these updated coordinates without restarting the server.
+                <div style="background:var(--bg-base); border-radius:8px; padding:10px 12px; font-size:0.75rem; color:var(--text-muted); border-left:3px solid #10b981;">
+                  <strong style="color:var(--text-primary);">गवर्नेंस अनुपालन नोट:</strong> यह सिस्टम 100% ऑप्टिकल सीसीटीवी पर आधारित है (बिना किसी आईओटी कॉलर के)। यह स्वतः राष्ट्रीय पशुधन मिशन (NDLM) प्रारूप में डेटा मैप करता है।
                 </div>
 
               </div>
 
             </div>
 
+
+            <!-- =====================================================================
+                 5. ZONE-WISE AI BEHAVIOR ANALYTICS GRID (4 COMPREHENSIVE CARDS)
+                 ===================================================================== -->
+            <div style="margin-bottom:1.5rem;">
+              <h3 style="font-size:1.1rem; font-weight:800; margin-bottom:0.85rem; display:flex; align-items:center; gap:8px;">
+                <span>📊 ज़ोन-वार एआई व्यवहार विश्लेषण एवं गवर्नेंस मॉड्यूल</span>
+                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:500;">(Vision-Based Behavioral Telemetry)</span>
+              </h3>
+
+              <div class="zone-analytics-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(290px, 1fr)); gap:1.25rem;">
+                
+                <!-- CARD 1: FEEDER TROUGH MONITORING -->
+                <div class="card" style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:12px; padding:1.25rem; display:flex; flex-direction:column; justify-content:space-between; position:relative; overflow:hidden;">
+                  <div style="position:absolute; top:0; left:0; right:0; height:4px; background:#10b981;"></div>
+                  <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:1.2rem;">🌾</span>
+                        <h4 style="font-size:0.95rem; font-weight:700; margin:0;">चारा चरणी एआई मॉनिटर</h4>
+                      </div>
+                      <span class="tab-badge" id="trough-status-pill" style="background:#10b981; color:#fff; font-size:0.72rem; padding:2px 8px; border-radius:4px; font-weight:700;">ADEQUATE</span>
+                    </div>
+                    <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">चरणी में चारा घनत्व एवं गोवंश की खुराक समय की स्वचालित गणना</p>
+                    
+                    <!-- Visual Trough Fill Gauge -->
+                    <div style="margin-bottom:12px;">
+                      <div style="display:flex; justify-content:space-between; font-size:0.78rem; font-weight:700; margin-bottom:4px;">
+                        <span>चरणी चारा घनत्व (Fill Level):</span>
+                        <span id="trough-fill-pct-text" style="color:#10b981;">78.5% भरपुर</span>
+                      </div>
+                      <div style="width:100%; height:8px; background:rgba(255,255,255,0.08); border-radius:4px; overflow:hidden;">
+                        <div id="trough-fill-bar" style="width:78.5%; height:100%; background:linear-gradient(90deg, #10b981, #059669); transition:width 0.4s ease;"></div>
+                      </div>
+                    </div>
+
+                    <!-- Stats Row -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+                      <div style="background:var(--bg-base); padding:8px; border-radius:6px; text-align:center;">
+                        <div style="font-size:0.7rem; color:var(--text-muted);">चरणी में उपस्थित गायें</div>
+                        <div style="font-size:1.1rem; font-weight:800; color:#10b981;" id="feeder-cattle-active-count">3 गोवंश</div>
+                      </div>
+                      <div style="background:var(--bg-base); padding:8px; border-radius:6px; text-align:center;">
+                        <div style="font-size:0.7rem; color:var(--text-muted);">भूखे/उपेक्षित गोवंश</div>
+                        <div style="font-size:1.1rem; font-weight:800; color:#ef4444;" id="feeder-neglected-count">0 फ्लैग</div>
+                      </div>
+                    </div>
+
+                    <!-- Live Cattle Feeding Table Snippet -->
+                    <div style="max-height:100px; overflow-y:auto; border:1px solid var(--border-subtle); border-radius:6px; font-size:0.75rem; margin-bottom:10px;">
+                      <table style="width:100%; border-collapse:collapse;" id="feeder-cows-mini-table">
+                        <tbody id="feeder-cows-mini-tbody">
+                          <!-- Populated dynamically -->
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <button type="button" class="btn-tool" id="btn-inspect-trough-density" style="width:100%; font-size:0.8rem; justify-content:center;">
+                    <span>🔍 तुरंत चरणी घनत्व स्कैन करें</span>
+                  </button>
+                </div>
+
+
+                <!-- CARD 2: QUARANTINE WARD & TRIPWIRE -->
+                <div class="card" style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:12px; padding:1.25rem; display:flex; flex-direction:column; justify-content:space-between; position:relative; overflow:hidden;">
+                  <div style="position:absolute; top:0; left:0; right:0; height:4px; background:#f59e0b;"></div>
+                  <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:1.2rem;">🟡</span>
+                        <h4 style="font-size:0.95rem; font-weight:700; margin:0;">क्वारंटीन वार्ड एवं ट्रिपवायर</h4>
+                      </div>
+                      <span class="tab-badge" id="tripwire-status-pill" style="background:rgba(245,158,11,0.2); color:#f59e0b; border:1px solid rgba(245,158,11,0.4); font-size:0.72rem; padding:2px 8px; border-radius:4px; font-weight:700;">🟢 ARMED</span>
+                    </div>
+                    <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">आइसोलेशन वार्ड सीमा पर वर्चुअल ट्रिपवायर एवं अनधिकृत घुसपैठ सुरक्षा अलर्ट</p>
+
+                    <!-- Alert Indicator Box -->
+                    <div id="quarantine-breach-indicator" style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:10px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                      <span style="font-size:1.1rem;">🛡️</span>
+                      <div style="font-size:0.78rem; line-height:1.3;">
+                        <strong id="quarantine-breach-title" style="color:#10b981;">आइसोलेशन वार्ड सुरक्षित</strong>
+                        <div id="quarantine-breach-subtitle" style="color:var(--text-muted);">कोई अनधिकृत क्रॉसिंग या संक्रमण जोखिम नहीं पाया गया</div>
+                      </div>
+                    </div>
+
+                    <!-- Stats Row -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+                      <div style="background:var(--bg-base); padding:8px; border-radius:6px; text-align:center;">
+                        <div style="font-size:0.7rem; color:var(--text-muted);">क्वारंटीन में भर्ती</div>
+                        <div style="font-size:1.1rem; font-weight:800; color:#f59e0b;" id="quarantine-inmates-count">2 उपचाराधीन</div>
+                      </div>
+                      <div style="background:var(--bg-base); padding:8px; border-radius:6px; text-align:center;">
+                        <div style="font-size:0.7rem; color:var(--text-muted);">कुल सुरक्षा उल्लंघन</div>
+                        <div style="font-size:1.1rem; font-weight:800; color:#ef4444;" id="quarantine-total-breaches">0 घटना</div>
+                      </div>
+                    </div>
+
+                    <div id="quarantine-inmates-list" style="font-size:0.75rem; color:var(--text-muted); background:var(--bg-base); padding:6px 10px; border-radius:6px; margin-bottom:10px;">
+                      भर्ती गोवंश: <span style="font-weight:700; color:var(--text-primary);" id="quarantine-tags-text">COW-104, COW-109</span>
+                    </div>
+                  </div>
+
+                  <button type="button" class="btn-tool" id="btn-view-quarantine-logs" style="width:100%; font-size:0.8rem; justify-content:center;">
+                    <span>📜 क्वारंटीन सुरक्षा लॉग देखें</span>
+                  </button>
+                </div>
+
+
+                <!-- CARD 3: RESTING & RUMINATING ANALYTICS -->
+                <div class="card" style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:12px; padding:1.25rem; display:flex; flex-direction:column; justify-content:space-between; position:relative; overflow:hidden;">
+                  <div style="position:absolute; top:0; left:0; right:0; height:4px; background:#3b82f6;"></div>
+                  <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:1.2rem;">🛌</span>
+                        <h4 style="font-size:0.95rem; font-weight:700; margin:0;">विश्राम एवं जुगाली गति विश्लेषण</h4>
+                      </div>
+                      <span class="tab-badge" id="rumination-status-pill" style="background:rgba(59,130,246,0.2); color:#3b82f6; border:1px solid rgba(59,130,246,0.4); font-size:0.72rem; padding:2px 8px; border-radius:4px; font-weight:700;">NORMAL</span>
+                    </div>
+                    <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">जबड़े एवं सिर की गति से जुगाली पैटर्न और अस्वाभाविक सुस्ती का पता लगाना</p>
+
+                    <!-- Chewing Pattern Meter -->
+                    <div style="margin-bottom:12px;">
+                      <div style="display:flex; justify-content:space-between; font-size:0.78rem; font-weight:700; margin-bottom:4px;">
+                        <span>जुगाली स्वास्थ्य सूचकांक (Chewing Score):</span>
+                        <span id="rumination-score-text" style="color:#3b82f6;">88.0% सामान्य</span>
+                      </div>
+                      <div style="width:100%; height:8px; background:rgba(255,255,255,0.08); border-radius:4px; overflow:hidden;">
+                        <div id="rumination-score-bar" style="width:88%; height:100%; background:linear-gradient(90deg, #3b82f6, #60a5fa); transition:width 0.4s ease;"></div>
+                      </div>
+                    </div>
+
+                    <!-- Stats Row -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+                      <div style="background:var(--bg-base); padding:8px; border-radius:6px; text-align:center;">
+                        <div style="font-size:0.7rem; color:var(--text-muted);">विश्राम अवस्था में</div>
+                        <div style="font-size:1.1rem; font-weight:800; color:#3b82f6;" id="resting-cattle-count">6 गोवंश</div>
+                      </div>
+                      <div style="background:var(--bg-base); padding:8px; border-radius:6px; text-align:center;">
+                        <div style="font-size:0.7rem; color:var(--text-muted);">संभावित बीमार / सुस्त</div>
+                        <div style="font-size:1.1rem; font-weight:800; color:#ef4444;" id="lethargic-cattle-count">0 गोवंश</div>
+                      </div>
+                    </div>
+
+                    <div id="lethargic-alerts-box" style="font-size:0.75rem; color:var(--text-muted); background:var(--bg-base); padding:8px 10px; border-radius:6px; margin-bottom:10px;">
+                      <span>गतिविधि स्थिति: सभी विश्राम कर रहे गोवंश सामान्य जुगाली कर रहे हैं।</span>
+                    </div>
+                  </div>
+
+                  <button type="button" class="btn-tool" id="btn-trigger-ai-diagnosis" style="width:100%; font-size:0.8rem; justify-content:center;">
+                    <span>🩺 Groq AI क्लिनिकल निदान चलाएं</span>
+                  </button>
+                </div>
+
+
+                <!-- CARD 4: FODDER SUBSIDY AUDIT & ATTENDANCE -->
+                <div class="card" style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:12px; padding:1.25rem; display:flex; flex-direction:column; justify-content:space-between; position:relative; overflow:hidden;">
+                  <div style="position:absolute; top:0; left:0; right:0; height:4px; background:#8b5cf6;"></div>
+                  <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:1.2rem;">🏛️</span>
+                        <h4 style="font-size:0.95rem; font-weight:700; margin:0;">चारा अनुदान लेखापरीक्षा</h4>
+                      </div>
+                      <span class="tab-badge" style="background:rgba(139,92,246,0.2); color:#a78bfa; border:1px solid rgba(139,92,246,0.4); font-size:0.72rem; padding:2px 8px; border-radius:4px; font-weight:700;">GOVT VERIFIED</span>
+                    </div>
+                    <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">CCTV YOLO वास्तविक उपस्थिति के आधार पर दैनिक चारा अनुदान दावा</p>
+
+                    <!-- Calculated Subsidy Box -->
+                    <div style="background:linear-gradient(135deg, rgba(139,92,246,0.12), rgba(59,130,246,0.08)); border:1px solid rgba(139,92,246,0.3); border-radius:8px; padding:10px; margin-bottom:12px;">
+                      <div style="font-size:0.75rem; color:var(--text-muted);">दैनिक चारा अनुदान दावा (Daily Claim):</div>
+                      <div style="font-size:1.35rem; font-weight:800; color:#a78bfa;" id="daily-subsidy-amount-text">₹790.00 / दिन</div>
+                      <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;" id="monthly-subsidy-projected-text">अनुमानित मासिक दावा: ₹23,700.00</div>
+                    </div>
+
+                    <!-- Headcount Breakdown -->
+                    <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-bottom:12px; font-size:0.72rem; text-align:center;">
+                      <div style="background:var(--bg-base); padding:4px 6px; border-radius:4px;">
+                        <div style="color:var(--text-muted);">गायें (₹40)</div>
+                        <strong style="color:var(--text-primary);" id="subsidy-cow-count">12</strong>
+                      </div>
+                      <div style="background:var(--bg-base); padding:4px 6px; border-radius:4px;">
+                        <div style="color:var(--text-muted);">बैल (₹35)</div>
+                        <strong style="color:var(--text-primary);" id="subsidy-bull-count">2</strong>
+                      </div>
+                      <div style="background:var(--bg-base); padding:4px 6px; border-radius:4px;">
+                        <div style="color:var(--text-muted);">बछड़े (₹20)</div>
+                        <strong style="color:var(--text-primary);" id="subsidy-calf-count">4</strong>
+                      </div>
+                      <div style="background:var(--bg-base); padding:4px 6px; border-radius:4px;">
+                        <div style="color:var(--text-muted);">बीमार (₹50)</div>
+                        <strong style="color:var(--text-primary);" id="subsidy-sick-count">2</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <a id="btn-download-subsidy-report" href="#" target="_blank" class="btn-primary" style="width:100%; font-size:0.8rem; justify-content:center; text-decoration:none; display:flex; align-items:center; gap:6px;">
+                    <span>📑 शासकीय ऑडिट प्रमाणपत्र डाउनलोड करें</span>
+                  </a>
+                </div>
+
+              </div>
+            </div>
+
+
+            <!-- =====================================================================
+                 6. NDLM / BHARAT PASHUDHAN 12-DIGIT TAG-TO-ZONE OCR MAPPING TABLE
+                 ===================================================================== -->
+            <div class="card" style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:12px; padding:1.25rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:10px;">
+                <div>
+                  <h3 style="font-size:1rem; font-weight:800; margin:0; display:flex; align-items:center; gap:8px;">
+                    <span>🏷️ NDLM / भारत पशुधन (12-अंकीय टैग) ऑप्टिकल OCR एवं ज़ोन मैपिंग</span>
+                    <span class="tab-badge" style="background:rgba(16,185,129,0.15); color:#10b981; font-size:0.72rem; padding:2px 8px;">National Livestock Mission</span>
+                  </h3>
+                  <p style="font-size:0.78rem; color:var(--text-muted); margin:4px 0 0 0;">प्रत्येक गोवंश के विजुअल ईयर-टैग को शेड के संबंधित ज़ोन से स्वतः संबद्ध किया गया है</p>
+                </div>
+
+                <div style="display:flex; gap:8px;">
+                  <button type="button" class="btn-tool" id="btn-trigger-ocr-scan" style="font-weight:700;">
+                    <span>🔍 लाइव टैग OCR स्कैन चलाएं</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Table -->
+              <div style="overflow-x:auto;">
+                <table class="data-table" style="width:100%; border-collapse:collapse; font-size:0.85rem;" id="ndlm-tag-mappings-table">
+                  <thead>
+                    <tr style="border-bottom:1px solid var(--border-subtle); text-align:left; color:var(--text-muted);">
+                      <th style="padding:10px;">टैग आईडी (Tag)</th>
+                      <th style="padding:10px;">NDLM 12-अंकीय यूआईडी (Pashu Aadhaar)</th>
+                      <th style="padding:10px;">वर्तमान स्थित ज़ोन (Current Zone)</th>
+                      <th style="padding:10px;">शारीरिक मुद्रा (Posture)</th>
+                      <th style="padding:10px;">चारा चरणी समय (Feeding Duration)</th>
+                      <th style="padding:10px;">स्वास्थ्य स्थिति (Health)</th>
+                      <th style="padding:10px; text-align:right;">NDLM सिंक</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ndlm-tag-mappings-tbody">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
         </section>
+
+      </main>
+
+
+    </div>
+  </div>
+
+
+  <!-- =======================================================================
+       CHIEF VETERINARY OFFICER (CVO) EMERGENCY OUTBREAK ALERT MODAL
+       ======================================================================= -->
+  <div class="modal-overlay" id="cvo-alert-modal" style="display:none;">
+    <div class="modal-card" style="max-width:620px; width:90%; background:var(--bg-card); border:1px solid rgba(239,68,68,0.4); border-radius:14px; box-shadow:0 20px 40px rgba(0,0,0,0.5); overflow:hidden;">
+      
+      <div class="modal-header" style="background:rgba(239,68,68,0.12); border-bottom:1px solid rgba(239,68,68,0.25); padding:1rem 1.25rem; display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.4rem;">🚨</span>
+          <div>
+            <h3 style="margin:0; font-size:1.05rem; font-weight:800; color:#ef4444;">मुख्य पशु चिकित्सा अधिकारी (CVO) आपातकालीन अलर्ट</h3>
+            <p style="margin:2px 0 0 0; font-size:0.75rem; color:var(--text-muted);">संक्रमण / बीमारी प्रकोप अथवा गंभीर आपातकाल की त्वरित सूचना प्रेषण</p>
+          </div>
+        </div>
+        <button type="button" class="btn-icon" id="close-cvo-modal-btn" title="Close">✕</button>
+      </div>
+
+      <form id="cvo-dispatch-form" style="padding:1.25rem; display:flex; flex-direction:column; gap:1rem;">
+        
+        <div class="form-row-2" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.8rem; font-weight:700;">आपातकालीन घटना प्रकार (Event Type) *</label>
+            <select class="form-select" id="cvo-event-type" style="font-size:0.85rem;" required>
+              <option value="DISEASE_OUTBREAK_SUSPECTED" selected>संक्रमण प्रकोप की आशंका (Outbreak Suspected)</option>
+              <option value="MORTALITY_ALERT">गोवंश मृत्यु / गंभीर अचेतनता (Mortality / Distress)</option>
+              <option value="QUARANTINE_BREACH">क्वारंटीन आइसोलेशन वार्ड उल्लंघन (Quarantine Breach)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.8rem; font-weight:700;">तीव्रता स्तर (Severity Level)</label>
+            <select class="form-select" id="cvo-severity" style="font-size:0.85rem;">
+              <option value="CRITICAL" selected>अत्यंत गंभीर (CRITICAL - Instant SMS & Call)</option>
+              <option value="HIGH">उच्च प्राथमिकता (HIGH)</option>
+              <option value="WARNING">मध्यम चेतावनी (WARNING)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.8rem; font-weight:700;">प्रभावित गोवंश टैग आईडी (Comma Separated)</label>
+          <input type="text" class="form-input" id="cvo-affected-tags" placeholder="e.g. COW-104, COW-109" style="font-size:0.85rem;" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.8rem; font-weight:700;">लक्षण एवं सीसीटीवी अवलोकित विवरण (Clinical Symptoms / Message) *</label>
+          <textarea class="form-textarea" id="cvo-message" rows="3" placeholder="उदा. क्वारंटीन शेड में लगातार 2 गोवंशों में लार गिरना एवं तीव्र सुस्ती पाई गई है..." required style="font-size:0.85rem;"></textarea>
+        </div>
+
+        <div style="background:var(--bg-base); padding:10px 12px; border-radius:8px; font-size:0.75rem; color:var(--text-muted); border-left:3px solid #ef4444;">
+          <strong>डिजिटल साक्ष्य:</strong> यह अलर्ट बाड़ा सीसीटीवी के वर्तमान स्नैपशॉट, टाइमस्टैम्प एवं क्रिप्टोग्राफिक हैश के साथ सीधे जिला पशु चिकित्सा अधिकारी के डैशबोर्ड पर रिकॉर्ड होगा।
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:6px;">
+          <button type="button" class="btn-tool" id="cancel-cvo-modal-btn">रद्द करें</button>
+          <button type="submit" class="btn-primary" style="background:#dc2626; border-color:#b91c1c; font-weight:700;">
+            <span>🚨 तुरंत CVO को प्रेषित करें</span>
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
 
       </main>
 

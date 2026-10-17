@@ -296,3 +296,92 @@ class AlertModel(Base):
             "resolved_at": self.resolved_at,
             "details": details
         }
+
+class ShedZoneConfigModel(Base):
+    __tablename__ = "shed_zone_configs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    camera_id = Column(String(64), unique=True, nullable=False, index=True)
+    zones_json = Column(Text, nullable=False)
+    updated_at = Column(String(64), default=utc_now_iso, nullable=False)
+
+    def to_dict(self):
+        try:
+            zones = json.loads(self.zones_json)
+        except Exception:
+            zones = {}
+        return {
+            "id": self.id,
+            "camera_id": self.camera_id,
+            "zones": zones,
+            "updated_at": self.updated_at
+        }
+
+class CVODispatchModel(Base):
+    __tablename__ = "cvo_dispatches"
+
+    id = Column(String(64), primary_key=True)
+    camera_id = Column(String(64), nullable=False, index=True)
+    shed_name = Column(String(128), nullable=False)
+    severity = Column(String(32), default="CRITICAL", nullable=False)
+    event_type = Column(String(64), nullable=False)  # "MORTALITY_ALERT", "DISEASE_OUTBREAK_SUSPECTED", "QUARANTINE_BREACH"
+    affected_tags = Column(String(256), nullable=True)  # Comma-separated tag IDs
+    message = Column(Text, nullable=False)
+    snapshot_filename = Column(String(256), nullable=True)
+    evidence_hash = Column(String(128), nullable=True)
+    dispatched_at = Column(String(64), default=utc_now_iso, nullable=False)
+    cvo_status = Column(String(32), default="DISPATCHED", nullable=False)  # "DISPATCHED", "ACKNOWLEDGED", "ATTENDED"
+    officer_name = Column(String(128), default="Chief Veterinary Officer (CVO) District Animal Husbandry", nullable=False)
+    notes = Column(Text, nullable=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "camera_id": self.camera_id,
+            "shed_name": self.shed_name,
+            "severity": self.severity,
+            "event_type": self.event_type,
+            "affected_tags": [t.strip() for t in (self.affected_tags or "").split(",") if t.strip()],
+            "message": self.message,
+            "snapshot_url": f"/api/snapshots/{self.snapshot_filename}" if self.snapshot_filename else None,
+            "evidence_hash": self.evidence_hash,
+            "dispatched_at": self.dispatched_at,
+            "cvo_status": self.cvo_status,
+            "officer_name": self.officer_name,
+            "notes": self.notes
+        }
+
+class FodderSubsidyDailyModel(Base):
+    __tablename__ = "fodder_subsidy_records"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    report_date = Column(String(32), nullable=False, index=True)  # YYYY-MM-DD
+    camera_id = Column(String(64), nullable=False, index=True)
+    shed_name = Column(String(128), nullable=False)
+    total_headcount = Column(Integer, default=0, nullable=False)
+    cow_count = Column(Integer, default=0, nullable=False)
+    bull_count = Column(Integer, default=0, nullable=False)
+    calf_count = Column(Integer, default=0, nullable=False)
+    sick_count = Column(Integer, default=0, nullable=False)
+    daily_subsidy_amount = Column(Float, default=0.0, nullable=False)  # In INR (₹)
+    attendance_rate = Column(Float, default=100.0, nullable=False)  # Percentage
+    verified_by = Column(String(128), default="CCTV YOLO Vision Audit Engine", nullable=False)
+    created_at = Column(String(64), default=utc_now_iso, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "report_date": self.report_date,
+            "camera_id": self.camera_id,
+            "shed_name": self.shed_name,
+            "total_headcount": self.total_headcount,
+            "cow_count": self.cow_count,
+            "bull_count": self.bull_count,
+            "calf_count": self.calf_count,
+            "sick_count": self.sick_count,
+            "daily_subsidy_amount": round(self.daily_subsidy_amount, 2),
+            "attendance_rate": round(self.attendance_rate, 1),
+            "verified_by": self.verified_by,
+            "created_at": self.created_at
+        }
+

@@ -11,7 +11,10 @@ from backend.app.db.models import (
     CattleMedicalModel,
     CensusSettingModel,
     FeedingScheduleModel,
-    SubsidyConfigModel
+    SubsidyConfigModel,
+    ShedZoneConfigModel,
+    CVODispatchModel,
+    FodderSubsidyDailyModel
 )
 
 logger = logging.getLogger("gaushala.db")

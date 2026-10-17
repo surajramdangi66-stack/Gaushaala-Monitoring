@@ -92,7 +92,7 @@ class CameraPipeline:
                 self._loop_counter += 1
 
                 # Process real incoming video frame with YOLOv8 (detecting animals & workers)
-                result = self.analytics.process_frame(raw_frame)
+                result = self.analytics.process_frame(raw_frame, alert_engine=self.alert_engine)
 
                 # Sync detections with Cross-Camera Entity Presence Manager
                 for track in result.tracks:
@@ -189,6 +189,34 @@ class CameraPipeline:
         """
         overlay_frame = frame.copy()
         h, w = overlay_frame.shape[:2]
+
+        # Draw sleek, subtle polygon zone geofences (Feeder, Quarantine, Resting, Boundary)
+        zone_color_map = {
+            "feeder": ((16, 185, 129), (129, 185, 16), "🌾 चारा चरणी (Feeder Trough)"),
+            "boundary": ((239, 68, 68), (68, 68, 239), "🛡️ बाड़ा सीमा (Perimeter)"),
+            "quarantine": ((245, 158, 11), (11, 158, 245), "🟡 क्वारंटीन वार्ड (Isolation)"),
+            "resting": ((59, 130, 246), (246, 130, 59), "🛌 विश्राम शेड (Resting Bay)")
+        }
+
+        for ztype, zone_obj in self.analytics.spatial.zones.items():
+            if not zone_obj.polygon_coords or len(zone_obj.polygon_coords) < 3:
+                continue
+            colors = zone_color_map.get(ztype, ((100, 100, 100), (100, 100, 100), zone_obj.name))
+            bgr_col = colors[1]
+            pts = np.array(zone_obj.polygon_coords, dtype=np.int32).reshape((-1, 1, 2))
+
+            # Draw sleek transparent fill and border
+            cv2.polylines(overlay_frame, [pts], isClosed=True, color=bgr_col, thickness=2, lineType=cv2.LINE_AA)
+
+            # Draw small tag label at first vertex
+            lx, ly = int(zone_obj.polygon_coords[0][0]), int(zone_obj.polygon_coords[0][1])
+            lx = max(10, min(w - 180, lx))
+            ly = max(20, min(h - 10, ly))
+            lbl = colors[2]
+            (lw, lh), _ = cv2.getTextSize(lbl, cv2.FONT_HERSHEY_SIMPLEX, 0.38, 1)
+            cv2.rectangle(overlay_frame, (lx, ly - lh - 4), (lx + lw + 8, ly + 2), (18, 22, 28), -1)
+            cv2.rectangle(overlay_frame, (lx, ly - lh - 4), (lx + lw + 8, ly + 2), bgr_col, 1)
+            cv2.putText(overlay_frame, lbl, (lx + 4, ly - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.38, (240, 240, 240), 1, cv2.LINE_AA)
 
         # Draw detected entities with sleek corner styling
         for track in result.tracks:
@@ -301,6 +329,7 @@ class CameraPipeline:
             active = self.latest_result.active_count if (self.latest_result and is_connected) else 0
             resting = self.latest_result.resting_count if (self.latest_result and is_connected) else 0
             feeder = self.latest_result.feeder_count if (self.latest_result and is_connected) else 0
+            quarantine = self.latest_result.quarantine_count if (self.latest_result and is_connected) else 0
             has_breach = (len(self.latest_result.breaches_detected) > 0) if (self.latest_result and is_connected) else False
             has_prostration = (len(self.latest_result.prostrations_detected) > 0) if (self.latest_result and is_connected) else False
 
@@ -323,6 +352,9 @@ class CameraPipeline:
                         "is_worker": t.is_worker
                     })
 
+            # Retrieve real-time government subsidy calculations
+            subsidy_data = self.analytics.shed_manager.compute_subsidy_metrics() if hasattr(self.analytics, "shed_manager") else {}
+
             return {
                 "id": self.camera_id,
                 "name": self.name,
@@ -336,9 +368,16 @@ class CameraPipeline:
                 "active_cattle": active,
                 "resting_cattle": resting,
                 "feeder_cattle": feeder,
+                "quarantine_cattle": quarantine,
                 "has_breach": has_breach,
                 "has_prostration": has_prostration,
-                "tracks": tracks_payload
+                "tracks": tracks_payload,
+                "trough_metrics": self.latest_result.trough_metrics if self.latest_result else {},
+                "feeding_summary": self.latest_result.feeding_summary if self.latest_result else {},
+                "rumination_summary": self.latest_result.rumination_summary if self.latest_result else {},
+                "ndlm_mappings": self.latest_result.ndlm_mappings if self.latest_result else [],
+                "quarantine_breaches": self.latest_result.quarantine_breaches if self.latest_result else [],
+                "subsidy_metrics": subsidy_data
             }
 
 
