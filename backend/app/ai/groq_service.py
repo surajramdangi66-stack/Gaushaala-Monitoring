@@ -38,18 +38,23 @@ class GroqAIAutomationService:
         entity_id: Optional[str] = None,
         duration: Optional[float] = None,
         zone_name: Optional[str] = None,
+        symptoms: Optional[List[str]] = None,
+        vitals: Optional[Dict[str, Any]] = None,
         lang: str = "en"
     ) -> Dict[str, Any]:
         """
-        Generates automated clinical AI veterinary diagnosis & action plan.
+        Generates automated clinical AI veterinary diagnosis & action plan with symptoms & vitals support.
         """
         system_prompt = (
             "You are the Senior Veterinary Medical AI for a Smart Gaushala Cattle Welfare Monitoring Platform. "
-            "You provide razor-sharp, actionable clinical guidance for cattle distress triggers detected by CCTV vision. "
+            "You provide razor-sharp, actionable clinical guidance for cattle distress triggers, CCTV vision anomalies, and reported physical symptoms. "
             "Respond in structured JSON format with fields: 'assessment', 'risk_score' (1-10), 'immediate_actions' (list of strings), "
             "'medical_protocol' (string), and 'shift_recommendation' (string). "
             f"Provide response in {'Hindi (Devanagari script)' if lang == 'hi' else 'English'}."
         )
+
+        symptoms_str = ", ".join(symptoms) if symptoms else "None specified"
+        vitals_str = json.dumps(vitals) if vitals else "Normal parameters"
 
         user_content = (
             f"Alert Type: {alert_type}\n"
@@ -57,7 +62,9 @@ class GroqAIAutomationService:
             f"Cattle ID: #{entity_id or 'Unknown'}\n"
             f"Duration motionless: {int(duration or 0)} seconds\n"
             f"Enclosure: {zone_name or 'Main Shed'}\n"
-            "Analyze cause, immediate cattle distress mitigation, and supervisor checklist."
+            f"Clinical Symptoms: {symptoms_str}\n"
+            f"Physiological Vitals: {vitals_str}\n"
+            "Analyze underlying pathology, differential diagnosis, immediate caretaker first-aid, drug therapy protocol, and shift directive."
         )
 
         if self.client:
@@ -80,8 +87,112 @@ class GroqAIAutomationService:
 
         # Intelligent Automated Clinical Fallback when Groq key is pending in .env
         is_hi = (lang == "hi")
-        target_name = f"#{entity_id}" if entity_id else "अज्ञात गोवंश" if is_hi else "monitored cattle"
+        target_name = f"#{entity_id}" if entity_id else ("अज्ञात गोवंश" if is_hi else "monitored cattle")
         pen_name = zone_name or ("निगरानी बाड़ा" if is_hi else "monitored pen")
+
+        # Check symptoms for specialized bovine pathologies
+        sym_joined = " ".join(symptoms or []).lower()
+
+        if "bloat" in sym_joined or "tympany" in sym_joined or "आफरा" in sym_joined or "पेट फूलना" in sym_joined:
+            return {
+                "assessment": (
+                    f"गोवंश {target_name} ({pen_name}) में तीव्र आफरा (Rumen Tympany / Bloat) के लक्षण। बाएं कोख (Left paralumbar fossa) का असामान्य उभार, दर्द एवं बेचैनी। किण्वन गैस या झागदार चारे से रुमेन में गैस का संचय।"
+                    if is_hi else
+                    f"Cattle {target_name} in {pen_name} exhibits acute ruminal tympany (bloat). Severe distension of the left paralumbar fossa, discomfort, and respiratory compression due to entrapment of fermentation gases."
+                ),
+                "risk_score": 9.2,
+                "immediate_actions": [
+                    "गोवंश को तुरंत बैठने से रोकें और सिर को थोड़ा ऊंचा रखकर खड़ा रखें" if is_hi else "Keep cattle standing with head elevated; strictly avoid recumbency",
+                    "मुंह में लकड़ी की बिट (mouth gag) बांधें ताकि डकार आकर गैस बाहर निकले" if is_hi else "Insert a wooden mouth gag to stimulate salivation and eructation",
+                    "पेट के बाएं हिस्से पर तारपीन तेल या सरसों के तेल की हल्की मालिश करें" if is_hi else "Gently massage the left flank; administer 100ml Tympol / Bloatosil drench"
+                ],
+                "medical_protocol": (
+                    "टिम्पोल (Tympol) 100ml अथवा तारपीन का तेल 30-50ml सरसों के तेल में मिलाकर दें। यदि अत्यधिक आपातकाल हो तो ट्रोकार एवं कैन्युला (Trocar & Cannula) द्वारा रुमेन गैस निकालें।"
+                    if is_hi else
+                    "Administer dimethicone/silicone anti-frothing agent (Bloatosil 100ml) or turpentine oil in mustard oil. In severe asphyxiation distress, perform emergency trocarization of left flank."
+                ),
+                "shift_recommendation": (
+                    "बाड़े में उपलब्ध गीला या फंगसयुक्त चारा तुरंत हटा दें तथा अगले 12 घंटे तक सूखा भूसा ही दें।"
+                    if is_hi else
+                    "Immediately withdraw lush/fermented legume fodder from trough; provide dry straw for next 12 hours."
+                ),
+                "powered_by": "Automated Veterinary Rules Engine (Add GROQ_API_KEY in .env for live Groq LLaMA-3.3 acceleration)"
+            }
+        elif "nodule" in sym_joined or "lump" in sym_joined or "गांठ" in sym_joined or "lumpy" in sym_joined:
+            return {
+                "assessment": (
+                    f"गोवंश {target_name} ({pen_name}) की त्वचा पर गांठें एवं तेज बुखार। लंपी स्किन रोग (Lumpy Skin Disease - Capripoxvirus) का प्रबल संदेह। यह रोग मच्छरों एवं मक्खियों द्वारा फैलता है।"
+                    if is_hi else
+                    f"Cattle {target_name} in {pen_name} shows cutaneous skin nodules and pyrexia, strongly indicative of Lumpy Skin Disease (LSD). High transmission vector via biting flies and ticks."
+                ),
+                "risk_score": 8.8,
+                "immediate_actions": [
+                    "संक्रमित गोवंश को तुरंत स्वस्थ झुंड से अलग क्वारंटाइन शेड में शिफ्ट करें" if is_hi else "Immediately isolate infected cattle into the quarantine ward",
+                    "शेड में नीम की पत्तियों का धुआं करें एवं कीटनाशक स्प्रे (Deltamethrin) का छिड़काव करें" if is_hi else "Perform vector fogging (neem smoke / deltamethrin spray) to eliminate flies",
+                    "घाव एवं गांठों पर एंटीसेप्टिक स्प्रे (Topicure/Betadine) का प्रयोग करें" if is_hi else "Spray topical wound healing aerosol (Topicure/Betadine) on ruptured skin nodules"
+                ],
+                "medical_protocol": (
+                    "पेरासिटामोल/मेलोक्सीकैम बुखार एवं दर्द हेतु, एंटीहिस्टामिनिक (Pheniramine maleate), तथा द्वितीयक जीवाणु संक्रमण रोकने हेतु एंटीबायोटिक (Enrofloxacin) पशु चिकित्सक के निर्देशानुसार दें।"
+                    if is_hi else
+                    "Administer NSAID (Meloxicam 0.5mg/kg), antihistamine (Avil 10ml), and secondary antibiotic cover (Enrofloxacin/Oxytetracycline) under veterinary prescription."
+                ),
+                "shift_recommendation": (
+                    "पूरे बाड़े के अन्य सभी गोवंशों का गोट पॉक्स टीकाकरण रिकॉर्ड जांचें एवं क्वारंटाइन लॉक लगाएं।"
+                    if is_hi else
+                    "Audit Goat Pox vaccine compliance across entire herd; impose strict biosecurity quarantine."
+                ),
+                "powered_by": "Automated Veterinary Rules Engine (Add GROQ_API_KEY in .env for live Groq LLaMA-3.3 acceleration)"
+            }
+        elif "salivation" in sym_joined or "लार" in sym_joined or "drool" in sym_joined or "fmd" in sym_joined or "खुर" in sym_joined:
+            return {
+                "assessment": (
+                    f"गोवंश {target_name} ({pen_name}) में मुंह से तारदार लार गिरना, लंगड़ाना एवं खुरों में छाले। खुरपका-मुंहपका रोग (Foot-and-Mouth Disease - Aphthovirus) के स्पष्ट नैदानिक लक्षण।"
+                    if is_hi else
+                    f"Cattle {target_name} in {pen_name} demonstrates ropy hypersalivation, lameness, and foot/mouth vesicles. Pathognomonic indicators of Foot-and-Mouth Disease (FMD)."
+                ),
+                "risk_score": 9.0,
+                "immediate_actions": [
+                    "बाड़े के मुख्य द्वार पर पोटेशियम परमैंगनेट (लाल दवा) का फुट-बाथ (Foot-bath) तैयार करें" if is_hi else "Establish a 1:1000 Potassium Permanganate foot-bath barrier at pen entrance",
+                    "मुंह के छालों को बोरिक एसिड ग्लिसरीन घोल अथवा फिटकरी पानी से धोएं" if is_hi else "Gently wash oral lesions with alum solution (2%) or boro-glycerine",
+                    "मुलायम एवं पतला दलिया या हरा चारा ही खाने को दें" if is_hi else "Provide soft drenching porridge / crushed green forage due to sore mouth"
+                ],
+                "medical_protocol": (
+                    "खुरों के घावों पर पोटाश वाश के बाद टॉपिक्योर स्प्रे लगाएं। दर्द निवारक (Flunixin Meglumine) तथा जटिलताओं से बचाव हेतु एंटीबायोटिक का उपयोग करें।"
+                    if is_hi else
+                    "Wash hooves with KMnO4 solution, apply fly-repellent wound spray, administer analgesic (Flunixin/Meloxicam) and broad-spectrum antibiotic."
+                ),
+                "shift_recommendation": (
+                    "गौशाला के मुख्य प्रवेश पर बाहरी वाहनों एवं व्यक्तियों की आवाजाही पर पूर्ण प्रतिबंध लगाएं।"
+                    if is_hi else
+                    "Impose zero-tolerance quarantine lock; notify regional government veterinary dispensary."
+                ),
+                "powered_by": "Automated Veterinary Rules Engine (Add GROQ_API_KEY in .env for live Groq LLaMA-3.3 acceleration)"
+            }
+        elif "fever" in sym_joined or "बुखार" in sym_joined or "temp" in sym_joined:
+            return {
+                "assessment": (
+                    f"गोवंश {target_name} ({pen_name}) में उच्च शारीरिक तापमान (>103.5°F), सुस्ती एवं चारा बंद होना। संभावित सिस्टेमिक संक्रमण अथवा टिक-जनित प्रोटोजोआ (Theileriosis/Babesiosis)।"
+                    if is_hi else
+                    f"Cattle {target_name} in {pen_name} shows pyrexia (>103.5°F), anorexia, and lethargy. High suspicion of systemic bacterial infection or tick-borne hemoprotozoan disease (Theileria/Babesia)."
+                ),
+                "risk_score": 8.0,
+                "immediate_actions": [
+                    "गोवंश के सिर और गर्दन पर ठंडा पानी डालकर तापमान नियंत्रित करें" if is_hi else "Apply cool water hydrotherapy to head and poll to counter thermal shock",
+                    "शरीर पर चिचड़ी/जूँ (ticks) की उपस्थिति की सूक्ष्म जांच करें" if is_hi else "Inspect perineum, ears, and dewlap for engorged tick vectors",
+                    "ताजा इलेक्ट्रोलाइट जल उपलब्ध कराएं" if is_hi else "Provide ad-libitum oral electrolyte rehydration solution"
+                ],
+                "medical_protocol": (
+                    "मेलोक्सीकैम + पेरासिटामोल इंजेक्शन (Melonex Plus 15-20ml I/M), रक्त की जांच (Blood Smear) करवाकर एंटी-प्रोटोजोअल या एंटीबायोटिक दें।"
+                    if is_hi else
+                    "Administer Meloxicam + Paracetamol (Melonex Plus 20ml I/M). Draw peripheral blood smear for protozoa smear testing."
+                ),
+                "shift_recommendation": (
+                    "प्रत्येक 3 घंटे पर रेक्टल तापमान की पुनः जांच दर्ज करें।"
+                    if is_hi else
+                    "Log rectal temperature every 3 hours until normothermia (<102°F) is restored."
+                ),
+                "powered_by": "Automated Veterinary Rules Engine (Add GROQ_API_KEY in .env for live Groq LLaMA-3.3 acceleration)"
+            }
 
         if alert_type == "PROSTRATION_DISTRESS":
             return {
@@ -158,10 +269,11 @@ class GroqAIAutomationService:
                 "powered_by": "Automated Veterinary Rules Engine (Add GROQ_API_KEY in .env for live Groq LLaMA-3.3 acceleration)"
             }
 
-    def generate_shift_audit_report(self, metrics: Optional[Dict[str, Any]] = None, lang: str = "en") -> Dict[str, Any]:
+    def generate_shift_audit_report(self, metrics: Optional[Dict[str, Any]] = None, lang: str = "en", shift_name: Optional[str] = None) -> Dict[str, Any]:
         """
         Generates an automated executive AI shift audit report.
         """
+        shift_label = shift_name or "Current Duty Shift"
         if not metrics:
             try:
                 from backend.app.camera.stream_manager import get_stream_manager
@@ -225,7 +337,7 @@ class GroqAIAutomationService:
                         "alerts_logged": alerts_logged
                     },
                     "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-                    "shift": "Current Duty Shift",
+                    "shift": shift_label,
                     "model": self.model,
                     "powered_by": f"Groq Cloud AI ({self.model})"
                 }
@@ -268,7 +380,7 @@ class GroqAIAutomationService:
                 "alerts_logged": alerts_logged
             },
             "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "shift": "Current Duty Shift",
+            "shift": shift_label,
             "model": "Hybrid Clinical Rules Engine (Groq ready in .env)",
             "powered_by": "Gaushala AI Automation Engine"
         }

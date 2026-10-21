@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="stylesheet" href="/static/css/styles.css?v=2026.2">
 </head>
 <body class="light-theme">
 
@@ -575,98 +575,401 @@
           </div>
         </section>
 
-        <!-- =====================================================================
-             TAB 4: GROQ AI AUTOMATION & VETERINARY INTELLIGENCE
-             Powered by Groq Cloud & .env configuration
+          <!-- =====================================================================
+             TAB 4: GROQ AI AUTOMATION & VETERINARY INTELLIGENCE (ADVANCED)
+             Powered by Groq Cloud LPU™ Inference & Hybrid Rules Telemetry
              ===================================================================== -->
         <section class="view-panel" id="ai-view" role="tabpanel" aria-labelledby="tab-ai-btn">
           <div class="ai-automation-content">
             
-            <!-- Groq Hero Header Banner -->
+            <!-- Groq Hero Header Command Banner -->
             <div class="ai-hero-card">
               <div class="ai-hero-left">
-                <div class="ai-badge-chip">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spark-icon">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                  </svg>
-                  <span id="groq-model-status-text">Groq Cloud AI Engine (LLaMA-3.3-70B)</span>
+                <div class="ai-badge-row">
+                  <div class="ai-badge-chip">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spark-icon">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    </svg>
+                    <span id="groq-model-status-text">⚡ Groq LPU™ Cloud Engine (LLaMA-3.3-70B)</span>
+                  </div>
+                  <div class="ai-latency-chip" id="ai-latency-pill">
+                    <span class="pulse-dot-green"></span>
+                    <span>142ms Latency</span>
+                  </div>
+                  <div class="ai-speed-chip">
+                    <span>⚡ 285 Tokens/sec</span>
+                  </div>
                 </div>
-                <h1 class="ai-hero-title" data-i18n="ai_hero_title">Livestock Health Automation & Diagnostic AI</h1>
+
+                <h1 class="ai-hero-title" data-i18n="ai_hero_title">
+                  Groq Neural Veterinary Intelligence & Telemetry Hub
+                </h1>
                 <p class="ai-hero-desc" data-i18n="ai_hero_desc">
-                  Harness ultra-fast LLaMA-3.3 reasoning powered by Groq to diagnose cattle distress, generate veterinary shift handover audit reports, and provide immediate caretaker action protocols.
+                  Ultra-low-latency LPU™ inference engine providing 24x7 automated bovine distress triage, voice-assisted veterinary consultation, and comprehensive shift handover audits.
                 </p>
               </div>
+
               <div class="ai-hero-right">
                 <div class="env-config-box">
-                  <div class="env-badge">
-                    <span class="dot-green"></span>
-                    <span>.env Configured</span>
+                  <div class="env-header">
+                    <div class="env-badge">
+                      <span class="dot-green"></span>
+                      <span>Groq LPU Active</span>
+                    </div>
+                    <button class="btn-xs-refresh" id="refresh-ai-status-btn" title="Check Model Status">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                    </button>
                   </div>
                   <div class="env-details" id="ai-status-summary">
-                    <code>GROQ_MODEL=llama-3.3-70b-versatile</code>
+                    <code>llama-3.3-70b-versatile</code>
+                  </div>
+                  <div class="env-foot-metrics">
+                    <span>Zero Cold Start</span> • <span>Precision: FP16</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- 3 Groq AI Feature Cards -->
-            <div class="ai-features-grid">
-              
-              <!-- Card 1: One-Click Clinical Distress Diagnosis -->
-              <div class="ai-card">
-                <div class="ai-card-header">
-                  <div class="ai-card-icon icon-rose">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                    </svg>
+            <!-- Workspace Sub-navigation Pills -->
+            <div class="ai-subtabs-nav" role="tablist">
+              <button class="ai-subtab-btn active" data-subpanel="triage" id="subtab-ai-diag">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                <span>Clinical Triage & Diagnosis</span>
+                <span class="subtab-glow-indicator"></span>
+              </button>
+
+              <button class="ai-subtab-btn" data-subpanel="chat" id="subtab-ai-chat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <span>Veterinary AI Copilot (Voice & Text)</span>
+              </button>
+
+              <button class="ai-subtab-btn" data-subpanel="report" id="subtab-ai-report">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <span>Shift Handover Audit</span>
+              </button>
+
+              <button class="ai-subtab-btn" data-subpanel="formulary" id="subtab-ai-formulary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                <span>Emergency Bovine Formulary</span>
+              </button>
+            </div>
+
+            <!-- ===============================================================
+                 SUBPANEL 1: CLINICAL TRIAGE & DISTRESS DIAGNOSIS
+                 =============================================================== -->
+            <div class="ai-subpanel active" id="ai-panel-triage">
+              <div class="ai-triage-container">
+                
+                <!-- Left Input Controls Pane -->
+                <div class="ai-triage-input-card">
+                  <div class="triage-header">
+                    <div class="triage-title-group">
+                      <div class="ai-card-icon icon-rose">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                      </div>
+                      <div>
+                        <h3 class="ai-card-title">Intelligent Clinical Triage</h3>
+                        <p class="ai-card-sub">Select CCTV telemetry trigger or evaluate physical clinical signs</p>
+                      </div>
+                    </div>
+
+                    <!-- Input Mode Toggle -->
+                    <div class="triage-mode-toggle">
+                      <button class="mode-btn active" id="mode-cctv-trigger" data-mode="cctv">
+                        <span>🔴 Live CCTV Alert</span>
+                      </button>
+                      <button class="mode-btn" id="mode-symptom-matrix" data-mode="matrix">
+                        <span>🩺 Symptom Matrix</span>
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <h3 class="ai-card-title" data-i18n="ai_diag_title">Clinical Distress Diagnosis</h3>
-                    <p class="ai-card-sub" data-i18n="ai_diag_sub">Instant clinical diagnosis & caretaker action protocol</p>
+
+                  <!-- Mode A: Live CCTV Alert Selection -->
+                  <div class="triage-input-section" id="section-cctv-mode">
+                    <label class="form-label">
+                      <span>Live CCTV Distress Alert / Livestock Anomaly:</span>
+                      <button type="button" class="btn-text-link" id="refresh-alert-select-btn">↻ Refresh Alerts</button>
+                    </label>
+                    <div class="custom-select-wrapper">
+                      <select class="form-select" id="ai-diag-select">
+                        <option value="" disabled selected>-- No Active Distress Alerts Detected --</option>
+                      </select>
+                    </div>
+                    <div class="alert-info-preview" id="selected-alert-preview" style="display:none;">
+                      <span class="preview-tag" id="preview-alert-type">PROSTRATION</span>
+                      <span class="preview-entity" id="preview-alert-cow">#104</span>
+                      <span class="preview-zone" id="preview-alert-zone">North Shed</span>
+                      <span class="preview-duration" id="preview-alert-time">Motionless: 180s</span>
+                    </div>
                   </div>
-                </div>
-                <div class="ai-card-body">
-                  <label class="form-label" data-i18n="ai_select_alert">Select Live Distress Alert / Livestock Anomaly:</label>
-                  <select class="form-select" id="ai-diag-select">
-                    <option value="" disabled selected>-- No Active Distress Alerts Detected --</option>
-                  </select>
-                  <div class="form-actions">
-                    <button class="btn-groq" id="run-groq-diag-btn">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+
+                  <!-- Mode B: Manual Symptom Matrix & Cow ID -->
+                  <div class="triage-input-section" id="section-symptom-mode" style="display:none;">
+                    <div class="form-row-2">
+                      <div class="form-group">
+                        <label class="form-label">Cattle Tag ID / Cow Name:</label>
+                        <input type="text" class="form-input" id="triage-cow-id" placeholder="e.g. COW-108 / Gauri" value="COW-104" />
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">Enclosure / Shed:</label>
+                        <select class="form-select" id="triage-pen-select">
+                          <option value="Zone A - North Shed" selected>Zone A - North Shed</option>
+                          <option value="Zone B - East Milking Bay">Zone B - East Milking Bay</option>
+                          <option value="Zone C - Quarantine Ward">Zone C - Quarantine Ward</option>
+                          <option value="Zone D - Calving & Infant Barn">Zone D - Calving & Infant Barn</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <!-- Clickable Symptom Tag Matrix -->
+                    <div class="form-group">
+                      <label class="form-label">Observed Clinical Signs (Click all that apply):</label>
+                      <div class="symptom-tag-grid" id="symptom-tag-container">
+                        <button type="button" class="sym-tag active" data-symptom="Recumbency / Downer Cow (असमर्थ लेटना)">
+                          <span>🚨 Downer Cow / Inability to Rise</span>
+                        </button>
+                        <button type="button" class="sym-tag" data-symptom="Rumen Bloat / Tympany (पेट फूलना/आफरा)">
+                          <span>🎈 Left Flank Distension (Bloat)</span>
+                        </button>
+                        <button type="button" class="sym-tag" data-symptom="Excessive Drooling / Froth (लार टपकना)">
+                          <span>🤤 Hypersalivation / Drooling</span>
+                        </button>
+                        <button type="button" class="sym-tag" data-symptom="High Pyrexia Fever >103.5F (तेज बुखार)">
+                          <span>🌡️ High Fever &gt;103.5°F</span>
+                        </button>
+                        <button type="button" class="sym-tag" data-symptom="Lameness / Foot Lesions (लंगड़ाना/खुर में घाव)">
+                          <span>🦶 Lameness & Foot Vesicles</span>
+                        </button>
+                        <button type="button" class="sym-tag" data-symptom="Cutaneous Nodules / Lumps (त्वचा पर गांठें)">
+                          <span>🔘 Skin Lumps / Nodules (LSD)</span>
+                        </button>
+                        <button type="button" class="sym-tag" data-symptom="Labored Panting / Heat Shock (हांफना)">
+                          <span>🫁 Labored Respiration / Panting</span>
+                        </button>
+                        <button type="button" class="sym-tag" data-symptom="Acute Milk Drop & Off-feed (दूध/चारा बंद)">
+                          <span>🥛 Off-Feed & Milk Drop</span>
+                        </button>
+                        <button type="button" class="sym-tag" data-symptom="Watery Scours / Diarrhea (दस्त/पेचिश)">
+                          <span>💧 Profuse Scours / Dehydration</span>
+                        </button>
+                        <button type="button" class="sym-tag" data-symptom="Sunken Dull Eyes / Weakness (सुस्ती)">
+                          <span>👁️ Dull Sunken Eyes / Weakness</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Vitals Quick Controls -->
+                    <div class="vitals-row">
+                      <div class="vital-slider-box">
+                        <div class="vital-slider-head">
+                          <span>Rectal Temp (°F)</span>
+                          <span class="vital-val-display" id="disp-temp-val">102.5°F</span>
+                        </div>
+                        <input type="range" class="vital-range" id="input-vital-temp" min="98.0" max="107.0" step="0.1" value="102.5" />
+                        <div class="vital-range-labels">
+                          <span>Normal 101.5°F</span>
+                          <span class="text-rose">Critical &gt;104°F</span>
+                        </div>
+                      </div>
+
+                      <div class="vital-slider-box">
+                        <div class="vital-slider-head">
+                          <span>Respiration (/min)</span>
+                          <span class="vital-val-display" id="disp-resp-val">28/min</span>
+                        </div>
+                        <input type="range" class="vital-range" id="input-vital-resp" min="10" max="90" step="1" value="28" />
+                        <div class="vital-range-labels">
+                          <span>Normal 15-30</span>
+                          <span class="text-rose">Panting &gt;50</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Run Diagnosis Action -->
+                  <div class="triage-action-bar">
+                    <button class="btn-groq-mega" id="run-groq-diag-btn">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="lightning-svg">
                         <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                       </svg>
-                      <span data-i18n="btn_run_diag">Run Groq Diagnosis</span>
+                      <span data-i18n="btn_run_diag">Run Groq Clinical Inference</span>
+                      <span class="btn-badge-speed">&lt; 150ms</span>
                     </button>
                   </div>
-                  <div class="ai-result-box" id="ai-diag-output" style="display:none;">
-                    <!-- Diagnosis Output Container -->
-                  </div>
                 </div>
-              </div>
 
-              <!-- Card 2: Shift Handover & Audit Report Generator -->
-              <div class="ai-card">
-                <div class="ai-card-header">
-                  <div class="ai-card-icon icon-indigo">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                      <polyline points="14 2 14 8 20 8"/>
-                      <line x1="16" y1="13" x2="8" y2="13"/>
-                      <line x1="16" y1="17" x2="8" y2="17"/>
-                      <polyline points="10 9 9 9 8 9"/>
-                    </svg>
+                <!-- Right Diagnosis Output Pane -->
+                <div class="ai-triage-output-card">
+                  <div class="output-header-bar">
+                    <div class="output-badge-status">
+                      <span class="sparkle-icon">✨</span>
+                      <span>Veterinary Clinical Case Record</span>
+                    </div>
+                    <div class="output-actions" id="diag-card-actions" style="display:none;">
+                      <button class="btn-subtle-tool" id="btn-speak-diag" title="Read Aloud in Audio">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                        <span id="speak-diag-text">Listen</span>
+                      </button>
+                      <button class="btn-subtle-tool" id="btn-copy-diag" title="Copy to Clipboard">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        <span>Copy</span>
+                      </button>
+                      <button class="btn-subtle-tool" id="btn-print-diag" title="Print Medical Sheet">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                        <span>Print</span>
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <h3 class="ai-card-title" data-i18n="ai_audit_title">AI Shift Audit Report</h3>
-                    <p class="ai-card-sub" data-i18n="ai_audit_sub">Automated veterinary handover summary</p>
+
+                  <!-- Initial Empty State -->
+                  <div class="triage-empty-state" id="triage-empty-box">
+                    <div class="empty-icon-wrap">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 16v-4"/>
+                        <path d="M12 8h.01"/>
+                      </svg>
+                    </div>
+                    <h4>No Clinical Analysis Run Yet</h4>
+                    <p>Select a live distress trigger or tap symptoms on the left, then click <strong>Run Groq Clinical Inference</strong> to synthesize an instant veterinary assessment.</p>
+                  </div>
+
+                  <!-- Results Box -->
+                  <div class="ai-result-box" id="ai-diag-output" style="display:none;"></div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- ===============================================================
+                 SUBPANEL 2: VETERINARY AI COPILOT (VOICE & TEXT CHAT)
+                 =============================================================== -->
+            <div class="ai-subpanel" id="ai-panel-chat">
+              <div class="ai-chat-master-card">
+                
+                <div class="chat-master-top">
+                  <div class="copilot-identity">
+                    <div class="copilot-avatar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polygon points="12 8 8 12 12 16 16 12 12 8"/>
+                      </svg>
+                      <span class="active-pulse"></span>
+                    </div>
+                    <div>
+                      <div class="copilot-name">Groq Veterinary AI Copilot</div>
+                      <div class="copilot-role">Real-time Telemetry & Clinical Livestock Specialist • Bilingual (हिन्दी / English)</div>
+                    </div>
+                  </div>
+
+                  <div class="chat-quick-actions">
+                    <button class="btn-subtle-tool" id="btn-clear-chat-history">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                      <span>Clear Chat</span>
+                    </button>
                   </div>
                 </div>
-                <div class="ai-card-body">
-                  <p class="card-desc-text" data-i18n="ai_audit_desc">
-                    Generates a structured clinical inspection and shift audit report summarizing cattle herd count, active alerts, prostration events, and recommended supervisor tasks.
-                  </p>
-                  <div class="form-actions">
-                    <button class="btn-primary" id="generate-shift-report-btn">
+
+                <!-- Suggested Prompt Pills -->
+                <div class="quick-prompts-tray">
+                  <span class="tray-label">Quick Inquiries:</span>
+                  <div class="prompts-scroll-wrap">
+                    <button class="prompt-chip" data-prompt="What are the immediate caretaker steps for a cow suffering from acute rumen bloat?">
+                      🎈 Acute Bloat First-Aid
+                    </button>
+                    <button class="prompt-chip" data-prompt="What are the classic early symptoms and CBG injection protocol for Milk Fever (Hypocalcemia)?">
+                      🥛 Milk Fever & CBG Protocol
+                    </button>
+                    <button class="prompt-chip" data-prompt="How to calculate the Temperature-Humidity Index (THI) for cattle heat stress in Indian summers?">
+                      🌡️ Heat Stress & THI Index
+                    </button>
+                    <button class="prompt-chip" data-prompt="What biosecurity quarantine measures must be enacted for suspected Lumpy Skin Disease (LSD)?">
+                      🦠 Lumpy Skin Quarantine
+                    </button>
+                    <button class="prompt-chip" data-prompt="What is the ideal daily ratio of green fodder, dry straw, and mineral concentrate for indigenous Gir/Sahiwal cows?">
+                      🌾 Fodder & Mineral Ration
+                    </button>
+                    <button class="prompt-chip" data-prompt="What are the protocol guidelines when cattle cross the perimeter geofence after 22:00 IST?">
+                      🛡️ Night Perimeter Security
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Chat History Messages Scroll Area -->
+                <div class="chat-history-box" id="ai-chat-history">
+                  <div class="chat-bubble chat-bubble-ai">
+                    <div class="chat-bubble-header">
+                      <span class="chat-sender">⚡ Groq LLaMA-3.3-70B • Veterinary Copilot</span>
+                      <span class="chat-time">Just now</span>
+                    </div>
+                    <div class="chat-text" data-i18n="ai_chat_welcome">
+                      Namaste! I am your 24/7 Groq Veterinary and Telemetry Intelligence Assistant. Ask me about downer cow emergency protocols, heat stress, feed ratios, vaccine schedules, or perimeter security in Hindi or English.
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Chat Input Controls Bar with Voice Mic & Send -->
+                <form id="ai-chat-form" class="chat-input-bar">
+                  <button type="button" class="btn-voice-mic" id="ai-chat-mic-btn" title="Speak Question (हिन्दी या English में बोलें)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mic-svg">
+                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                      <line x1="12" y1="19" x2="12" y2="23"/>
+                      <line x1="8" y1="23" x2="16" y2="23"/>
+                    </svg>
+                    <span class="recording-pulse" style="display:none;"></span>
+                  </button>
+
+                  <input 
+                    type="text" 
+                    class="chat-input" 
+                    id="ai-chat-input" 
+                    placeholder="Ask clinical, feed, or telemetry questions (or click microphone to speak)..." 
+                    data-i18n-ph="ai_chat_placeholder" 
+                    required 
+                    autocomplete="off"
+                  />
+
+                  <button type="submit" class="btn-groq" id="ai-chat-send-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="22" y1="2" x2="11" y2="13"/>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                    <span data-i18n="btn_ask">Ask AI</span>
+                  </button>
+                </form>
+
+              </div>
+            </div>
+
+            <!-- ===============================================================
+                 SUBPANEL 3: SHIFT HANDOVER AUDIT & REPORT GENERATOR
+                 =============================================================== -->
+            <div class="ai-subpanel" id="ai-panel-report">
+              <div class="ai-report-master-card">
+                
+                <div class="report-controls-banner">
+                  <div class="report-controls-left">
+                    <div class="ai-card-icon icon-indigo">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </div>
+                    <div>
+                      <h3 class="ai-card-title" data-i18n="ai_audit_title">Automated Veterinary Shift Handover Audit</h3>
+                      <p class="ai-card-sub" data-i18n="ai_audit_sub">Synthesize real-time YOLOv8 tracks, alerts, and caretaker task checklists</p>
+                    </div>
+                  </div>
+
+                  <div class="report-controls-right">
+                    <div class="shift-select-group">
+                      <label class="form-label-inline">Duty Shift:</label>
+                      <select class="form-select form-select-sm" id="report-shift-select">
+                        <option value="Morning Duty Shift (05:00 - 13:00 IST)" selected>Morning (05:00 - 13:00 IST)</option>
+                        <option value="Afternoon Duty Shift (13:00 - 21:00 IST)">Afternoon (13:00 - 21:00 IST)</option>
+                        <option value="Night Duty Shift (21:00 - 05:00 IST)">Night (21:00 - 05:00 IST)</option>
+                      </select>
+                    </div>
+
+                    <button class="btn-groq-mega" id="generate-shift-report-btn">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                         <polyline points="7 10 12 15 17 10"/>
@@ -675,44 +978,165 @@
                       <span data-i18n="btn_gen_report">Generate Shift Report</span>
                     </button>
                   </div>
-                  <div class="ai-result-box" id="ai-audit-output" style="display:none;">
-                    <!-- Audit Report Output Container -->
+                </div>
+
+                <!-- Shift Telemetry Quick Gauges -->
+                <div class="report-telemetry-preview-bar">
+                  <div class="preview-metric">
+                    <span class="p-num" id="rep-preview-total">0</span>
+                    <span class="p-lbl">Live Herd Census</span>
+                  </div>
+                  <div class="preview-divider"></div>
+                  <div class="preview-metric">
+                    <span class="p-num text-emerald" id="rep-preview-active">0</span>
+                    <span class="p-lbl">Nominal Roaming & Feed</span>
+                  </div>
+                  <div class="preview-divider"></div>
+                  <div class="preview-metric">
+                    <span class="p-num text-amber" id="rep-preview-resting">0</span>
+                    <span class="p-lbl">Resting / Inactive</span>
+                  </div>
+                  <div class="preview-divider"></div>
+                  <div class="preview-metric">
+                    <span class="p-num text-rose" id="rep-preview-alerts">0</span>
+                    <span class="p-lbl">Logged Distress Events</span>
                   </div>
                 </div>
-              </div>
 
-              <!-- Card 3: Interactive Veterinary Health Assistant Chat -->
-              <div class="ai-card ai-card-full">
-                <div class="ai-card-header">
-                  <div class="ai-card-icon icon-emerald">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                    </svg>
-                  </div>
+                <!-- Output Container -->
+                <div class="ai-result-box" id="ai-audit-output" style="display:none;"></div>
+
+              </div>
+            </div>
+
+            <!-- ===============================================================
+                 SUBPANEL 4: EMERGENCY BOVINE DISEASE FORMULARY
+                 =============================================================== -->
+            <div class="ai-subpanel" id="ai-panel-formulary">
+              <div class="formulary-container">
+                <div class="formulary-top-bar">
                   <div>
-                    <h3 class="ai-card-title" data-i18n="ai_chat_title">Interactive Livestock Intelligence Assistant</h3>
-                    <p class="ai-card-sub" data-i18n="ai_chat_sub">Ask clinical, nutrition, or telemetry questions to Groq LLaMA-3.3</p>
+                    <h3 class="ai-card-title">Bovine Emergency Clinical Formulary & SOP Guide</h3>
+                    <p class="ai-card-sub">Instant veterinary protocols, drug dosages, and caretaker triage procedures for the 6 core bovine pathologies</p>
+                  </div>
+                  <div class="formulary-search">
+                    <input type="text" class="form-input form-input-sm" id="formulary-search-input" placeholder="Search disease, drug (e.g., CBG, bloat, FMD)..." />
                   </div>
                 </div>
-                <div class="ai-card-body">
-                  <div class="chat-history-box" id="ai-chat-history">
-                    <div class="chat-bubble chat-bubble-ai">
-                      <div class="chat-sender">Groq Cattle AI</div>
-                      <div class="chat-text" data-i18n="ai_chat_welcome">
-                        Hello! I am your 24/7 Groq Veterinary and Telemetry Intelligence Assistant. Ask me about cow recumbency protocols, heat stress, feed ratios, or perimeter security.
-                      </div>
+
+                <!-- Formulary Cards Grid -->
+                <div class="formulary-grid" id="formulary-cards-grid">
+                  
+                  <!-- Card 1: Milk Fever -->
+                  <div class="formulary-card" data-disease="milk fever hypocalcemia सूतक ज्वर cbg">
+                    <div class="form-card-badge badge-rose">High Urgency • Metabolic</div>
+                    <h4 class="form-disease-name">Milk Fever / Hypocalcemia (सूतक ज्वर)</h4>
+                    <p class="form-disease-cause">Acute drop in blood calcium post-calving; cold ears, "S-shaped" neck curve, sternal recumbency.</p>
+                    <div class="form-protocol-sec">
+                      <span class="proto-lbl">First Aid:</span>
+                      <span>Prop animal in sternal posture; avoid lateral recumbency to prevent rumen regurgitation.</span>
                     </div>
+                    <div class="form-protocol-sec">
+                      <span class="proto-lbl">Rx Formulation:</span>
+                      <code>Calcium Borogluconate (CBG 450ml) IV slowly (warm to body temp) + SC</code>
+                    </div>
+                    <button class="btn-ask-groq-form" onclick="AiModule.askFormularyCopilot('Milk Fever (Hypocalcemia)')">
+                      <span>⚡ Ask Groq AI for In-Depth Treatment</span>
+                    </button>
                   </div>
 
-                  <form id="ai-chat-form" class="chat-input-row">
-                    <input type="text" class="chat-input" id="ai-chat-input" placeholder="Ask a question (e.g., 'What are the first symptoms of milk fever?')..." data-i18n-ph="ai_chat_placeholder" required />
-                    <button type="submit" class="btn-groq">
-                      <span data-i18n="btn_ask">Ask AI</span>
+                  <!-- Card 2: Bloat / Tympany -->
+                  <div class="formulary-card" data-disease="bloat tympany आफरा पेट फूलना tympol">
+                    <div class="form-card-badge badge-amber">Asphyxiation Risk • Digestive</div>
+                    <h4 class="form-disease-name">Acute Rumen Tympany / Bloat (आफरा रोग)</h4>
+                    <p class="form-disease-cause">Excessive gas retention in rumen due to lush legumes or spoiled feed; left paralumbar fossa distended.</p>
+                    <div class="form-protocol-sec">
+                      <span class="proto-lbl">First Aid:</span>
+                      <span>Keep head elevated, place wooden bit in mouth to induce eructation, gentle left flank massage.</span>
+                    </div>
+                    <div class="form-protocol-sec">
+                      <span class="proto-lbl">Rx Formulation:</span>
+                      <code>Bloatosil / Tympol 100ml drench in 500ml water or turpentine oil in mustard oil</code>
+                    </div>
+                    <button class="btn-ask-groq-form" onclick="AiModule.askFormularyCopilot('Acute Rumen Tympany / Bloat')">
+                      <span>⚡ Ask Groq AI for In-Depth Treatment</span>
                     </button>
-                  </form>
+                  </div>
+
+                  <!-- Card 3: Lumpy Skin Disease -->
+                  <div class="formulary-card" data-disease="lumpy skin disease lsd गांठदार त्वचा रोग pox">
+                    <div class="form-card-badge badge-purple">Contagious • Viral</div>
+                    <h4 class="form-disease-name">Lumpy Skin Disease (गांठदार त्वचा रोग - LSD)</h4>
+                    <p class="form-disease-cause">Capripoxvirus vector transmission via biting flies/ticks; round firm skin nodules, edema, and high fever.</p>
+                    <div class="form-protocol-sec">
+                      <span class="proto-lbl">First Aid:</span>
+                      <span>Immediate isolation into quarantine shed; apply fly repellents, fumigate enclosure with neem smoke.</span>
+                    </div>
+                    <div class="form-protocol-sec">
+                      <span class="proto-lbl">Rx Formulation:</span>
+                      <code>Melonex Plus (20ml IM) + Avil (10ml IM) + Topical Topicure Aerosol on lesions</code>
+                    </div>
+                    <button class="btn-ask-groq-form" onclick="AiModule.askFormularyCopilot('Lumpy Skin Disease (LSD)')">
+                      <span>⚡ Ask Groq AI for In-Depth Treatment</span>
+                    </button>
+                  </div>
+
+                  <!-- Card 4: Foot and Mouth Disease -->
+                  <div class="formulary-card" data-disease="foot mouth disease fmd खुरपका मुंहपका aphthovirus">
+                    <div class="form-card-badge badge-rose">High Contagion • Biosecurity Alert</div>
+                    <h4 class="form-disease-name">Foot-and-Mouth Disease (खुरपका-मुंहपका - FMD)</h4>
+                    <p class="form-disease-cause">Aphthovirus infection causing ropy hypersalivation, lip smacking, vesicles on tongue, gums, and interdigital clefts.</p>
+                    <div class="form-protocol-sec">
+                      <span class="proto-lbl">First Aid:</span>
+                      <span>KMnO4 (1:1000) foot-bath at door; wash oral sores with 2% alum water or boro-glycerine; soft feed.</span>
+                    </div>
+                    <div class="form-protocol-sec">
+                      <span class="proto-lbl">Rx Formulation:</span>
+                      <code>Flunixin Meglumine (15ml IM) + Ceftiofur / Enrofloxacin + Zinc Oxide hoof dressing</code>
+                    </div>
+                    <button class="btn-ask-groq-form" onclick="AiModule.askFormularyCopilot('Foot and Mouth Disease (FMD)')">
+                      <span>⚡ Ask Groq AI for In-Depth Treatment</span>
+                    </button>
+                  </div>
+
+                  <!-- Card 5: Bovine Mastitis -->
+                  <div class="formulary-card" data-disease="mastitis थनैला सूजन दूध intramammary">
+                    <div class="form-card-badge badge-cyan">Udder Health • Bacterial</div>
+                    <h4 class="form-disease-name">Bovine Mastitis (थनैला रोग)</h4>
+                    <p class="form-disease-cause">Intramammary bacterial invasion causing udder swelling, hardness, hot quarter, curd-like or watery milk.</p>
+                    <div class="form-protocol-sec">
+                      <span class="proto-lbl">First Aid:</span>
+                      <span>Frequent stripping of affected quarter (every 2h); apply cold fomentation for acute heat/swelling.</span>
+                    </div>
+                    <div class="form-protocol-sec">
+                      <span class="proto-lbl">Rx Formulation:</span>
+                      <code>Intramammary Infusion (Cobactan / Tilox) + Isoflupredone acetate + Serratiopeptidase</code>
+                    </div>
+                    <button class="btn-ask-groq-form" onclick="AiModule.askFormularyCopilot('Bovine Mastitis')">
+                      <span>⚡ Ask Groq AI for In-Depth Treatment</span>
+                    </button>
+                  </div>
+
+                  <!-- Card 6: Heat Stress & Prostration -->
+                  <div class="formulary-card" data-disease="heat stress thi prostration लू ऊष्माघात">
+                    <div class="form-card-badge badge-amber">Environmental Distress • THI &gt; 78</div>
+                    <h4 class="form-disease-name">Heat Stress & Prostration (लू एवं ऊष्माघात)</h4>
+                    <p class="form-disease-cause">Elevated environmental THI index (&gt;78); open-mouth breathing, drooling, restlessness, body temp &gt;104°F.</p>
+                    <div class="form-protocol-sec">
+                      <span class="proto-lbl">First Aid:</span>
+                      <span>Move to shaded ventilated stall; continuous water dousing over poll, neck, and spine with fans.</span>
+                    </div>
+                    <div class="form-protocol-sec">
+                      <span class="proto-lbl">Rx Formulation:</span>
+                      <code>Oral Electrolytes + Sodium Bicarbonate (50g) in water + Vitamin C / Betaine drench</code>
+                    </div>
+                    <button class="btn-ask-groq-form" onclick="AiModule.askFormularyCopilot('Heat Stress & Prostration')">
+                      <span>⚡ Ask Groq AI for In-Depth Treatment</span>
+                    </button>
+                  </div>
+
                 </div>
               </div>
-
             </div>
 
           </div>
@@ -2675,6 +3099,33 @@
     </div>
   </div>
 
+  <!-- Groq AI Live Distress Diagnosis Modal -->
+  <div class="modal-overlay" id="diagnosis-modal">
+    <div class="modal-card" style="max-width: 800px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge icon-spark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div>
+            <h2 class="modal-title" id="diag-modal-title">Groq AI Clinical Diagnosis Consultation</h2>
+            <p class="modal-subtitle">Instant LLaMA-3.3 inference on live CCTV livestock distress telemetry</p>
+          </div>
+        </div>
+        <button class="btn-icon" id="close-diag-modal-btn" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body" id="diag-modal-body">
+        <div class="ai-loading-spinner">
+          <div class="spinner"></div>
+          <span>Synthesizing Groq clinical distress evaluation...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast-container"></div>
 
@@ -2683,10 +3134,10 @@
   <script src="/static/js/dashboard.js"></script>
   <script src="/static/js/monitor.js"></script>
   <script src="/static/js/alerts.js"></script>
-  <script src="/static/js/ai.js"></script>
+  <script src="/static/js/ai.js?v=2026.2"></script>
   <script src="/static/js/census.js"></script>
   <script src="/static/js/zones.js"></script>
-  <script src="/static/js/app.js"></script>
+  <script src="/static/js/app.js?v=2026.2"></script>
 </body>
 </html>
 

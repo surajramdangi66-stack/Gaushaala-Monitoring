@@ -536,7 +536,10 @@ function switchTab(tabId) {
       ZoneEditorModule.init();
     }
   } else if (tabId === 'ai') {
+    AiModule.init();
     AiModule.checkStatus();
+    AiModule.refreshAlertSelect();
+    AiModule.updateTelemetrySnapshot();
   }
 }
 
